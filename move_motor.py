@@ -1,6 +1,7 @@
+#!/usr/bin/env python
+
 """Code to connect to the 3 motors and test their motion."""
 
-# The following code has been copied from motor.py in the motor_board repository by Fergus Riche (fr293).
 import smbus
 import sys
 
@@ -12,6 +13,8 @@ z = int(sys.argv[4])
 
 bus = smbus.SMBus(1)
 
-bus.write_byte_data(8, x >> 8, x & 255)
-bus.write_byte_data(16, y >> 8, y & 255)
-bus.write_byte_data(24, z >> 8, z & 255)
+# The arguments for write_byte_data are: the I2C address of each motor, the register of the motion (?) and how much to
+# move it by.
+bus.write_byte_data(0x50, x >> 8, x & 255)
+bus.write_byte_data(0x58, y >> 8, y & 255)
+bus.write_byte_data(0x6a, z >> 8, z & 255)
