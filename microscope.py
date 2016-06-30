@@ -38,7 +38,7 @@ class Microscope:
     _GUI_KEY_ENTER = 13
 
     # Other useful constants:
-    _ARROW_STEP_SIZE = 32
+    _ARROW_STEP_SIZE = 5000
 
     # Spatial conversions from pixels to microns. This needs to be updated
     # by hand.
@@ -59,6 +59,7 @@ class Microscope:
         self.stage = s.ScopeStage(channel)
         # self.light = twoLED.Lightboard()
         self.datafile = data_output.Datafile(filename)
+
         # Set up the GUI variables:
         self._gui_quit = False
         self._gui_greyscale = True
@@ -69,6 +70,7 @@ class Microscope:
         self._gui_tracking = False
         self._gui_bead_pos = None
         self._gui_color = (0, 0, 0)  # BGR colour
+
         # And the rest:
         self.template_selection = None
 
@@ -122,13 +124,16 @@ class Microscope:
         if self._gui_pause_img is None:
             self._gui_img = self.camera.get_frame(
                 greyscale=self._gui_greyscale)
-        else:  # If paused, use a fresh copy of the pause frame
+        else:
+            # If paused, use a fresh copy of the pause frame
             self._gui_img = self._gui_pause_img.copy()
+
         # Now do the tracking, before the rectangle is drawn!
         if self._gui_tracking:
             self._update_gui_tracker()
         # Now process keyboard input:
         keypress = cv2.waitKey(100)
+
         # Skip all the unnecessary if statements if no keypress
         if keypress != -1:
             # This converts Windows arrow keys to Linux
@@ -153,6 +158,7 @@ class Microscope:
                     crop = self._gui_img[self._gui_sel[1]: self._gui_sel[1]+h,
                            self._gui_sel[0]: self._gui_sel[0]+w]
                     cv2.imwrite("microscope_img_%s.jpg" % fname, crop)
+
             elif keypress == ord('t'):
                 # The t key will save the stored template image.
                 fname = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

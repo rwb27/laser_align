@@ -1,6 +1,12 @@
 """Contains base-level functions that are required for the others to run."""
 
 import numpy as np
+import cv2
+
+
+def make_greyscale(frame, greyscale):
+    """Makes an image 'frame' greyscale if greyscale is True."""
+    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if greyscale else frame
 
 
 def verify_vector(vector):

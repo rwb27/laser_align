@@ -22,7 +22,7 @@ def crop_centre(bgr_arr, frac):
     crop = bgr_arr[_frac_round(y_res, frac)[0]: _frac_round(y_res, frac)[1],
            _frac_round(x_res, frac)[0]: _frac_round(x_res, frac)[1], :]
 
-    actual_fraction = crop.size/bgr_arr.size * 100.
+    actual_fraction = float(crop.size)/bgr_arr.size * 100
     print r'Cropped the centre {}% of image.'.format(actual_fraction)
     return crop, actual_fraction
 

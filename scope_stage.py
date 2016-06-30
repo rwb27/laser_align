@@ -80,3 +80,8 @@ def _move_motors(bus, x, y, z, mod_no=None):
     # This is only valid for the specific set of motors tested.
     time.sleep(ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
 
+
+if __name__ == '__main__':
+    stage = ScopeStage()
+    while True:
+        stage.focus_rel(31999)
