@@ -5,8 +5,11 @@ import cv2
 
 
 def make_greyscale(frame, greyscale):
-    """Makes an image 'frame' greyscale if greyscale is True."""
-    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if greyscale else frame
+    """Makes an image 'frame' greyscale if 'greyscale' is True."""
+    # TODO This function appears to flatten the array - it needs reshaping
+    # TODO if greyscale is True.
+    greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return greyscaled if greyscale else frame
 
 
 def verify_vector(vector):

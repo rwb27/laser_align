@@ -1,14 +1,9 @@
-""" REVISION 10-03-2015 - jps79 
-
-This control script sets up the stage and camera, as a convenient
-abstraction.  It contains all the hardware code used in the experiment.
-
-Author: (c) James Sharkey, 2015
-
-It was used for the paper in Review of Scientific Instruments titled:
-A one-piece 3D printed flexure translation stage for open-source microscopy 
-
-This script is released under the GNU General Public License v3.0."""
+"""microscope.py
+This script combines the Camera and ScopeStage classes into a single Microscope
+class that can be controlled together. It is based on the script by James
+Sharkey, which was used for the paper in Review of Scientific Instruments
+titled: A one-piece 3D printed flexure translation stage for open-source
+microscopy."""
 
 # The microscope may be slow to be created; it must wait for the camera, stage
 # and the datafile to be ready for use.
@@ -19,10 +14,15 @@ import time
 import camera
 import scope_stage as s
 import data_output
+import image_proc as proc
 # import twoLED
 
 
-class Microscope:
+class MicroscopeGUI:
+    """Class to control the GUI used for the microscope, developed by James
+    Sharkey. The class Microscope (below) is used to combine the Camera and
+    ScopeStage classes, which is more useful when this GUI is not being
+    used."""
 
     # Key codes for Windows (W) and Linux (L), to allow conversion:
     _GUI_W_KEYS = {2490368: "UP", 2621440: "DOWN", 2424832: "LEFT",
@@ -38,27 +38,17 @@ class Microscope:
     _GUI_KEY_ENTER = 13
 
     # Other useful constants:
-    _ARROW_STEP_SIZE = 5000
-
-    # Spatial conversions from pixels to microns. This needs to be updated
-    # by hand.
-    _UM_PER_PIXEL = 0.4846
-
-    # Store a conversion matrix, can be updated with result of calibrate() if
-    # necessary.
-    _CAMERA_TO_STAGE_MATRIX = np.array([[5.2, 7.0], [6.3, -5.6]])
+    _ARROW_STEP_SIZE = 1000
 
     def __init__(self, width=640, height=480, cv2camera=False,
                  channel=1, filename=None):
-        """Creates a new Microscope containing a Camera and Stage object.
+        """Creates a new MicroscopeGUI containing a Camera and Stage object.
         - Optionally specify a width and height for Camera object, the channel
         for the Stage object and a filename for the attached datafile."""
 
-        # Internal objects needed:
-        self.camera = camera.Camera(width, height, cv2camera)
-        self.stage = s.ScopeStage(channel)
-        # self.light = twoLED.Lightboard()
-        self.datafile = data_output.Datafile(filename)
+        # Create a new Microscope object.
+        self.microscope = Microscope(width, height, cv2camera, channel,
+                                     filename)
 
         # Set up the GUI variables:
         self._gui_quit = False
@@ -77,10 +67,7 @@ class Microscope:
     def __del__(self):
         # Close the attached objects properly by deleting them
         cv2.destroyAllWindows()
-        del self.camera
-        del self.stage
-        # del self.light
-        del self.datafile
+        del self.microscope
 
     @staticmethod
     def _gui_nothing(x):
@@ -100,7 +87,7 @@ class Microscope:
         # Add mouse functionality on image click:
         cv2.setMouseCallback('Preview', self._on_gui_mouse)
         # For the sake of speed, use the RPi iterator:
-        self.camera.use_iterator(True)
+        self.microscope.camera.use_iterator(True)
 
     def _read_gui_track_bars(self):
         """Read in and process the track bar values."""
@@ -122,7 +109,7 @@ class Microscope:
         """Run the code needed to update the GUI to latest frame."""
         # Take image if not paused:
         if self._gui_pause_img is None:
-            self._gui_img = self.camera.get_frame(
+            self._gui_img = self.microscope.camera.get_frame(
                 greyscale=self._gui_greyscale)
         else:
             # If paused, use a fresh copy of the pause frame
@@ -143,12 +130,12 @@ class Microscope:
                 # The 0xFF allows ordinary Linux keys to work too
                 keypress &= 0xFF
             # Now process the keypress:
-                # The q key will quit the GUI and close it
-            if keypress == ord('q'):
+                # The x key will exit the GUI and close it
+            if keypress == ord('x'):
                 self._gui_quit = True
-            elif keypress == ord('s'):
-                # The s key will save the box region or the whole frame if
-                # nothing selected.
+            elif keypress == ord('g'):
+                # The g key will 'grab' (save) the box region or the whole
+                # frame if nothing selected.
                 fname = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 if self._gui_sel is None:
                     cv2.imwrite("microscope_img_%s.jpg" % fname, self._gui_img)
@@ -167,15 +154,23 @@ class Microscope:
                 # The space bar will reset the template selection box and
                 # stop tracking.
                 self._stop_gui_tracking()
-            elif keypress == self._GUI_KEY_RIGHT:
+            # QWEASD for 3D motion: WASD are motion in +y, -x, -y,
+            # +x directions, QE are motion in +z, -z directions. Note these
+            # need to be CHANGED DEPENDING ON THE CAMERA ORIENTATION. NOT
+            # SURE ABOUT Q AND E YET.
+            elif keypress == ord('s'):
                 # The arrow keys will move the stage
-                self.stage.move_rel([self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == self._GUI_KEY_LEFT:
-                self.stage.move_rel([-self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == self._GUI_KEY_UP:
-                self.stage.move_rel([0, self._ARROW_STEP_SIZE, 0])
-            elif keypress == self._GUI_KEY_DOWN:
-                self.stage.move_rel([0, -self._ARROW_STEP_SIZE, 0])
+                self.microscope.stage.move_rel([self._ARROW_STEP_SIZE, 0, 0])
+            elif keypress == ord('w'):
+                self.microscope.stage.move_rel([-self._ARROW_STEP_SIZE, 0, 0])
+            elif keypress == ord('d'):
+                self.microscope.stage.move_rel([0, self._ARROW_STEP_SIZE, 0])
+            elif keypress == ord('a'):
+                self.microscope.stage.move_rel([0, -self._ARROW_STEP_SIZE, 0])
+            elif keypress == ord('q'):
+                self.microscope.stage.move_rel([0, 0, -self._ARROW_STEP_SIZE])
+            elif keypress == ord('e'):
+                self.microscope.stage.move_rel([0, 0, self._ARROW_STEP_SIZE])
             elif keypress == ord('i'):
                 # The i key inverts the selection box colour.
                 if self._gui_color == (0, 0, 0):
@@ -199,11 +194,11 @@ class Microscope:
             if (w >= 100) or (h >= 100):
                 # If template bigger than the default search box, enlarge it.
                 d = max(w, h) + 50
-                centre = self.camera.find_template(
+                centre = self.microscope.camera.find_template(
                     self.template_selection, self._gui_img, self._gui_bead_pos,
                     box_d=d)
             else:
-                centre = self.camera.find_template(
+                centre = self.microscope.camera.find_template(
                     self.template_selection, self._gui_img, self._gui_bead_pos)
 
         except RuntimeError:
@@ -264,7 +259,43 @@ class Microscope:
                              max(self._gui_drag_start[0], x),
                              max(self._gui_drag_start[1], y))
 
-    def _camera_centre_move(self, template):
+    def run_gui(self):
+        """Run the GUI."""
+        self._create_gui()
+        while not self._gui_quit:
+            self._read_gui_track_bars()
+            self._update_gui()
+        self.microscope.stage.centre_stage()
+        cv2.destroyWindow('Preview')
+        cv2.destroyWindow('Controls')
+        self._gui_quit = False  # This allows restarting of the GUI
+
+
+class Microscope:
+
+    # Spatial conversions from pixels to microns. This needs to be updated
+    # by hand.
+    _UM_PER_PIXEL = 0.4846
+
+    # Store a conversion matrix, can be updated with result of calibrate() if
+    # necessary.
+    _CAMERA_TO_STAGE_MATRIX = np.array([[5.2, 7.0], [6.3, -5.6]])
+
+    def __init__(self, width=640, height=480, cv2camera=False, channel=1,
+                 filename=None):
+        # Internal objects needed:
+        self.camera = camera.Camera(width, height, cv2camera)
+        self.stage = s.ScopeStage(channel)
+        # self.light = twoLED.Lightboard()
+        self.datafile = data_output.Datafile(filename)
+
+    def __del__(self):
+        del self.camera
+        del self.stage
+        # del self.light
+        del self.datafile
+
+    def camera_centre_move(self, template):
         """Code to return the movement in pixels needed to centre a template
         image, as well as the actual camera position of the template."""
         width, height = self.camera.resolution
@@ -282,7 +313,7 @@ class Microscope:
 
         return camera_move, template_pos
 
-    def _camera_move_distance(self, camera_move):
+    def camera_move_distance(self, camera_move):
         """Code to convert an (x,y) displacement in pixels to a distance in
         microns."""
         camera_move = np.array(camera_move)
@@ -309,10 +340,10 @@ class Microscope:
 
         stage_move = np.array([0, 0, 0])
         stage_moves = []
-        camera_move, position = self._camera_centre_move(template)
+        camera_move, position = self.camera_centre_move(template)
         camera_positions = [position]
         iteration = 0
-        while ((self._camera_move_distance(camera_move)) > tolerance) and \
+        while ((self.camera_move_distance(camera_move)) > tolerance) and \
                 (iteration < max_iterations):
             iteration += 1
             stage_move = np.dot(camera_move, self._CAMERA_TO_STAGE_MATRIX)  # Rotate to stage coords
@@ -321,23 +352,12 @@ class Microscope:
             self.stage.move_rel(stage_move)
             stage_moves.append(stage_move)
             time.sleep(0.5)
-            camera_move, position = self._camera_centre_move(template)
+            camera_move, position = self.camera_centre_move(template)
             camera_positions.append(position)
         if iteration == max_iterations:
             print "Abort: Tolerance not reached in %d iterations" % iteration
             iteration *= -1
         return iteration, np.array(camera_positions), np.array(stage_moves)
-
-    def run_gui(self):
-        """Run the GUI."""
-        self._create_gui()
-        while not self._gui_quit:
-            self._read_gui_track_bars()
-            self._update_gui()
-        self.stage.centre_stage()
-        cv2.destroyWindow('Preview')
-        cv2.destroyWindow('Controls')
-        self._gui_quit = False  # This allows restarting of the GUI
 
     def calibrate(self, template=None, d=128):
         """Calibrate the stage-camera coordinates by finding the transformation
@@ -351,19 +371,18 @@ class Microscope:
 
         # Set up the necessary variables:
         self.camera.preview()
-        # pos = [np.array([i, j, 0]) for i in [-d, d] for j in [-d, d]]
         pos = [np.array([d, d, 0]), np.array([d, -d, 0]),
                np.array([-d, -d, 0]), np.array([-d, d, 0])]
         camera_displacement = []
         stage_displacement = []
 
-        # Move to centre from known location to minimise backlash:
-        self.stage.move_to_pos([16, 16, 0])
+        # Move to centre (scope_stage takes account of backlash already).
         self.stage.move_to_pos([0, 0, 0])
         if template is None:
             template = self.camera.get_frame()
-            w, h = template.shape
-            template = template[w/4:3*w/4, h/4:3*h/4]
+            # Crop the central 1/2 of the image - can replace by my central
+            # crop function or the general crop function (to be written).
+            template = proc.crop_section(template, 50)[0]
         time.sleep(1)
 
         # Store the initial configuration:
@@ -375,14 +394,17 @@ class Microscope:
 
         # Now make the motions in square specified by pos
         for p in pos:
-            self.stage.move_to_pos(np.add(init_stage_vector, p) +
-                                   np.array([-32, -16, 0]))  # Backlash correct
+            # Relate the microstep motion to the pixels measured on the
+            # camera. To do it with millimetres, you need to relate the
+            # pixels to the graticule image. Use ImageJ to make manual
+            # measurements.
             self.stage.move_to_pos(np.add(init_stage_vector, p))
             time.sleep(1)
             cam_pos = np.array(self.camera.find_template(template, box_d=-1,
                                                          decimal=True))
             cam_pos = np.subtract(cam_pos, init_cam_pos)
-            stage_pos = np.subtract(self.stage.position[0:2], init_stage_pos)
+            stage_pos = np.subtract(self.stage.position[0:2],
+                                    init_stage_pos)
             camera_displacement.append(cam_pos)
             stage_displacement.append(stage_pos)
         self.stage.centre_stage()
@@ -400,6 +422,7 @@ class Microscope:
         self.camera.preview()
         return a
 
+
 if __name__ == "__main__":
-    m = Microscope()
+    m = MicroscopeGUI()
     m.run_gui()

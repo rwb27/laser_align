@@ -51,7 +51,7 @@ class Camera:
         self._camera = None
         self._stream = None
         self.latest_frame = None
-        self._resolution = (width, height)
+        self.resolution = (width, height)
         if ((width <= 0) or (height <= 0)) and not cv2camera:
             # Negative dimensions use full sensor
             width = self._FULL_RPI_WIDTH
@@ -159,7 +159,7 @@ class Camera:
                 self._view = True
                 time.sleep(2)   # Let the image be properly received.
 
-    def get_frame(self, greyscale=True, videoport=True, mode='bayer'):
+    def get_frame(self, greyscale=False, videoport=True, mode='bayer'):
         """Manages obtaining a frame from the camera device.
             - Toggle greyscale to obtain either a grey frame or BGR colour one.
             - Use videoport to select RPi option "use_video_port",
@@ -230,7 +230,7 @@ class Camera:
                 self._camera.zoom = (x, y, w, h)
 
     def find_template(self, template, frame=None, bead_pos=(-1, -1), box_d=200,
-                      centre_mass=True, cross_corr=True, fraction=0.05,
+                      centre_mass=True, cross_corr=True, tolerance=0.05,
                       decimal=False):
         """Finds a dot given a camera and a template image. Returns a camera
         coordinate for the centre of where the template has matched a part
@@ -292,7 +292,7 @@ class Camera:
             corr = cv2.matchTemplate(frame, template, cv2.TM_SQDIFF_NORMED)
             corr *= -1.0  # Actually want minima with this method so reverse
             # values.
-        corr += (corr.max()-corr.min())*fraction - corr.max()
+        corr += (corr.max()-corr.min()) * tolerance - corr.max()
         corr = cv2.threshold(corr, 0, 0, cv2.THRESH_TOZERO)[1]
         if centre_mass:  # Either centre of mass:
             peak = ndimage.measurements.center_of_mass(corr)
@@ -312,7 +312,7 @@ class Camera:
 
 
 def auto_focus(camera, sharpness_func=sharpness_lap, mode='bayer',
-               mmt_range=None, backlash=128, res=(640, 480),
+               mmt_range=None, backlash=None, res=(640, 480),
                crop_percent=50, pixel_block=4):
 
     """Autofocus the image on the camera by varying z only, using a given
@@ -326,7 +326,8 @@ def auto_focus(camera, sharpness_func=sharpness_lap, mode='bayer',
     the format [(step_size, repeats), ...]. This function measures from
     -step * n / 2 to +step * n / 2 in steps of n, allowing for backlash.
     :param backlash: The number of micro-steps to wind up by, so that
-    measurements are made by rotating the motors in the same direction.
+    measurements are made by rotating the motors in the same direction. If
+    None, the default [128, 128, 128] is chosen.
     :param res: A tuple of the camera resolution to set. Irrelevant for raw
     image capture.
     :param crop_percent: The percentage of the image to crop along each
@@ -342,6 +343,9 @@ def auto_focus(camera, sharpness_func=sharpness_lap, mode='bayer',
     # Initialise camera and stage.
     camera.preview()
     stage = s.ScopeStage()
+
+    if backlash is None:
+        backlash = np.array([128, 128, 128])
 
     if mmt_range is None:
         mmt_range = [(1000, 20), (200, 10), (200, 10), (100, 12)]
@@ -365,9 +369,7 @@ def auto_focus(camera, sharpness_func=sharpness_lap, mode='bayer',
         positions = []
 
         # Initial capture
-        stage.focus_rel(-step * n / 2 - backlash)
-        stage.focus_rel(backlash)
-
+        stage.focus_rel(-step * n / 2)
         sharpness_list.append(sharpness_func(capture_func(greyscale=False,
                                                           mode=mode)))
         positions.append(stage.position[2])
@@ -376,7 +378,7 @@ def auto_focus(camera, sharpness_func=sharpness_lap, mode='bayer',
         for i in range(n):
             stage.focus_rel(step)
             raw_array = capture_func(greyscale=False, mode=mode)
-            (cropped, actual_percent) = proc.crop_centre(
+            (cropped, actual_percent) = proc.crop_section(
                 raw_array, crop_percent)
             compressed = proc.down_sample(cropped, pixel_block)
             sharpness_list.append(sharpness_lap(compressed))
@@ -384,8 +386,7 @@ def auto_focus(camera, sharpness_func=sharpness_lap, mode='bayer',
 
         # Move to where the sharpness is maximised and measure about it.
         new_position = np.argmax(sharpness_list)
-        stage.focus_rel(-(n - new_position) * step - backlash)
-        stage.focus_rel(backlash)
+        stage.focus_rel(-(n - new_position) * step)
 
         data_arr = np.vstack((positions, sharpness_list)).T
         autofocus_data.add_data(data_arr, tests, '', attrs={

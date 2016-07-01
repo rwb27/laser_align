@@ -8,7 +8,7 @@ import gen_helpers as h
 from image_mmts import get_res
 
 
-def crop_centre(bgr_arr, frac):
+def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
     """Crops the central portion of the image by a specified amount.
     :param bgr_arr: The 3D image array to split, in the format (no. of row
     pixels in image, no. of column pixels in image, 3 BGR values).
@@ -16,14 +16,30 @@ def crop_centre(bgr_arr, frac):
     y) to retain. For example, x_frac = 30, y_frac = 50 would result in a
     cropped image 15% either side of the centre along x and 25% either side of
     the centre along y.
+    :param centre_frac: The centre of the cropped image relative to the main
+    image, as a fraction of the (x, y) length of the main image with origin
+    at (0, 0). For example, (1/2., 1/4.) would result in the cropped image
+    being centred on the top edge of the main image, 3/4 of the way along
+    the edge from the top left corner. Checks exist to ensure the crop
+    covers only the range of the main image.
     :return: The cropped image BGR array."""
 
     (x_res, y_res) = get_res(bgr_arr)[:2]
-    crop = bgr_arr[_frac_round(y_res, frac)[0]: _frac_round(y_res, frac)[1],
-           _frac_round(x_res, frac)[0]: _frac_round(x_res, frac)[1], :]
+    if type(frac) is not tuple:
+        frac = (frac, frac)
+    for each in frac:
+        assert each >= 0, "{} is an invalid fraction of the image to " \
+                          "crop.".format(each)
+    for each in centre_frac:
+        assert -1/2. <= each <= 1/2., "Centre lies outside range of image."
+
+    crop = bgr_arr[_frac_round(y_res, frac[1], centre_frac[1])[0]:
+                   _frac_round(y_res, frac[1], centre_frac[1])[1],
+                   _frac_round(x_res, frac[0], centre_frac[0])[0]:
+                   _frac_round(x_res, frac[0], centre_frac[0])[1], :]
 
     actual_fraction = float(crop.size)/bgr_arr.size * 100
-    print r'Cropped the centre {}% of image.'.format(actual_fraction)
+    print r'Cropped the centre_frac {}% of image.'.format(actual_fraction)
     return crop, actual_fraction
 
 
@@ -79,10 +95,23 @@ def down_sample(array, factor_int):
     return binned
 
 
-def _frac_round(number, frac):
-    """Function to aid readability, used in crop_centre."""
+def _frac_round(number, frac, centre_frac):
+    """Function to aid readability, used in crop_section. Note that frac and
+    centre_frac are individual elements of the tuples defined in
+    crop_section."""
     frac /= 100.
-    return int(np.round(number/2.*(1-frac))), int(np.round(number/2.*(1+frac)))
+    lower_bound = (number/2.*(1-frac)) + (number * float(centre_frac))
+    upper_bound = (number/2.*(1+frac)) + (number * float(centre_frac))
+
+    if lower_bound < 0:
+        lower_bound = 0
+        raise Warning('Lower bound of cropped image exceeds main image '
+                      'dimensions. Setting it to start of main image.')
+    if upper_bound > number:
+        upper_bound = 1
+        raise Warning('Upper bound of cropped image exceeds main image '
+                      'dimensions. Setting it to end of main image.')
+    return int(np.round(lower_bound)), int(np.round(upper_bound))
 
 
 def _get_pixel_step(res, num_sub_imgs):

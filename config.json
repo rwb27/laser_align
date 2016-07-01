@@ -1,0 +1,24 @@
+{
+	"Resolution":		[640, 480],
+	"Pi camera width":	2592,
+    "Pi camera height":	1944,
+	"Greyscale":		False,
+	"Video port":		True,
+	"Image mode":		"bayer",
+	
+	# From find_template
+	"centre_mass":      True, 
+	"cross_corr":		True, 
+	"tolerance":		0.05,
+	"decimal":			False,
+    
+	# From auto focus function
+	"sharpness_func":	"sharpness_lap", 
+	"mode":				"bayer",
+    "mmt_range":		None, 
+	"backlash":			None, 
+	"res":				[640, 480],
+	"crop_percent":		50, 
+	"pixel_block":		4
+
+}

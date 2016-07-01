@@ -1,7 +1,8 @@
 """Makes image out of focus for testing."""
 
-import smbus
+import scope_stage
 
-z = -30000
-bus = smbus.SMBus(1)
-bus.write_byte_data(0x6a, z >>8, z & 255)
+stage = scope_stage.ScopeStage()
+
+stage.move_rel([0, 0, 28872])
+
