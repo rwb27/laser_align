@@ -4,14 +4,16 @@ microscope. Adapted from the script by James Sharkey, 2015, which was used for
 the paper in Review of Scientific Instruments titled: A one-piece 3D printed
 flexure translation stage for open-source microscopy."""
 
-import h5py
 import datetime
 import numpy as np
+import h5py
+import simplejson as json
+from jsmin import jsmin
 
 
 class Datafile:
 
-    _DEFAULT_FILE = "microscope_datafile"
+    _DEFAULT_FILE = "datafile"
 
     def __init__(self, filename=None):
         """A class to manage a hdf5 datafile.
@@ -98,3 +100,16 @@ class Datafile:
 
     def __del__(self):
         self._close()
+
+
+def config_read(json_file):
+    """Parses a JSON config file with comments and returns the output
+    dictionary.
+    :param json_file: The JSON file name, ending in .json."""
+    with open(json_file) as js_file:
+        no_comments = jsmin(js_file.read(), quote_chars="'\"`")
+    return json.loads(no_comments)
+
+
+if __name__ == '__main__':
+    print config_read('./configs/microscope_defaults.json')

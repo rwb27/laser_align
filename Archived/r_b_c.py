@@ -16,7 +16,7 @@ import random
 import time
 import cv2
 
-m = microscope.MicroscopeGUI(filename="repeatability_backlash_corrected.hdf5") # create a microscope object
+m = microscope.ScopeGUI(filename="repeatability_backlash_corrected.hdf5") # create a microscope object
 m.camera.preview() # start the camera preview window
 
 # we correct for backlash by moving away and back again, such that we are
