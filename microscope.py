@@ -1,37 +1,28 @@
 """microscope.py
-This script contains all the classes required to make the microscope
-work. This includes the abstract Camera and ScopeStage classes and
-their combination into a single Microscope class that allows both to be
-controlled together. It is based on the script by James Sharkey, which was used
-for the paper in Review of Scientific Instruments titled: A one-piece 3D
-printed flexure translation stage for open-source microscopy. NOTE: Whenever
-using microscope.py, ensure that its module-wide variable 'defaults' is
-correctly defined."""
+This script combines the Camera and ScopeStage classes into a single Microscope
+class that can be controlled together. It is based on the script by James
+Sharkey, which was used for the paper in Review of Scientific Instruments
+titled: A one-piece 3D printed flexure translation stage for open-source
+microscopy."""
 
-import smbus
-import io
-import sys
+# The microscope may be slow to be created; it must wait for the camera, stage
+# and the datafile to be ready for use.
 import numpy as np
-from scipy import ndimage
 import cv2
 import datetime
 import time
-import gen_helpers as gen
-import data_io
+import camera
+import scope_stage as s
+import data_output
 import image_proc as proc
 # import twoLED
-try:
-    import picamera
-    import picamera.array
-except ImportError:
-    pass  # Don't fail on error; simply force cv2 camera later
-
-# Read defaults from config file.
-defaults = data_io.config_read('./configs/microscope_defaults.json')
 
 
-class ScopeGUI:
-    """Class to control the GUI used for the microscope."""
+class MicroscopeGUI:
+    """Class to control the GUI used for the microscope, developed by James
+    Sharkey. The class Microscope (below) is used to combine the Camera and
+    ScopeStage classes, which is more useful when this GUI is not being
+    used."""
 
     # Key codes for Windows (W) and Linux (L), to allow conversion:
     _GUI_W_KEYS = {2490368: "UP", 2621440: "DOWN", 2424832: "LEFT",
@@ -47,15 +38,13 @@ class ScopeGUI:
     _GUI_KEY_ENTER = 13
 
     # Other useful constants:
-    _ARROW_STEP_SIZE = defaults["key_stepsize"]
+    _ARROW_STEP_SIZE = 1000
 
-    def __init__(self, width=defaults["resolution"][0],
-                 height=defaults["resolution"][1], cv2camera=False,
-                 channel=defaults["channel"],
-                 filename=defaults["filename"]):
-        """Optionally specify a width and height for Camera object, the channel
-        for the Stage object and a filename for the attached datafile.
-        cv2camera allows non-RPi systems to be tested also."""
+    def __init__(self, width=640, height=480, cv2camera=False,
+                 channel=1, filename=None):
+        """Creates a new MicroscopeGUI containing a Camera and Stage object.
+        - Optionally specify a width and height for Camera object, the channel
+        for the Stage object and a filename for the attached datafile."""
 
         # Create a new Microscope object.
         self.microscope = Microscope(width, height, cv2camera, channel,
@@ -76,7 +65,7 @@ class ScopeGUI:
         self.template_selection = None
 
     def __del__(self):
-        """Closes the attached objects properly by deleting them."""
+        # Close the attached objects properly by deleting them
         cv2.destroyAllWindows()
         del self.microscope
 
@@ -140,11 +129,11 @@ class ScopeGUI:
             else:
                 # The 0xFF allows ordinary Linux keys to work too
                 keypress &= 0xFF
-
             # Now process the keypress:
-            if keypress == ord(defaults["exit"]):
+                # The x key will exit the GUI and close it
+            if keypress == ord('x'):
                 self._gui_quit = True
-            elif keypress == ord(defaults["save"]):
+            elif keypress == ord('g'):
                 # The g key will 'grab' (save) the box region or the whole
                 # frame if nothing selected.
                 fname = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -157,32 +146,33 @@ class ScopeGUI:
                            self._gui_sel[0]: self._gui_sel[0]+w]
                     cv2.imwrite("microscope_img_%s.jpg" % fname, crop)
 
-            elif keypress == ord(defaults["save_stored_image"]):
+            elif keypress == ord('t'):
                 # The t key will save the stored template image.
                 fname = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 cv2.imwrite("template_%s.jpg" % fname, self.template_selection)
-            elif keypress == ord(defaults["stop_tracking"]):
-                # Reset the template selection box and stop tracking.
+            elif keypress == self._GUI_KEY_SPACE:
+                # The space bar will reset the template selection box and
+                # stop tracking.
                 self._stop_gui_tracking()
             # QWEASD for 3D motion: WASD are motion in +y, -x, -y,
             # +x directions, QE are motion in +z, -z directions. Note these
             # need to be CHANGED DEPENDING ON THE CAMERA ORIENTATION. NOT
             # SURE ABOUT Q AND E YET.
-            elif keypress == ord(defaults["+x"]):
+            elif keypress == ord('s'):
                 # The arrow keys will move the stage
                 self.microscope.stage.move_rel([self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == ord(defaults["-x"]):
+            elif keypress == ord('w'):
                 self.microscope.stage.move_rel([-self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == ord(defaults["+y"]):
+            elif keypress == ord('d'):
                 self.microscope.stage.move_rel([0, self._ARROW_STEP_SIZE, 0])
-            elif keypress == ord(defaults["-y"]):
+            elif keypress == ord('a'):
                 self.microscope.stage.move_rel([0, -self._ARROW_STEP_SIZE, 0])
-            elif keypress == ord(defaults["-z"]):
+            elif keypress == ord('q'):
                 self.microscope.stage.move_rel([0, 0, -self._ARROW_STEP_SIZE])
-            elif keypress == ord(defaults["+z"]):
+            elif keypress == ord('e'):
                 self.microscope.stage.move_rel([0, 0, self._ARROW_STEP_SIZE])
-            elif keypress == ord(defaults["invert_colour"]):
-                # Inverts the selection box colour.
+            elif keypress == ord('i'):
+                # The i key inverts the selection box colour.
                 if self._gui_color == (0, 0, 0):
                     self._gui_color = (255, 255, 255)  # White
                 else:
@@ -225,7 +215,7 @@ class ScopeGUI:
         # The selection is top left to bottom right.
         self._gui_sel = (x1, y1, x2, y2)
 
-    def _on_gui_mouse(self, event, x, y, flags):
+    def _on_gui_mouse(self, event, x, y, flags, param):
         """Code to run on mouse action on GUI preview image."""
         # This is the bounding box selection: the start, end and
         # intermediate parts respectively.
@@ -275,39 +265,29 @@ class ScopeGUI:
         while not self._gui_quit:
             self._read_gui_track_bars()
             self._update_gui()
-
-        # Triggered when the GUI quit key is pressed.
-        # self.microscope.stage.centre_stage() Uncomment to move scope back
-        # to original position upon closing.
+        self.microscope.stage.centre_stage()
         cv2.destroyWindow('Preview')
         cv2.destroyWindow('Controls')
         self._gui_quit = False  # This allows restarting of the GUI
 
 
 class Microscope:
-    """Class to combine camera and stage into a single usable class. The
-    microscope may be slow to be created; it must wait for the camera,
-    stage and the datafile to be ready for use."""
 
-    _UM_PER_PIXEL = defaults["microns_per_pixel"]
-    _CAMERA_TO_STAGE_MATRIX = np.array(defaults["camera_stage_transform"])
+    # Spatial conversions from pixels to microns. This needs to be updated
+    # by hand.
+    _UM_PER_PIXEL = 0.4846
 
-    def __init__(self, width=defaults["resolution"][0],
-                 height=defaults["resolution"][1], cv2camera=False,
-                 channel=defaults["channel"],
-                 filename=defaults["filename"]):
-        """Create the Microscope object containing a camera, stage and
-        datafile. Use this instead of using the Camera and ScopeStage classes!
-        :param width: Resolution along x.
-        :param height: " along y.
-        :param cv2camera: Set to True if cv2-type camera will be used.
-        :param channel: Channel of I2C bus to connect to motors for the stage.
-        :param filename: The name of the data file."""
+    # Store a conversion matrix, can be updated with result of calibrate() if
+    # necessary.
+    _CAMERA_TO_STAGE_MATRIX = np.array([[5.2, 7.0], [6.3, -5.6]])
 
-        self.camera = Camera(width, height)
-        self.stage = ScopeStage(channel)
+    def __init__(self, width=640, height=480, cv2camera=False, channel=1,
+                 filename=None):
+        # Internal objects needed:
+        self.camera = camera.Camera(width, height, cv2camera)
+        self.stage = s.ScopeStage(channel)
         # self.light = twoLED.Lightboard()
-        self.datafile = data_io.Datafile(filename)
+        self.datafile = data_output.Datafile(filename)
 
     def __del__(self):
         del self.camera
@@ -330,6 +310,7 @@ class Microscope:
                 (camera_move[0] <= (width/2.0)))
         assert ((camera_move[1] >= -(height/2.0)) and
                 (camera_move[1] <= (height/2.0)))
+
         return camera_move, template_pos
 
     def camera_move_distance(self, camera_move):
@@ -442,380 +423,6 @@ class Microscope:
         return a
 
 
-class Camera:
-
-    (_FULL_RPI_WIDTH, _FULL_RPI_HEIGHT) = defaults["max_resolution"]
-
-    def __init__(self, width=defaults["resolution"][0],
-                 height=defaults["resolution"][1], cv2camera=False):
-        """An abstracted camera class. Use through the Microscope class
-        wherever possible.
-           - Optionally specify an image width and height.
-           - Choosing cv2camera=True allows testing on non RPi systems,
-             though code will detect if picamera is not present and assume
-             that cv2 must be used instead.
-           - Set greyscale to False if measurements are to be done with a
-           full colour image."""
-
-        if "picamera" not in sys.modules:  # If cannot use picamera, force cv2
-            cv2camera = True
-        self._usecv2 = cv2camera
-        self._view = False
-        self._camera = None
-        self._stream = None
-        self.latest_frame = None
-
-        # Check the resolution is valid.
-
-        if 0 < width <= self._FULL_RPI_WIDTH and 0 < height <= \
-                self._FULL_RPI_HEIGHT:
-            self.resolution = (width, height)
-        elif (width <= 0 or height <= 0) and not cv2camera:
-            # Negative dimensions - use full sensor
-            self.resolution = (self._FULL_RPI_WIDTH, self._FULL_RPI_HEIGHT)
-        else:
-            raise ValueError('Camera resolution has incorrect dimensions.')
-
-        if self._usecv2:
-            self._camera = cv2.VideoCapture(0)
-            self._camera.set(3, width)  # Set width
-            self._camera.set(4, height)  # Set height
-        else:
-            self._camera = picamera.PiCamera()
-            self._rgb_stream = picamera.array.PiRGBArray(self._camera)
-            self._bayer_stream = picamera.array.PiBayerArray(self._camera)
-            self._camera.resolution = (width, height)
-            self._fast_capture_iterator = None
-
-    def _close(self):
-        """Closes the camera devices correctly. Called on deletion, do not call
-         explicitly."""
-        del self.latest_frame
-
-        if self._usecv2:
-            self._camera.release()
-        else:
-            if self._fast_capture_iterator is not None:
-                del self._fast_capture_iterator
-            self._camera.close()
-            self._rgb_stream.close()
-
-    def __del__(self):
-        self._close()
-
-    def _cv2_frame(self, greyscale):
-        """Uses the cv2 VideoCapture method to obtain an image. Use get_frame()
-        to access."""
-        if not self._usecv2:
-            raise TypeError("_cv2_frame() should ONLY be used when camera is "
-                            "cv2.VideoCapture(0)")
-        # We seem to be one frame behind always. So simply get current frame by
-        # updating twice .
-        frame = self._camera.read()[1]
-        frame = self._camera.read()[1]
-        if greyscale:
-            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        return frame
-
-    def _jpeg_frame(self, greyscale, videoport):
-        """Captures via a jpeg, code may be adapted to save jpeg. Use
-        get_frame() to access."""
-
-        if self._fast_capture_iterator is not None:
-            raise Warning("_jpeg_frame cannot be used while use_iterator(True)"
-                          " is set.")
-
-        stream = io.BytesIO()
-        stream.seek(0)
-        self._camera.capture(stream, format='jpeg', use_video_port=videoport)
-        data = np.fromstring(stream.getvalue(), dtype=np.uint8)
-        frame = cv2.imdecode(data, 1)
-        return gen.make_greyscale(frame, greyscale)
-
-    def _bayer_frame(self, greyscale):
-        """Capture a raw bayer image, de-mosaic it and output a BGR numpy
-        array."""
-        # Normally bayer images are not processed via white balance, etc in
-        # the camera and are thus of much worse quality if this were done.
-        # But the combination of lenses in the Pi means that the reverse is
-        # true.
-        self._camera.capture(self._bayer_stream, 'jpeg', bayer=True)
-        frame = (self._bayer_stream.demosaic() >> 2).astype(np.uint8)
-        return gen.make_greyscale(frame, greyscale)
-
-    def _bgr_frame(self, greyscale, videoport):
-        """Captures straight to a BGR array object; a raw format. Use
-        get_frame() to access."""
-
-        if self._fast_capture_iterator is not None:
-            raise Warning("_bgr_frame cannot be used while use_iterator(True) "
-                          "is set.")
-        self._rgb_stream.seek(0)
-        self._camera.capture(self._rgb_stream, 'bgr', use_video_port=videoport)
-        frame = self._rgb_stream.array
-        return gen.make_greyscale(frame, greyscale)
-
-    def _fast_frame(self, greyscale):
-        """Captures really fast with the iterator method. Must be set up to run
-        using use_iterator(True). Use get_frame() to access."""
-        if self._fast_capture_iterator is None:
-            raise Warning("_fast_frame cannot be used while use_iterator(True)"
-                          " is not set.")
-        self._rgb_stream.seek(0)
-        self._fast_capture_iterator.next()
-        frame = self._rgb_stream.array
-        return gen.make_greyscale(frame, greyscale)
-
-    def preview(self):
-        """If using picamera, turn preview on and off."""
-        if not self._usecv2:
-            if self._view:
-                self._camera.stop_preview()
-                self._view = False
-            else:
-                self._camera.start_preview(fullscreen=False, window=(
-                    20, 20, int(640*1.5), int(480*1.5)))
-                self._view = True
-                time.sleep(2)   # Let the image be properly received.
-
-    def get_frame(self, greyscale=defaults["greyscale"],
-                  videoport=defaults["videoport"], mode=defaults["mode"]):
-        """Manages obtaining a frame from the camera device.
-            - Toggle greyscale to obtain either a grey frame or BGR colour one.
-            - Use videoport to select RPi option "use_video_port",
-            which speeds up capture of images but has an offset compared to not
-            using it.
-            - mode allows choosing RPi camera method; via a
-            compressed 'compressed', 'bgr' or 'bayer'. 'bgr' is less CPU
-            intensive than 'compressed'.
-            - If use_iterator(True) has been used to initiate the iterator
-            method of capture, this method will be overridden to use that,
-            regardless of jpg/array choice."""
-
-        if self._usecv2:
-            frame = self._cv2_frame(greyscale)
-        elif self._fast_capture_iterator is not None:
-            frame = self._fast_frame(greyscale)
-        elif mode == 'compressed':
-            frame = self._jpeg_frame(greyscale, videoport)
-        elif mode == 'bgr':
-            frame = self._bgr_frame(greyscale, videoport)
-        elif mode == 'bayer':
-            frame = self._bayer_frame(greyscale)
-        else:
-            raise ValueError('The parameter \'mode\' has an invalid value: '
-                             '{}.'.format(mode))
-        self.latest_frame = frame
-        return frame
-
-    def use_iterator(self, iterator=defaults["iterator"]):
-        """For the RPi camera only, use the capture_continuous iterator to
-        capture frames many times faster.
-           - Call this function with iterator=True to turn on the method, and
-           use get_frame() as usual. To turn off the iterator and allow
-           capture via jpeg/raw then call with iterator=False."""
-        if self._usecv2:
-            return
-        if iterator:
-            if self._fast_capture_iterator is None:
-                self._fast_capture_iterator = self._camera.capture_continuous(
-                    self._rgb_stream, 'bgr', use_video_port=True)
-        else:
-            self._fast_capture_iterator = None
-
-    def set_roi(self, (x, y, w, h)=(0, 0, -1, -1), normed=False):
-        """For the RPi camera only, set the Region of Interest on the sensor
-        itself.
-            - The tuple should be (x,y,w,gen) so x,y position then width and
-            height in pixels. Setting w,gen negative will use maximum size.
-            Reset by calling as set_roi().
-            - Take great care: changing this will change the camera coordinate
-            system, since the zoomed in region will be treated as the whole
-            image afterwards.
-            - Will NOT behave as expected if applied when already zoomed!
-            - Set normed to True to adjust raw normalise coordinates."""
-        if self._usecv2:
-            pass
-        else:
-            # TODO Binning and native resolution hard coding
-            (frame_w, frame_h) = self.resolution
-            if w <= 0:
-                w = frame_w
-            if h <= 0:
-                h = frame_h
-            if not normed:
-                self._camera.zoom = (x*1.0/frame_w, y*1.0/frame_h,
-                                     w*1.0/frame_w, h*1.0/frame_h)
-            else:
-                self._camera.zoom = (x, y, w, h)
-
-    def find_template(self, template, frame=None, bead_pos=(-1, -1), box_d=200,
-                      centre_mass=True, cross_corr=True, tolerance=0.05,
-                      decimal=False):
-        """Finds a dot given a camera and a template image. Returns a camera
-        coordinate for the centre of where the template has matched a part
-        of the image.
-        - Default behaviour is to search a 100x100px box at the centre of the
-        image.
-        - Providing a frame as an argument will allow searching of an existing
-        image, which avoids taking a frame from the camera.
-        - Specifying a bead_pos will centre the search on that location; use
-        when a previous location is known and bead has not moved. The camera
-        co-ordinate system should be used. Default is (-1,-1) which actually
-        looks at the centre.
-        - Specifying box_d allows the dimensions of the search box to be
-        altered. A negative or zero value will search the whole image. box_d
-        ought to be larger that the template dimensions.
-        - Toggle centremass to use Centre of Mass searching (default: True) or
-        Maximum Value (False).
-        - Use either Cross Correlation (cross_corr=True, the default) or
-        Square Difference (False) to find the likely position of the template.
-        - Fraction is the tolerance in the thresholding when filtering.
-        - decimal determines whether a float or int is returned."""
-
-        # If the template is a colour image (3 channels), make greyscale.
-        if len(template.shape) == 3:
-            template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-        if frame is None:
-            # The default mode is a bayer image.
-            frame = self.get_frame()
-        else:
-            frame = frame.copy()
-
-        # These offsets are needed to find position in uncropped image.
-        frame_x_off, frame_y_off = 0, 0
-        temp_w, temp_h = template.shape[::-1]
-        if box_d > 0:  # Only crop if box_d is positive
-            if bead_pos == (-1, -1):  # Search the centre if default:
-                frame_w, frame_h = frame.shape[::-1]
-                frame_x_off, frame_y_off = int(
-                    frame_w / 2 - box_d / 2), int(frame_h / 2 - box_d / 2)
-            else:  # Otherwise search centred on bead_pos
-                frame_x_off, frame_y_off = int(bead_pos[0] - box_d / 2), \
-                                           int(bead_pos[1] - box_d / 2)
-            frame = frame[frame_y_off: frame_y_off + box_d,
-                          frame_x_off: frame_x_off + box_d]
-
-        # Check the size of the frame is bigger than the template to avoid
-        # OpenCV Error:
-        frame_w, frame_h = frame.shape[::-1]
-        if (frame_w < temp_w) or (frame_h < temp_h):
-            raise RuntimeError("Template larger than Frame dimensions! %dx%d "
-                               "> %dx%d" % (temp_w, temp_h, frame_w, frame_h))
-
-        # If all good, then do the actual correlation:
-        # Use either Cross Correlation or Square Difference to match
-        if cross_corr:
-            corr = cv2.matchTemplate(frame, template, cv2.TM_CCORR_NORMED)
-        else:
-            corr = cv2.matchTemplate(frame, template, cv2.TM_SQDIFF_NORMED)
-            corr *= -1.0  # Actually want minima with this method so reverse
-            # values.
-        corr += (corr.max()-corr.min()) * tolerance - corr.max()
-        corr = cv2.threshold(corr, 0, 0, cv2.THRESH_TOZERO)[1]
-        if centre_mass:  # Either centre of mass:
-            peak = ndimage.measurements.center_of_mass(corr)
-            # Array indexing means peak has (y,x) not (x,y):
-            centre = (peak[1] + temp_w/2.0, peak[0] + temp_h/2.0)
-        else:  # or crudely using max pixel
-            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(corr)
-            centre = (max_loc[0] + temp_w/2.0, max_loc[1] + temp_h/2.0)
-        centre = (centre[0]+frame_x_off, frame_y_off+centre[1])
-
-        # To see what the correlations look like.
-        corr *= 255/corr.max()
-        cv2.imwrite("corr_%f.jpg" % time.time(), corr)
-        if not decimal:
-            centre = (int(centre[0]), int(centre[1]))
-        return centre
-
-
-class ScopeStage:
-    # Check these bounds.
-    _XYZ_BOUND = np.array(defaults["xyz_bound"])
-    _MICROSTEPS = defaults["microsteps"]  # How many micro-steps per step.
-
-    def __init__(self, channel=defaults["channel"]):
-        """Class representing a 3-axis microscope stage."""
-        self.bus = smbus.SMBus(channel)
-        time.sleep(3)
-        self.position = np.array([0, 0, 0])
-
-    def move_rel(self, vector, back=defaults["backlash"],
-                 override=defaults["override"]):
-        """Move the stage by (x,y,z) micro steps.
-        :param vector: The increment to move by along [x, y, z].
-        :param back: An array of the backlash along [x, y, z]. If None,
-        it is set to the default value of [128, 128, 128].
-        :param override: Set to True to ignore the limits set by _XYZ_BOUND,
-        otherwise an error is raised when the bounds are exceeded."""
-
-        # Check back has correct format.
-        assert np.all(back >= 0), "Backlash must >= 0 for all [x, y, z]."
-        back = gen.verify_vector(back)
-
-        r = gen.verify_vector(vector)
-
-        # Generate the list of movements to make. If back is [0, 0, 0],
-        # there is nly one motion to make.
-        movements = []
-        if np.any(back != np.zeros(3)):
-            # Subtract an extra amount where vector is negative.
-            r[r < 0] -= back[np.where(r < 0)]
-            r2 = np.zeros(3)
-            r2[r < 0] = back[np.where(r < 0)]
-            movements.append(r2)
-        movements.insert(0, r)
-
-        for movement in movements:
-            new_pos = np.add(self.position, movement)
-            # If all elements of the new position vector are inside bounds (OR
-            # overridden):
-            if np.all(np.less_equal(
-                    np.absolute(new_pos), self._XYZ_BOUND)) or override:
-                _move_motors(self.bus, *movement)
-                self.position = new_pos
-            else:
-                raise ValueError('New position is outside allowed range.')
-
-    def move_to_pos(self, final, over=defaults["override"]):
-        new_position = gen.verify_vector(final)
-        rel_mov = np.subtract(new_position, self.position)
-        return self.move_rel(rel_mov, override=over)
-
-    def focus_rel(self, z):
-        """Move the stage in the Z direction by z micro steps."""
-        self.move_rel([0, 0, z])
-
-    def centre_stage(self):
-        """Move the stage such that self.position is (0,0,0) which in theory
-        centres it."""
-        self.move_to_pos([0, 0, 0])
-
-    def current_pos(self):
-        print self.position
-
-    def _reset_pos(self):
-        # Hard resets the stored position, just in case things go wrong.
-        self.position = np.array([0, 0, 0])
-
-
-def _move_motors(bus, x, y, z):
-    """Move the motors for the connected module (addresses hardcoded) by a
-    certain number of steps.
-    :param bus: The smbus.SMBus object connected to appropriate i2c channel.
-    :param x: Move x-direction-controlling motor by specified number of steps.
-    :param y: "
-    :param z: "."""
-    [x, y, z] = [int(x), int(y), int(z)]
-
-    # The arguments for write_byte_data are: the I2C address of each motor,
-    # the register and how much to move it by.
-    # Currently hardcoded in, consider looking this up upon program run.
-    bus.write_byte_data(0x50, x >> 8, x & 255)
-    bus.write_byte_data(0x58, y >> 8, y & 255)
-    bus.write_byte_data(0x6a, z >> 8, z & 255)
-
-    # Empirical formula for how micro step values relate to rotational speed.
-    # This is only valid for the specific set of motors tested.
-    time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
+if __name__ == "__main__":
+    m = MicroscopeGUI()
+    m.run_gui()

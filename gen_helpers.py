@@ -51,3 +51,6 @@ def _factors(num):
         1, int(num ** 0.5) + 1) if num % j == 0)))
     factor_list.sort()
     return factor_list
+
+
+
