@@ -5,7 +5,7 @@ Functions to process and measure image features."""
 
 import numpy as np
 import gen_helpers as h
-from image_mmts import get_res
+from measurements import get_size
 
 
 def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
@@ -24,7 +24,7 @@ def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
     covers only the range of the main image.
     :return: The cropped image BGR array."""
 
-    (x_res, y_res) = get_res(bgr_arr)[:2]
+    (x_res, y_res) = get_size(bgr_arr)[:2]
     if type(frac) is not tuple:
         frac = (frac, frac)
     for each in frac:
@@ -39,7 +39,7 @@ def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
                    _frac_round(x_res, frac[0], centre_frac[0])[1], :]
 
     actual_fraction = float(crop.size)/bgr_arr.size * 100
-    print r'Cropped the centre_frac {}% of image.'.format(actual_fraction)
+    print r'Cropped {}% of image.'.format(actual_fraction)
     return crop, actual_fraction
 
 
@@ -52,7 +52,7 @@ def crop_img_into_n(bgr_arr, n):
     tuple of number of subimages per (row, column), list of lists of each
     sub-image array."""
 
-    [x_res, y_res, tot_res] = get_res(bgr_arr)
+    [x_res, y_res, tot_res] = get_size(bgr_arr)
 
     # Round n to the nearest factor of the total resolution so the image is
     # cropped while maintaining the same aspect ratio per crop.
@@ -75,7 +75,7 @@ def crop_img_into_n(bgr_arr, n):
     return [pixel_step, split_xy]
 
 
-def down_sample(array, factor_int):
+def down_sample(array, factor_int=4):
     """Down sample a numpy array, such that the total number of pixels is
     reduced by a factor of factor_int**2. This is done by grouping the
     pixels into square blocks and taking the average of each of the B, G, R

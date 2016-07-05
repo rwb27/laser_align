@@ -45,8 +45,10 @@ def sharpness_vs_position(pixel_step, list_of_arrs):
     return np.array(results)
 
 
-def get_res(bgr_arr):
-    """Get the x, y and total resolutions of the image in pixels.
+def get_size(bgr_arr):
+    """Get the x, y and total resolutions of the image in pixels. This is
+    subtly different to getting a camera's resolution because it acts on an
+    array, independently of any camera object.
     :param bgr_arr: The 3D array to split, with shape in the format (no. of
     row pixels in image, no. of column pixels in image, 3 BGR values). This
     is the format the images captured are in.

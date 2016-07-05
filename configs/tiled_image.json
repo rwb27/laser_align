@@ -1,0 +1,11 @@
+// Config file for tiled image generating function. Remaining parameters defined in microscope_defaults.json.
+
+{
+    "filename":     "tiled_images.hdf5",
+    "n":            10,     // The number of images per axis to take, i.e. generates an n x n images in total.
+    "steps":        500,    // The number of steps to take between each image.
+    "focus":        false,  // Whether to autofocus between each tile. For the first image, a full auto-focus is
+                            // performed, and a quick one on subsequent tiles.
+    "crop_percent": 50,
+    "pixel_block":  4
+}
