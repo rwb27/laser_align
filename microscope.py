@@ -88,15 +88,16 @@ class ScopeGUI:
     def _create_gui(self):
         """Initialises the things needed for the GUI."""
         # Create the necessary GUI elements
-        cv2.namedWindow('Preview', cv2.WINDOW_AUTOSIZE)
+        # cv2.namedWindow('Preview', cv2.WINDOW_AUTOSIZE)
         cv2.namedWindow('Controls', cv2.WINDOW_AUTOSIZE)
+        self.microscope.camera.preview()
         cv2.createTrackbar('Greyscale', 'Controls', 0, 1, self._gui_nothing)
         cv2.createTrackbar('Tracking', 'Controls', 0, 1, self._gui_nothing)
         # Set default values
         cv2.setTrackbarPos('Greyscale', 'Controls', 1)
         cv2.setTrackbarPos('Tracking', 'Controls', 0)
         # Add mouse functionality on image click:
-        cv2.setMouseCallback('Preview', self._on_gui_mouse)
+        # cv2.setMouseCallback('Preview', self._on_gui_mouse)
         # For the sake of speed, use the RPi iterator:
         self.microscope.camera.use_iterator(True)
 
@@ -119,18 +120,18 @@ class ScopeGUI:
     def _update_gui(self):
         """Run the code needed to update the GUI to latest frame."""
         # Take image if not paused:
-        if self._gui_pause_img is None:
-            self._gui_img = self.microscope.camera.get_frame(
-                greyscale=self._gui_greyscale)
-        else:
-            # If paused, use a fresh copy of the pause frame
-            self._gui_img = self._gui_pause_img.copy()
-
-        # Now do the tracking, before the rectangle is drawn!
-        if self._gui_tracking:
-            self._update_gui_tracker()
+        #if self._gui_pause_img is None:
+        #    self._gui_img = self.microscope.camera.get_frame(
+        #        greyscale=self._gui_greyscale)
+        #else:
+        #    # If paused, use a fresh copy of the pause frame
+        #    self._gui_img = self._gui_pause_img.copy()
+        #
+        ## Now do the tracking, before the rectangle is drawn!
+        #if self._gui_tracking:
+        #    self._update_gui_tracker()
         # Now process keyboard input:
-        keypress = cv2.waitKey(100)
+        keypress = cv2.waitKey()
 
         # Skip all the unnecessary if statements if no keypress
         if keypress != -1:
@@ -188,11 +189,11 @@ class ScopeGUI:
                 else:
                     self._gui_color = (0, 0, 0)        # Black
 
-        # Finally process the image, drawing boxes etc:
-        if self._gui_sel is not None:
-            cv2.rectangle(self._gui_img, (self._gui_sel[0], self._gui_sel[
-                1]), (self._gui_sel[2], self._gui_sel[3]), self._gui_color)
-        cv2.imshow('Preview', self._gui_img)
+                    # Finally process the image, drawing boxes etc:
+                    #if self._gui_sel is not None:
+                    #    cv2.rectangle(self._gui_img, (self._gui_sel[0], self._gui_sel[
+                    #        1]), (self._gui_sel[2], self._gui_sel[3]), self._gui_color)
+                    #cv2.imshow('Preview', self._gui_img)
 
     def _update_gui_tracker(self):
         """Code to update the position of the selection box if tracking is
@@ -225,49 +226,52 @@ class ScopeGUI:
         # The selection is top left to bottom right.
         self._gui_sel = (x1, y1, x2, y2)
 
-    def _on_gui_mouse(self, event, x, y, flags):
-        """Code to run on mouse action on GUI preview image."""
-        # This is the bounding box selection: the start, end and
-        # intermediate parts respectively.
-
-        if (event == cv2.EVENT_LBUTTONDOWN) and (self._gui_sel is None):
-            # Pause the display, and set initial coords for the bounding box:
-            self._gui_pause_img = self._gui_img
-            self._gui_drag_start = (x, y)
-            self._gui_sel = (x, y, x, y)
-
-        elif (event == cv2.EVENT_LBUTTONUP) and \
-                (self._gui_drag_start is not None):
-            # Finish setting the bounding box coords and unpause.
-            self._gui_sel = (min(self._gui_drag_start[0], x),
-                             min(self._gui_drag_start[1], y),
-                             max(self._gui_drag_start[0], x),
-                             max(self._gui_drag_start[1], y))
-
-            w, h = self._gui_sel[2] - self._gui_sel[0], \
-                self._gui_sel[3] - self._gui_sel[1]
-
-            self.template_selection = self._gui_pause_img[
-                                      self._gui_sel[1]: self._gui_sel[1]+h,
-                                      self._gui_sel[0]:self._gui_sel[0]+w]
-
-            if not self._gui_greyscale:
-                self.template_selection = cv2.cvtColor(self.template_selection,
-                                                       cv2.COLOR_BGR2GRAY)
-
-            self._gui_bead_pos = (int((self._gui_sel[0]+self._gui_sel[2])/2.0),
-                                  int((self._gui_sel[1]+self._gui_sel[3])/2.0))
-            self._gui_pause_img = None
-            self._gui_drag_start = None
-
-        elif (event == cv2.EVENT_MOUSEMOVE) and \
-                (self._gui_drag_start is not None) and \
-                (flags == cv2.EVENT_FLAG_LBUTTON):
-            # Set the bounding box to some intermediate value; don't unpause.
-            self._gui_sel = (min(self._gui_drag_start[0], x),
-                             min(self._gui_drag_start[1], y),
-                             max(self._gui_drag_start[0], x),
-                             max(self._gui_drag_start[1], y))
+    #def _on_gui_mouse(self, event, x, y, flags):
+    #    """Code to run on mouse action on GUI preview image."""
+    #    # This is the bounding box selection: the start, end and
+    #    # intermediate parts respectively.
+#
+    #    if (event == cv2.EVENT_LBUTTONDOWN) and (self._gui_sel is None):
+    #        # Pause the display, and set initial coords for the bounding box:
+    #        self._gui_pause_img = self._gui_img
+    #        self._gui_drag_start = (x, y)
+    #        self._gui_sel = (x, y, x, y)
+#
+    #    elif (event == cv2.EVENT_LBUTTONUP) and \
+    #            (self._gui_drag_start is not None):
+    #        # Finish setting the bounding box coords and unpause.
+    #        self._gui_sel = (min(self._gui_drag_start[0], x),
+    #                         min(self._gui_drag_start[1], y),
+    #                         max(self._gui_drag_start[0], x),
+    #                         max(self._gui_drag_start[1], y))
+#
+    #        w, h = self._gui_sel[2] - self._gui_sel[0], \
+    #            self._gui_sel[3] - self._gui_sel[1]
+#
+    #        self.template_selection = self._gui_pause_img[
+    #                                  self._gui_sel[1]: self._gui_sel[1]+h,
+    #                                  self._gui_sel[0]:self._gui_sel[0]+w]
+#
+    #        if not self._gui_greyscale:
+    #            self.template_selection = cv2.cvtColor(
+        # self.template_selection,
+    #                                                   cv2.COLOR_BGR2GRAY)
+#
+    #        self._gui_bead_pos = (int((self._gui_sel[0]+self._gui_sel[
+        # 2])/2.0),
+    #                              int((self._gui_sel[1]+self._gui_sel[
+        # 3])/2.0))
+    #        self._gui_pause_img = None
+    #        self._gui_drag_start = None
+#
+    #    elif (event == cv2.EVENT_MOUSEMOVE) and \
+    #            (self._gui_drag_start is not None) and \
+    #            (flags == cv2.EVENT_FLAG_LBUTTON):
+    #        # Set the bounding box to some intermediate value; don't unpause.
+    #        self._gui_sel = (min(self._gui_drag_start[0], x),
+    #                         min(self._gui_drag_start[1], y),
+    #                         max(self._gui_drag_start[0], x),
+    #                         max(self._gui_drag_start[1], y))
 
     def run_gui(self):
         """Run the GUI."""
@@ -279,8 +283,9 @@ class ScopeGUI:
         # Triggered when the GUI quit key is pressed.
         # self.microscope.stage.centre_stage() Uncomment to move scope back
         # to original position upon closing.
-        cv2.destroyWindow('Preview')
+        #cv2.destroyWindow('Preview')
         cv2.destroyWindow('Controls')
+        self.microscope.camera.preview()
         self._gui_quit = False  # This allows restarting of the GUI
 
 
@@ -290,7 +295,7 @@ class Microscope:
     stage and the datafile to be ready for use."""
 
     _UM_PER_PIXEL = defaults["microns_per_pixel"]
-    _CAMERA_TO_STAGE_MATRIX = np.array(defaults["camera_stage_transform"])
+    # CAMERA_TO_STAGE_MATRIX = np.array(defaults["camera_stage_transform"])
 
     def __init__(self, width=defaults["resolution"][0],
                  height=defaults["resolution"][1], cv2camera=False,
@@ -315,13 +320,17 @@ class Microscope:
         # del self.light
         del self.datafile
 
-    def camera_centre_move(self, template):
+    def camera_centre_move(self, template, mode=defaults["mode"]):
         """Code to return the movement in pixels needed to centre a template
         image, as well as the actual camera position of the template."""
-        width, height = self.camera.resolution
+        if mode == 'bayer':
+            width, height = self.camera.FULL_RPI_WIDTH, \
+                            self.camera.FULL_RPI_HEIGHT
+        else:
+            width, height = self.camera.resolution
+
         template_pos = self.camera.find_template(template, box_d=-1,
                                                  decimal=True)
-
         # The camera needs to move (-delta_x, -delta_y); given (0,0) is top
         # left, not centre as needed.
         camera_move = (-(template_pos[0] - (width/2.0)),
@@ -365,7 +374,7 @@ class Microscope:
         while ((self.camera_move_distance(camera_move)) > tolerance) and \
                 (iteration < max_iterations):
             iteration += 1
-            stage_move = np.dot(camera_move, self._CAMERA_TO_STAGE_MATRIX)  # Rotate to stage coords
+            stage_move = np.dot(camera_move, self.CAMERA_TO_STAGE_MATRIX)   # Rotate to stage coords
             stage_move = np.append(stage_move, [0], axis=1)                 # Append the z-component of zero
             stage_move = np.trunc(stage_move).astype(int)                   # Need integer microsteps (round to zero)
             self.stage.move_rel(stage_move)
@@ -378,7 +387,7 @@ class Microscope:
             iteration *= -1
         return iteration, np.array(camera_positions), np.array(stage_moves)
 
-    def calibrate(self, template=None, d=128):
+    def calibrate(self, template=None, d=1000):
         """Calibrate the stage-camera coordinates by finding the transformation
         between them.
         - If a template is specified, it will be used as the calibration track
@@ -392,13 +401,15 @@ class Microscope:
         self.camera.preview()
         pos = [np.array([d, d, 0]), np.array([d, -d, 0]),
                np.array([-d, -d, 0]), np.array([-d, d, 0])]
+        print "pos", pos
         camera_displacement = []
         stage_displacement = []
 
         # Move to centre (scope_stage takes account of backlash already).
         self.stage.move_to_pos([0, 0, 0])
         if template is None:
-            template = self.camera.get_frame()
+            # Default capture mode is bayer.
+            template = self.camera.get_frame(mode='compressed')
             # Crop the central 1/2 of the image - can replace by my central
             # crop function or the general crop function (to be written).
             template = proc.crop_section(template, 50)[0]
@@ -419,11 +430,14 @@ class Microscope:
             # measurements.
             self.stage.move_to_pos(np.add(init_stage_vector, p))
             time.sleep(1)
+            print "sleeping"
             cam_pos = np.array(self.camera.find_template(template, box_d=-1,
                                                          decimal=True))
             cam_pos = np.subtract(cam_pos, init_cam_pos)
+            print "subtraction", cam_pos
             stage_pos = np.subtract(self.stage.position[0:2],
                                     init_stage_pos)
+            print "stage_pos", stage_pos
             camera_displacement.append(cam_pos)
             stage_displacement.append(stage_pos)
         self.stage.centre_stage()
@@ -434,6 +448,7 @@ class Microscope:
         print camera_displacement
         stage_displacement = np.array(stage_displacement)
         print stage_displacement
+        # Is this definitely the matrix that we want?
         a, res, rank, s = np.linalg.lstsq(camera_displacement,
                                           stage_displacement)
         print "residuals:  ", res
@@ -444,7 +459,7 @@ class Microscope:
 
 class Camera:
 
-    (_FULL_RPI_WIDTH, _FULL_RPI_HEIGHT) = defaults["max_resolution"]
+    (FULL_RPI_WIDTH, FULL_RPI_HEIGHT) = defaults["max_resolution"]
 
     def __init__(self, width=defaults["resolution"][0],
                  height=defaults["resolution"][1], cv2camera=False):
@@ -467,12 +482,14 @@ class Camera:
 
         # Check the resolution is valid.
 
-        if 0 < width <= self._FULL_RPI_WIDTH and 0 < height <= \
-                self._FULL_RPI_HEIGHT:
+        if 0 < width <= self.FULL_RPI_WIDTH and 0 < height <= \
+                self.FULL_RPI_HEIGHT:
+            # Note this is irrelevant for bayer images which always capture
+            # at full resolution.
             self.resolution = (width, height)
         elif (width <= 0 or height <= 0) and not cv2camera:
             # Negative dimensions - use full sensor
-            self.resolution = (self._FULL_RPI_WIDTH, self._FULL_RPI_HEIGHT)
+            self.resolution = (self.FULL_RPI_WIDTH, self.FULL_RPI_HEIGHT)
         else:
             raise ValueError('Camera resolution has incorrect dimensions.')
 
@@ -566,6 +583,18 @@ class Camera:
         frame = self._rgb_stream.array
         return gen.make_greyscale(frame, greyscale)
 
+    def make_manual(self):
+        # Set ISO to the desired value
+        self._camera.iso = 100
+        # Wait for the automatic gain control to settle
+        time.sleep(2)
+        # Now fix the values
+        self._camera.shutter_speed = self._camera.exposure_speed
+        self._camera.exposure_mode = 'off'
+        g = self._camera.awb_gains
+        self._camera.awb_mode = 'off'
+        self._camera.awb_gains = g
+
     def preview(self):
         """If using picamera, turn preview on and off."""
         if not self._usecv2:
@@ -649,7 +678,8 @@ class Camera:
             else:
                 self._camera.zoom = (x, y, w, h)
 
-    def find_template(self, template, frame=None, bead_pos=(-1, -1), box_d=200,
+    def find_template(self, template, frame=None, bead_pos=(-1, -1),
+                      box_d=-1,
                       centre_mass=True, cross_corr=True, tolerance=0.05,
                       decimal=False):
         """Finds a dot given a camera and a template image. Returns a camera
@@ -678,7 +708,7 @@ class Camera:
             template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
         if frame is None:
             # The default mode is a bayer image.
-            frame = self.get_frame()
+            frame = self.get_frame(greyscale=True, mode='compressed')
         else:
             frame = frame.copy()
 
@@ -688,8 +718,8 @@ class Camera:
         if box_d > 0:  # Only crop if box_d is positive
             if bead_pos == (-1, -1):  # Search the centre if default:
                 frame_w, frame_h = frame.shape[::-1]
-                frame_x_off, frame_y_off = int(
-                    frame_w / 2 - box_d / 2), int(frame_h / 2 - box_d / 2)
+                frame_x_off, frame_y_off = int(frame_w / 2 - box_d / 2), int(
+                    frame_h / 2 - box_d / 2)
             else:  # Otherwise search centred on bead_pos
                 frame_x_off, frame_y_off = int(bead_pos[0] - box_d / 2), \
                                            int(bead_pos[1] - box_d / 2)
@@ -712,9 +742,13 @@ class Camera:
             corr *= -1.0  # Actually want minima with this method so reverse
             # values.
         corr += (corr.max()-corr.min()) * tolerance - corr.max()
+
+        """Use this section of the code for brightness centering."""
         corr = cv2.threshold(corr, 0, 0, cv2.THRESH_TOZERO)[1]
         if centre_mass:  # Either centre of mass:
+            # Get co-ordinates of peak from origin at top left of array.
             peak = ndimage.measurements.center_of_mass(corr)
+            """Ends here."""
             # Array indexing means peak has (y,x) not (x,y):
             centre = (peak[1] + temp_w/2.0, peak[0] + temp_h/2.0)
         else:  # or crudely using max pixel
@@ -724,9 +758,11 @@ class Camera:
 
         # To see what the correlations look like.
         corr *= 255/corr.max()
-        cv2.imwrite("corr_%f.jpg" % time.time(), corr)
+        #cv2.imwrite("corr_%f.jpg" % time.time(), corr)
         if not decimal:
             centre = (int(centre[0]), int(centre[1]))
+
+        print "tem plate found at {}".format(centre)
         return centre
 
 
@@ -808,6 +844,7 @@ def _move_motors(bus, x, y, z):
     :param y: "
     :param z: "."""
     [x, y, z] = [int(x), int(y), int(z)]
+    print "Moving by [{}, {}, {}]".format(x, y, z)
 
     # The arguments for write_byte_data are: the I2C address of each motor,
     # the register and how much to move it by.
@@ -819,3 +856,8 @@ def _move_motors(bus, x, y, z):
     # Empirical formula for how micro step values relate to rotational speed.
     # This is only valid for the specific set of motors tested.
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
+
+
+if __name__ == '__main__':
+    scope = ScopeGUI()
+    scope.run_gui()

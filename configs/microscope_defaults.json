@@ -14,7 +14,7 @@
 
     // Stage parameters.
     "channel":              1,                      // Varies depending on model of RPi used.
-    "xyz_bound":            [32000, 32000, 32000],  // Stage cannot be displaced by > [x_bound, y_bound, z_bound]
+    "xyz_bound":            [320000, 320000, 320000],  // Stage cannot be displaced by > [x_bound, y_bound, z_bound]
                                                     // microsteps from original position. Set 'override' to true to
                                                     // ignore these bounds.
     "microsteps":           16,         // Microsteps per step???

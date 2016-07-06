@@ -9,7 +9,7 @@ from measurements import get_size
 
 
 def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
-    """Crops the central portion of the image by a specified amount.
+    """Crops a portion of the image by a specified amount.
     :param bgr_arr: The 3D image array to split, in the format (no. of row
     pixels in image, no. of column pixels in image, 3 BGR values).
     :param frac: A tuple with the percentage of the image along (x,

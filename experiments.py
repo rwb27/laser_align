@@ -11,6 +11,9 @@ import data_io as d
 import image_proc as proc
 import measurements as m
 import microscope as micro
+import gen_helpers as h
+from scipy import ndimage
+import cv2
 
 
 def auto_focus(microscope, config='./configs/autofocus.json'):
@@ -117,3 +120,38 @@ def tiled(microscope, config='./configs/tiled_image.json'):
     except KeyboardInterrupt:
         print "Aborted, moving back to start"
         microscope.stage.move_to_pos([0, 0, 0])
+
+
+def detect_greyscaled():
+    scope = micro.Microscope(filename='centering.hdf5')
+    scope.camera.make_manual()
+    transform = scope.calibrate()
+    # transform = micro.defaults["camera_stage_transform"]
+    print transform
+    scope.camera.preview()
+    frame = scope.camera.get_frame(mode='compressed', greyscale=True)
+    # This is strongly affected by any other bright patches in the image -
+    # need a better way to distinguish the bright spot.
+    thresholded = cv2.threshold(frame, 180, 0, cv2.THRESH_TOZERO)[1]
+    gr = scope.datafile.new_group('centering')
+    scope.datafile.add_data(thresholded, gr, 'centering')
+    peak = ndimage.measurements.center_of_mass(thresholded)
+    print peak
+    half_dimensions = np.array(np.array(m.get_size(frame)[:2])/2., dtype=int)
+    print half_dimensions
+    # Note that the stage moves in x and y, so to calculate how much to move
+    # by to centre the spot, we need half_dimensions - peak.
+    thing = np.dot(half_dimensions - peak[::-1], transform)
+    print thing
+    move_by = np.concatenate((thing, np.array([0])))
+    print move_by
+    scope.stage.move_rel(move_by)
+    return
+
+    # TODO Find the centre of mass of the LED brightness. Threshold all
+    # TODO brightness below a certain value to zero, which stretches those
+    # TODO above this value. This co-ordinates for the bright blob. then use
+    # TODO move_rel to centre on it. Centre_on_template isn't needed.
+
+
+detect_greyscaled()

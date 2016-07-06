@@ -109,7 +109,3 @@ def config_read(json_file):
     with open(json_file) as js_file:
         no_comments = jsmin(js_file.read(), quote_chars="'\"`")
     return json.loads(no_comments)
-
-
-if __name__ == '__main__':
-    print config_read('./configs/microscope_defaults.json')
