@@ -3,9 +3,11 @@
 """image_proc.py
 Functions to process and measure image features."""
 
+import cv2
 import numpy as np
-import gen_helpers as h
-from measurements import get_size
+import helpers as h
+from helpers import frac_round
+from measurements import get_size, get_pixel_step, get_num_subimages
 
 
 def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
@@ -17,14 +19,14 @@ def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
     cropped image 15% either side of the centre along x and 25% either side of
     the centre along y.
     :param centre_frac: The centre of the cropped image relative to the main
-    image, as a fraction of the (x, y) length of the main image with origin
+    image, as a fraction of the (x, y) length of the main image with centre
     at (0, 0). For example, (1/2., 1/4.) would result in the cropped image
     being centred on the top edge of the main image, 3/4 of the way along
     the edge from the top left corner. Checks exist to ensure the crop
     covers only the range of the main image.
     :return: The cropped image BGR array."""
 
-    (x_res, y_res) = get_size(bgr_arr)[:2]
+    res = get_size(bgr_arr)[:2]
     if type(frac) is not tuple:
         frac = (frac, frac)
     for each in frac:
@@ -33,14 +35,36 @@ def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
     for each in centre_frac:
         assert -1/2. <= each <= 1/2., "Centre lies outside range of image."
 
-    crop = bgr_arr[_frac_round(y_res, frac[1], centre_frac[1])[0]:
-                   _frac_round(y_res, frac[1], centre_frac[1])[1],
-                   _frac_round(x_res, frac[0], centre_frac[0])[0]:
-                   _frac_round(x_res, frac[0], centre_frac[0])[1], :]
+    crop = bgr_arr[frac_round(res[1], frac[1], centre_frac[1])[0]:
+                   frac_round(res[1], frac[1], centre_frac[1])[1],
+                   frac_round(res[0], frac[0], centre_frac[0])[0]:
+                   frac_round(res[0], frac[0], centre_frac[0])[1], :]
 
     actual_fraction = float(crop.size)/bgr_arr.size * 100
     print r'Cropped {}% of image.'.format(actual_fraction)
     return crop, actual_fraction
+
+
+def crop_region(grey_arr, dims, centre_pixels=(0, 0)):
+    """Crops a region of a greyscaled array given a cropped image size and
+    centre.
+    :param grey_arr: The 3D image array to split, in the format (no. of row
+    pixels in image, no. of column pixels in image, 3 BGR values).
+    :param dims: A tuple of the dimensions of the cropped image along (x, y).
+    :param centre_pixels: The centre of the cropped image relative to the main
+    image in terms of the (x, y) length of the main image with centre
+    at (0, 0). For example, (280, 300) would result in the cropped image
+    being centred 280 pixels to the right of the centre and 300 pixels above.
+    :return: The cropped image array."""
+
+    res = get_size(grey_arr)[:2]
+    for i in range(2):
+        assert centre_pixels[i] + dims[i]/2. <= res[i]/2. and \
+               centre_pixels[i] - dims[i]/2. >= -res[i]/2.
+    return grey_arr[int(centre_pixels[1] - dims[1] / 2. + res[1] / 2.):
+                    int(centre_pixels[1] + dims[1] / 2. + res[1] / 2.),
+                    int(centre_pixels[0] - dims[0] / 2. + res[0] / 2.):
+                    int(centre_pixels[0] + dims[0] / 2. + res[0] / 2.)]
 
 
 def crop_img_into_n(bgr_arr, n):
@@ -59,8 +83,8 @@ def crop_img_into_n(bgr_arr, n):
     num_subimages = h.closest_factor(tot_res, n)
     print "Splitting image into {} sub-images.".format(num_subimages)
 
-    [x_subimgs, y_subimgs] = _get_num_subimages((x_res, y_res), num_subimages)
-    pixel_step = _get_pixel_step((x_res, y_res), (x_subimgs, y_subimgs))
+    [x_subimgs, y_subimgs] = get_num_subimages((x_res, y_res), num_subimages)
+    pixel_step = get_pixel_step((x_res, y_res), (x_subimgs, y_subimgs))
 
     # Split image along y, then x. Lists have been used here instead of
     # arrays because although it may be slower, memory leaks are less likely.
@@ -87,48 +111,32 @@ def down_sample(array, factor_int=4):
     factor_int = h.ccf(array.shape[0:2], factor_int)
     print "Using {} x {} pixel blocks for down-sampling.".format(factor_int,
                                                                  factor_int)
-    bin_y = np.mean(np.reshape(
-        array, (array.shape[0], array.shape[1]/factor_int, factor_int, 3),
-        order='C'), axis=2, dtype=np.uint16)
-    binned = np.mean(np.reshape(bin_y, (factor_int, array.shape[0]/factor_int,
-        array.shape[1]/factor_int, 3), order='F'), axis=0, dtype=np.uint16)
+    if len(array.shape) == 3:
+        # BGR array.
+        bin_y = np.mean(np.reshape(
+            array, (array.shape[0], array.shape[1]/factor_int, factor_int, 3),
+            order='C'), axis=2, dtype=np.uint16)
+        binned = np.mean(np.reshape(bin_y, (
+            factor_int, array.shape[0]/factor_int, array.shape[1]/factor_int,
+            3), order='F'), axis=0, dtype=np.uint16)
+    elif len(array.shape) == 2:
+        # Greyscale array.
+        bin_y = np.mean(np.reshape(
+            array, (array.shape[0], array.shape[1]/factor_int, factor_int),
+            order='C'), axis=2, dtype=np.uint16)
+        binned = np.mean(np.reshape(bin_y, (
+            factor_int, array.shape[0]/factor_int, array.shape[1]/factor_int),
+                                    order='F'), axis=0, dtype=np.uint16)
+    else:
+        raise ValueError('Array has incorrect dimensions.')
+
     return binned
 
 
-def _frac_round(number, frac, centre_frac):
-    """Function to aid readability, used in crop_section. Note that frac and
-    centre_frac are individual elements of the tuples defined in
-    crop_section."""
-    frac /= 100.
-    lower_bound = (number/2.*(1-frac)) + (number * float(centre_frac))
-    upper_bound = (number/2.*(1+frac)) + (number * float(centre_frac))
-
-    if lower_bound < 0:
-        lower_bound = 0
-        raise Warning('Lower bound of cropped image exceeds main image '
-                      'dimensions. Setting it to start of main image.')
-    if upper_bound > number:
-        upper_bound = 1
-        raise Warning('Upper bound of cropped image exceeds main image '
-                      'dimensions. Setting it to end of main image.')
-    return int(np.round(lower_bound)), int(np.round(upper_bound))
-
-
-def _get_pixel_step(res, num_sub_imgs):
-    """Calculates the number of pixels per subimage along x and y.
-    :param res: A tuple of the resolution of the main image along (x, y).
-    :param num_sub_imgs: A tuple of no. of subimages along x, y e.g. (4, 3).
-    :return: A tuple of (number of x pixels per sub-image, number of y
-    pixels per sub-image)."""
-    return res[0] / num_sub_imgs[0], res[1] / num_sub_imgs[1]
-
-
-def _get_num_subimages(res, tot_subimages):
-    """Returns a tuple of the number of subimages along x and y such that
-    aspect ratio is maintained.
-    :param res: (x_resolution, y_resolution).
-    :param tot_subimages: Total number of subimages to split the main image
-    into."""
-    x_split = np.sqrt(res[0] / res[1] * tot_subimages)
-    y_split = tot_subimages / x_split
-    return x_split, y_split
+def make_greyscale(frame, greyscale):
+    """Makes an image 'frame' greyscale if 'greyscale' is True."""
+    # TODO This function appears to flatten the array - it needs reshaping
+    # TODO if greyscale is True.
+    greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    print type(greyscaled)
+    return greyscaled if greyscale else frame

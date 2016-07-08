@@ -1,15 +1,27 @@
+#!/usr/bin/env python
+
 """Contains base-level functions that are required for the others to run."""
 
 import numpy as np
-import cv2
 
 
-def make_greyscale(frame, greyscale):
-    """Makes an image 'frame' greyscale if 'greyscale' is True."""
-    # TODO This function appears to flatten the array - it needs reshaping
-    # TODO if greyscale is True.
-    greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    return greyscaled if greyscale else frame
+def frac_round(number, frac, centre_frac):
+    """Function to aid readability, used in crop_section. Note that frac and
+    centre_frac are individual elements of the tuples defined in
+    crop_section."""
+    frac /= 100.
+    lower_bound = (number/2.*(1-frac)) + (number * float(centre_frac))
+    upper_bound = (number/2.*(1+frac)) + (number * float(centre_frac))
+
+    if lower_bound < 0:
+        lower_bound = 0
+        raise Warning('Lower bound of cropped image exceeds main image '
+                      'dimensions. Setting it to start of main image.')
+    if upper_bound > number:
+        upper_bound = 1
+        raise Warning('Upper bound of cropped image exceeds main image '
+                      'dimensions. Setting it to end of main image.')
+    return int(np.round(lower_bound)), int(np.round(upper_bound))
 
 
 def verify_vector(vector):
@@ -31,6 +43,11 @@ def closest_factor(f, n):
     """Returns the factor of f that is closest to n. If n is equidistant
     from two factors of f, the smallest of the two factors is returned."""
     return _one_disallowed(_factors(f), n)
+
+
+def passer(arr):
+    """Does nothing to a BGR/greyscale array."""
+    pass
 
 
 def _one_disallowed(factors, n):

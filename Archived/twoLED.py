@@ -8,8 +8,9 @@ A one-piece 3D printed flexure translation stage for open-source microscopy
 
 This script is released under the GNU General Public License v3.0
 """
-import RPi.GPIO as GPIO
 import time
+
+import RPi.GPIO as GPIO
 
 
 class Lightboard:

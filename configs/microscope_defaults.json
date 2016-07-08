@@ -1,7 +1,7 @@
 // Contains default parameters for the microscope (including the stage and camera).
 
 {
-    "filename":             "microscope_datafile",
+    "filename":             "./data/microscope_datafile",
 
     // Camera parameters.
 	"max_resolution":	    [2592, 1944],   // Tuples are not supported, use lists instead. Format is [x, y].

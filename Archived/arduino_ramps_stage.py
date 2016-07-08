@@ -12,8 +12,8 @@ This script is released under the GNU General Public License v3.0
 """
 # To use as a test class on a computer without a serial connection to an
 # Arduino stage: simply comment out all lines containing self._ser
-import serial
 import numpy as np
+import serial
 
 
 class Stage:

@@ -1,10 +1,9 @@
 """data_output.py
 Contains functions to output data appropriately."""
 
-import numpy as np
-from datetime import datetime
 import os
-import h5py
+from datetime import datetime
+import numpy as np
 
 
 def save_dat(arr, pref, comment=False, location='../Data', time=True,

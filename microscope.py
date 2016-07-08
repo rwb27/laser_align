@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """microscope.py
 This script contains all the classes required to make the microscope
 work. This includes the abstract Camera and ScopeStage classes and
@@ -8,17 +10,20 @@ printed flexure translation stage for open-source microscopy. NOTE: Whenever
 using microscope.py, ensure that its module-wide variable 'defaults' is
 correctly defined."""
 
-import smbus
+import datetime
 import io
 import sys
-import numpy as np
-from scipy import ndimage
-import cv2
-import datetime
 import time
-import gen_helpers as gen
+
+import cv2
+import numpy as np
+import smbus
+from scipy import ndimage
+
 import data_io
+import helpers as gen
 import image_proc as proc
+
 # import twoLED
 try:
     import picamera
@@ -46,7 +51,6 @@ class ScopeGUI:
     _GUI_KEY_SPACE = 32
     _GUI_KEY_ENTER = 13
 
-    # Other useful constants:
     _ARROW_STEP_SIZE = defaults["key_stepsize"]
 
     def __init__(self, width=defaults["resolution"][0],
@@ -295,21 +299,22 @@ class Microscope:
     stage and the datafile to be ready for use."""
 
     _UM_PER_PIXEL = defaults["microns_per_pixel"]
-    # CAMERA_TO_STAGE_MATRIX = np.array(defaults["camera_stage_transform"])
+    CAMERA_TO_STAGE_MATRIX = np.array(defaults["camera_stage_transform"])
 
     def __init__(self, width=defaults["resolution"][0],
                  height=defaults["resolution"][1], cv2camera=False,
                  channel=defaults["channel"],
-                 filename=defaults["filename"]):
+                 filename=defaults["filename"], man=False):
         """Create the Microscope object containing a camera, stage and
         datafile. Use this instead of using the Camera and ScopeStage classes!
         :param width: Resolution along x.
         :param height: " along y.
         :param cv2camera: Set to True if cv2-type camera will be used.
         :param channel: Channel of I2C bus to connect to motors for the stage.
-        :param filename: The name of the data file."""
+        :param filename: The name of the data file.
+        :param man: Whether to control pre-processing manually or not."""
 
-        self.camera = Camera(width, height)
+        self.camera = Camera(width, height, manual=man)
         self.stage = ScopeStage(channel)
         # self.light = twoLED.Lightboard()
         self.datafile = data_io.Datafile(filename)
@@ -399,9 +404,9 @@ class Microscope:
 
         # Set up the necessary variables:
         self.camera.preview()
+        gr = self.datafile.new_group('templates')
         pos = [np.array([d, d, 0]), np.array([d, -d, 0]),
                np.array([-d, -d, 0]), np.array([-d, d, 0])]
-        print "pos", pos
         camera_displacement = []
         stage_displacement = []
 
@@ -412,7 +417,10 @@ class Microscope:
             template = self.camera.get_frame(mode='compressed')
             # Crop the central 1/2 of the image - can replace by my central
             # crop function or the general crop function (to be written).
-            template = proc.crop_section(template, 50)[0]
+            frac = 80
+            template = proc.crop_section(template, frac)[0]
+            self.datafile.add_data(template, gr, 'template', attrs={
+                'crop_frac': frac})
         time.sleep(1)
 
         # Store the initial configuration:
@@ -448,12 +456,13 @@ class Microscope:
         print camera_displacement
         stage_displacement = np.array(stage_displacement)
         print stage_displacement
-        # Is this definitely the matrix that we want?
+
         a, res, rank, s = np.linalg.lstsq(camera_displacement,
                                           stage_displacement)
         print "residuals:  ", res
         print "norm:  ", np.linalg.norm(a)
         self.camera.preview()
+        self.CAMERA_TO_STAGE_MATRIX = a
         return a
 
 
@@ -462,7 +471,8 @@ class Camera:
     (FULL_RPI_WIDTH, FULL_RPI_HEIGHT) = defaults["max_resolution"]
 
     def __init__(self, width=defaults["resolution"][0],
-                 height=defaults["resolution"][1], cv2camera=False):
+                 height=defaults["resolution"][1], cv2camera=False,
+                 manual=False):
         """An abstracted camera class. Use through the Microscope class
         wherever possible.
            - Optionally specify an image width and height.
@@ -470,7 +480,9 @@ class Camera:
              though code will detect if picamera is not present and assume
              that cv2 must be used instead.
            - Set greyscale to False if measurements are to be done with a
-           full colour image."""
+           full colour image.
+           - manual specifies whether pre-processing (ISO, white balance,
+           exposure) are to be manually controlled or not."""
 
         if "picamera" not in sys.modules:  # If cannot use picamera, force cv2
             cv2camera = True
@@ -503,6 +515,10 @@ class Camera:
             self._bayer_stream = picamera.array.PiBayerArray(self._camera)
             self._camera.resolution = (width, height)
             self._fast_capture_iterator = None
+
+        if manual:
+            # This only works with RPi camera.
+            self.make_manual()
 
     def _close(self):
         """Closes the camera devices correctly. Called on deletion, do not call
@@ -547,7 +563,7 @@ class Camera:
         self._camera.capture(stream, format='jpeg', use_video_port=videoport)
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         frame = cv2.imdecode(data, 1)
-        return gen.make_greyscale(frame, greyscale)
+        return proc.make_greyscale(frame, greyscale)
 
     def _bayer_frame(self, greyscale):
         """Capture a raw bayer image, de-mosaic it and output a BGR numpy
@@ -558,7 +574,7 @@ class Camera:
         # true.
         self._camera.capture(self._bayer_stream, 'jpeg', bayer=True)
         frame = (self._bayer_stream.demosaic() >> 2).astype(np.uint8)
-        return gen.make_greyscale(frame, greyscale)
+        return proc.make_greyscale(frame, greyscale)
 
     def _bgr_frame(self, greyscale, videoport):
         """Captures straight to a BGR array object; a raw format. Use
@@ -570,7 +586,7 @@ class Camera:
         self._rgb_stream.seek(0)
         self._camera.capture(self._rgb_stream, 'bgr', use_video_port=videoport)
         frame = self._rgb_stream.array
-        return gen.make_greyscale(frame, greyscale)
+        return proc.make_greyscale(frame, greyscale)
 
     def _fast_frame(self, greyscale):
         """Captures really fast with the iterator method. Must be set up to run
@@ -581,7 +597,7 @@ class Camera:
         self._rgb_stream.seek(0)
         self._fast_capture_iterator.next()
         frame = self._rgb_stream.array
-        return gen.make_greyscale(frame, greyscale)
+        return proc.make_greyscale(frame, greyscale)
 
     def make_manual(self):
         # Set ISO to the desired value

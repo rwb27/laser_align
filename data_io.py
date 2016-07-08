@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """data_output.py
 This script contains classes and function to ease data output from the
 microscope. Adapted from the script by James Sharkey, 2015, which was used for
@@ -5,14 +7,13 @@ the paper in Review of Scientific Instruments titled: A one-piece 3D printed
 flexure translation stage for open-source microscopy."""
 
 import datetime
-import numpy as np
 import h5py
+import numpy as np
 import simplejson as json
 from jsmin import jsmin
 
 
 class Datafile:
-
     _DEFAULT_FILE = "datafile"
 
     def __init__(self, filename=None):
@@ -34,7 +35,7 @@ class Datafile:
             self._datafile = h5py.File(filename, 'a')
 
     def new_group(self, group, attrs=None):
-        """Create a new group with 'groupxxx' as the name, and returns it.
+        """Create a new group with 'group_xxx' as the name, and returns it.
         - A timestamp is automatically added.
         - Use add_data(...) to create a dataset; since this manages
         attributes correctly.
@@ -50,9 +51,9 @@ class Datafile:
             self._datafile = h5py.File(self._filename, 'a')
         keys = self._datafile.keys()
         n = 0
-        while group + "%03d" % n in keys:
+        while group + "_%03d" % n in keys:
             n += 1
-        group_path = group + "%03d" % n
+        group_path = group + "_%03d" % n
         g = self._datafile.create_group(group_path)
 
         self.add_attr(g, attrs)
@@ -75,9 +76,9 @@ class Datafile:
             n += 1
 
         dataset += "%05d" % n
-        dset = group_object.create_dataset(dataset, data=data_array)
+        d_set = group_object.create_dataset(dataset, data=data_array)
 
-        self.add_attr(dset, attrs)
+        self.add_attr(d_set, attrs)
         self._datafile.flush()
 
     @staticmethod

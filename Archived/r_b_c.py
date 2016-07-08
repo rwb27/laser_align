@@ -10,11 +10,12 @@ It was used for the paper in Review of Scientific Instruments titled:
 A one-piece 3D printed flexure translation stage for open-source microscopy 
 
 This script is released under the GNU General Public License v3.0."""
-import numpy as np
-import microscope
 import random
 import time
-import cv2
+
+import numpy as np
+
+import microscope
 
 m = microscope.ScopeGUI(filename="repeatability_backlash_corrected.hdf5") # create a microscope object
 m.camera.preview() # start the camera preview window
