@@ -21,7 +21,7 @@ import smbus
 from scipy import ndimage
 
 import data_io
-import helpers as gen
+import helpers as h
 import image_proc as proc
 
 # import twoLED
@@ -563,7 +563,7 @@ class Camera:
         self._camera.capture(stream, format='jpeg', use_video_port=videoport)
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         frame = cv2.imdecode(data, 1)
-        return proc.make_greyscale(frame, greyscale)
+        return h.make_greyscale(frame, greyscale)
 
     def _bayer_frame(self, greyscale):
         """Capture a raw bayer image, de-mosaic it and output a BGR numpy
@@ -574,7 +574,7 @@ class Camera:
         # true.
         self._camera.capture(self._bayer_stream, 'jpeg', bayer=True)
         frame = (self._bayer_stream.demosaic() >> 2).astype(np.uint8)
-        return proc.make_greyscale(frame, greyscale)
+        return h.make_greyscale(frame, greyscale)
 
     def _bgr_frame(self, greyscale, videoport):
         """Captures straight to a BGR array object; a raw format. Use
@@ -586,7 +586,7 @@ class Camera:
         self._rgb_stream.seek(0)
         self._camera.capture(self._rgb_stream, 'bgr', use_video_port=videoport)
         frame = self._rgb_stream.array
-        return proc.make_greyscale(frame, greyscale)
+        return h.make_greyscale(frame, greyscale)
 
     def _fast_frame(self, greyscale):
         """Captures really fast with the iterator method. Must be set up to run
@@ -597,7 +597,7 @@ class Camera:
         self._rgb_stream.seek(0)
         self._fast_capture_iterator.next()
         frame = self._rgb_stream.array
-        return proc.make_greyscale(frame, greyscale)
+        return h.make_greyscale(frame, greyscale)
 
     def make_manual(self):
         # Set ISO to the desired value
@@ -804,9 +804,9 @@ class ScopeStage:
 
         # Check back has correct format.
         assert np.all(back >= 0), "Backlash must >= 0 for all [x, y, z]."
-        back = gen.verify_vector(back)
+        back = h.verify_vector(back)
 
-        r = gen.verify_vector(vector)
+        r = h.verify_vector(vector)
 
         # Generate the list of movements to make. If back is [0, 0, 0],
         # there is nly one motion to make.
@@ -831,7 +831,7 @@ class ScopeStage:
                 raise ValueError('New position is outside allowed range.')
 
     def move_to_pos(self, final, over=defaults["override"]):
-        new_position = gen.verify_vector(final)
+        new_position = h.verify_vector(final)
         rel_mov = np.subtract(new_position, self.position)
         return self.move_rel(rel_mov, override=over)
 

@@ -76,9 +76,9 @@ def auto_focus(microscope):
         raise ValueError('Invalid sharpness function entered.')
 
     attributes['capture_func'] = micro.defaults["mode"]
-    autofocus_data = d.Datafile(filename=autofocus_defaults["filename"])
-    tests = autofocus_data.new_group(autofocus_defaults["group_name"],
-                                     attrs=attributes)
+    focus_data = microscope.datafile(filename=autofocus_defaults["filename"])
+    tests = focus_data.new_group(autofocus_defaults["group_name"],
+                                 attrs=attributes)
 
     # Take measurements and focus.
     for step, n in autofocus_defaults["mmt_range"]:
@@ -112,7 +112,7 @@ def auto_focus(microscope):
         microscope.stage.focus_rel(-(n - new_position) * step)
 
         data_arr = np.vstack((positions, sharpness_list)).T
-        autofocus_data.add_data(data_arr, tests, '', attrs={
+        focus_data.add_data(data_arr, tests, '', attrs={
             'Step size': step, 'Repeats': n,
             'Pixel block': autofocus_defaults["pixel_block"],
             'Actual percentage cropped': actual_percent})
@@ -152,8 +152,8 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
     attributes = {'n': n, 'steps': steps,
                   'backlash': micro.defaults["backlash"],
                   'focus': tiled_dict["focus"]}
-    tiled_data = d.Datafile(filename=tiled_dict["filename"])
-    image_set = tiled_data.new_group('tiled_image', attrs=attributes)
+
+    image_set = microscope.datafile.new_group('tiled_image', attrs=attributes)
 
     direction = 1
     microscope.stage.move_rel([-n / 2 * steps, -n / 2 * steps, 0])
@@ -170,7 +170,8 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
 
                 microscope.stage.move_rel([steps * direction, 0, 0])
                 time.sleep(0.5)
-                image = microscope.camera.get_frame(greyscale=True)
+                image = microscope.camera.get_frame(greyscale=False)
+                microscope.datafile.add_data(image, image_set, 'full_image')
 
                 # Post-process.
                 modified = image
@@ -181,15 +182,28 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
                             # Replace 'IMAGE_ARR' in each list by the image
                             # array.
                             function[index] = modified
+
+                    # Test code to save the cropped image before brightness
+                    # calculated.
+                    if func_list.index(function) == len(func_list) - 1:
+                        microscope.datafile.add_data(
+                            modified, image_set, 'img', attrs={
+                                'Position': microscope.stage.position,
+                                'Cropped size': 300})
+                        print "saved", modified.shape
                     modified = function[0](*function[1:])
+                    print 'mod', modified
 
                 # Save this array in HDF5 file.
                 if save_every_mmt:
-                    tiled_data.add_data(modified, image_set, 'img', attrs={
-                        'Position': microscope.stage.position,
-                        'Cropped size': 300})
+                    microscope.datafile.add_data(
+                        modified, image_set, 'img', attrs={
+                            'Position': microscope.stage.position,
+                            'Cropped size': 300})
                 else:
-                    results.append([microscope.stage.position, modified])
+                    results.append([microscope.stage.position[0],
+                                    microscope.stage.position[1],
+                                    microscope.stage.position[2], modified])
 
             microscope.stage.move_rel([0, steps, 0])
             direction *= -1
@@ -199,10 +213,8 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
 
         # Save results if they have been incrementally collected.
         if not save_every_mmt:
-            results = np.array(results)
-            tiled_data.add_data(results, image_set, 'img', attrs={
-                'Position': microscope.stage.position,
-                'Cropped size': 300})
+            results = np.array(results, dtype=np.float)
+            microscope.datafile.add_data(results, image_set, 'data')
 
     except KeyboardInterrupt:
         print "Aborted, moving back to start"
@@ -237,20 +249,19 @@ def centre_spot(scope):
     scope.datafile.add_data(cropped, gr, 'cropped')
     return
 
-    # TODO Find the centre of mass of the LED brightness. Threshold all
-    # TODO brightness below a certain value to zero, which stretches those
-    # TODO above this value. This co-ordinates for the bright blob. then use
-    # TODO move_rel to centre on it. Centre_on_template isn't needed.
-
 
 # Control pre-processing manually.
-scope = micro.Microscope(filename='spot_cropping.hdf5', man=True)
+scope = micro.Microscope(filename='dat.hdf5', man=True)
 scope.camera.preview()
-tiled(scope, func_list=[[pro.crop_region, 'IMAGE_ARR', (300, 300), (0, 0)],
-                        [pro.down_sample, 'IMAGE_ARR', tiled_dict[
-                            "pixel_block"]],
-                        [m.brightness, 'IMAGE_ARR']])
+tiled(scope)
 
+# func_list=[[pro.crop_section, 'IMAGE_ARR', (1/8., 1/8.), (0, 0)],
+                        #[pro.down_sample, 'IMAGE_ARR',
+                        # tiled_dict["pixel_block"]],
+                      #   [m.brightness, 'IMAGE_ARR']], save_every_mmt=False
+
+
+#centre_spot(scope)
 
 # Code to test the sharpness vs position plot, buts needs modification.
 #if __name__ == "__main__":

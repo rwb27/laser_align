@@ -3,10 +3,9 @@
 """image_proc.py
 Functions to process and measure image features."""
 
-import cv2
 import numpy as np
+
 import helpers as h
-from helpers import frac_round
 from measurements import get_size, get_pixel_step, get_num_subimages
 
 
@@ -35,10 +34,10 @@ def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
     for each in centre_frac:
         assert -1/2. <= each <= 1/2., "Centre lies outside range of image."
 
-    crop = bgr_arr[frac_round(res[1], frac[1], centre_frac[1])[0]:
-                   frac_round(res[1], frac[1], centre_frac[1])[1],
-                   frac_round(res[0], frac[0], centre_frac[0])[0]:
-                   frac_round(res[0], frac[0], centre_frac[0])[1], :]
+    crop = bgr_arr[h.frac_round(res[1], frac[1], centre_frac[1])[0]:
+                   h.frac_round(res[1], frac[1], centre_frac[1])[1],
+                   h.frac_round(res[0], frac[0], centre_frac[0])[0]:
+                   h.frac_round(res[0], frac[0], centre_frac[0])[1], :]
 
     actual_fraction = float(crop.size)/bgr_arr.size * 100
     print r'Cropped {}% of image.'.format(actual_fraction)
@@ -132,11 +131,6 @@ def down_sample(array, factor_int=4):
 
     return binned
 
-
-def make_greyscale(frame, greyscale):
-    """Makes an image 'frame' greyscale if 'greyscale' is True."""
-    # TODO This function appears to flatten the array - it needs reshaping
-    # TODO if greyscale is True.
-    greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    print type(greyscaled)
-    return greyscaled if greyscale else frame
+if __name__ == '__main__':
+    print crop_region(np.array([[1,2,3,4,5,6],[7,8,9,10,11,12],[13,14,15,16,17,
+                                                         18]]),(2, 1))

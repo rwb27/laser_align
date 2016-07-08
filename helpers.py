@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Contains base-level functions that are required for the others to run."""
-
+import cv2
 import numpy as np
 
 
@@ -45,8 +45,8 @@ def closest_factor(f, n):
     return _one_disallowed(_factors(f), n)
 
 
-def passer(arr):
-    """Does nothing to a BGR/greyscale array."""
+def passer(*args):
+    """Does nothing; the empty function object."""
     pass
 
 
@@ -68,3 +68,12 @@ def _factors(num):
         1, int(num ** 0.5) + 1) if num % j == 0)))
     factor_list.sort()
     return factor_list
+
+
+def make_greyscale(frame, greyscale):
+    """Makes an image 'frame' greyscale if 'greyscale' is True."""
+    # TODO This function appears to flatten the array - it needs reshaping
+    # TODO if greyscale is True.
+    greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    print type(greyscaled)
+    return greyscaled if greyscale else frame
