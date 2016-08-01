@@ -75,5 +75,4 @@ def make_greyscale(frame, greyscale):
     # TODO This function appears to flatten the array - it needs reshaping
     # TODO if greyscale is True.
     greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    print type(greyscaled)
     return greyscaled if greyscale else frame

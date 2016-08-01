@@ -5,12 +5,20 @@ Contains functions to perform a set of measurements and output the results
 to a datafile or graph. These functions are built on top of measurements.py,
 microscope.py, image_proc.py and data_io.py and come with their own JSON
 config files. NOTE: Whenever using microscope.py, ensure that its module-wide
-variable 'defaults' is correctly defined."""
+variable 'defaults' is correctly defined.
+
+Usage:
+    experiments.py autofocus
+    experiments.py centre
+    experiments.py tiled
+"""
 
 import time
 import cv2
 import numpy as np
 from scipy import ndimage
+import matplotlib.pyplot as plt
+from time import localtime
 
 import data_io as d
 import helpers as h
@@ -18,6 +26,7 @@ import image_proc as pro
 import measurements as m
 import microscope as micro
 from measurements import sharpness_lap
+from docopt import docopt
 
 # Read the relevant config files. microscope_defaults.json is used to
 # set everything about the microscope (see microscope.py), and
@@ -76,7 +85,7 @@ def auto_focus(microscope):
         raise ValueError('Invalid sharpness function entered.')
 
     attributes['capture_func'] = micro.defaults["mode"]
-    focus_data = microscope.datafile(filename=autofocus_defaults["filename"])
+    focus_data = d.Datafile(filename=autofocus_defaults["filename"])
     tests = focus_data.new_group(autofocus_defaults["group_name"],
                                  attrs=attributes)
 
@@ -134,13 +143,15 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
     3, 4]).
     - If the modified array for the image being taken is an argument,
     use the placeholder 'IMAGE_ARR' instead of it - this string will be
-    replaced by the image array during execution.
+    replaced by the modified image array during execution.
     - Each of the functions in the list must return only the processed image
     array.
     :param save_every_mmt: Save every measurement immediately after it has
     been taken. Otherwise, the entire set of measurements will be saved at
     the end.
     :return: A combined array of the tiled image."""
+
+    microscope.camera.preview()
 
     # Set mutable default values.
     if func_list is None:
@@ -161,10 +172,12 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
         # A set of results to be collected if save_every_mmt is False.
         results = []
 
-        # For each position in the range specified, take an image, applied
+        # For each position in the range specified, take an image, apply
         # all the functions in func_list on it, then either save the
         # measurement if save_every_mmt is true, or append the calculation
         # to a results file and save it all at the end.
+        prev_image = None
+        prev_modified_image = None
         for j in range(n):
             for i in range(n):
 
@@ -172,27 +185,21 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
                 time.sleep(0.5)
                 image = microscope.camera.get_frame(greyscale=False)
                 microscope.datafile.add_data(image, image_set, 'full_image')
-
+                assert image is not prev_image, "image didn't change"
+                prev_image = image
                 # Post-process.
                 modified = image
 
-                for function in func_list:
-                    for index, item in enumerate(function):
-                        if item == 'IMAGE_ARR':
-                            # Replace 'IMAGE_ARR' in each list by the image
-                            # array.
-                            function[index] = modified
+                #modified = pro.crop_section(modified, (12.5, 12.5))[0]
+                #modified = m.brightness(modified)
 
-                    # Test code to save the cropped image before brightness
-                    # calculated.
-                    if func_list.index(function) == len(func_list) - 1:
-                        microscope.datafile.add_data(
-                            modified, image_set, 'img', attrs={
-                                'Position': microscope.stage.position,
-                                'Cropped size': 300})
-                        print "saved", modified.shape
-                    modified = function[0](*function[1:])
-                    print 'mod', modified
+                for function in func_list:
+                    modified = function(modified)
+
+                    if type(modified) is tuple:
+                        # Hacky solution to get around crop-section having a
+                        # tuple output. TODO: Modify crop-section to stop this.
+                        modified = modified[0]
 
                 # Save this array in HDF5 file.
                 if save_every_mmt:
@@ -214,6 +221,7 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
         # Save results if they have been incrementally collected.
         if not save_every_mmt:
             results = np.array(results, dtype=np.float)
+            print "results", results
             microscope.datafile.add_data(results, image_set, 'data')
 
     except KeyboardInterrupt:
@@ -250,18 +258,37 @@ def centre_spot(scope):
     return
 
 
-# Control pre-processing manually.
-scope = micro.Microscope(filename='dat.hdf5', man=True)
-scope.camera.preview()
-tiled(scope)
-
-# func_list=[[pro.crop_section, 'IMAGE_ARR', (1/8., 1/8.), (0, 0)],
-                        #[pro.down_sample, 'IMAGE_ARR',
-                        # tiled_dict["pixel_block"]],
-                      #   [m.brightness, 'IMAGE_ARR']], save_every_mmt=False
+def bake_in_args(fun, args=[], kwargs={}, position_to_pass_through=0):
+    def wrapped(image):
+        return fun(*(args[:position_to_pass_through] + [image] +
+                     args[(position_to_pass_through+1):]),
+                   **kwargs)
+    return wrapped
 
 
-#centre_spot(scope)
+if __name__ == '__main__':
+    # Control pre-processing manually.
+    args = docopt(__doc__)
+    print args
+
+    scope = micro.Microscope(filename='dat.hdf5', man=True)
+
+    # Calculate brightness of central spot by taking a tiled section of
+    # images, cropping the central 1/64, down sampling the bayer image.
+    # Return an array of the positions and the brightness.
+    fun_list = [bake_in_args(pro.crop_section,
+                             args=['IMAGE_ARR', (12.5, 12.5), (0, 0)]),
+                bake_in_args(m.brightness, args=['IMAGE_ARR'])]
+
+    if args['autofocus']:
+        auto_focus(scope)
+    elif args['centre']:
+        centre_spot(scope)
+    elif args['tiled']:
+        tiled(scope, func_list=fun_list, save_every_mmt=False)
+
+
+
 
 # Code to test the sharpness vs position plot, buts needs modification.
 #if __name__ == "__main__":

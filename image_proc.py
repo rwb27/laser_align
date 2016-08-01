@@ -39,6 +39,7 @@ def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
                    h.frac_round(res[0], frac[0], centre_frac[0])[0]:
                    h.frac_round(res[0], frac[0], centre_frac[0])[1], :]
 
+    print crop.size, bgr_arr.size
     actual_fraction = float(crop.size)/bgr_arr.size * 100
     print r'Cropped {}% of image.'.format(actual_fraction)
     return crop, actual_fraction
@@ -111,7 +112,7 @@ def down_sample(array, factor_int=4):
     print "Using {} x {} pixel blocks for down-sampling.".format(factor_int,
                                                                  factor_int)
     if len(array.shape) == 3:
-        # BGR array.
+        # BGR array. Why is dtype uint16?
         bin_y = np.mean(np.reshape(
             array, (array.shape[0], array.shape[1]/factor_int, factor_int, 3),
             order='C'), axis=2, dtype=np.uint16)
@@ -129,7 +130,7 @@ def down_sample(array, factor_int=4):
     else:
         raise ValueError('Array has incorrect dimensions.')
 
-    return binned
+    return np.array(binned, dtype=np.uint8)
 
 if __name__ == '__main__':
     print crop_region(np.array([[1,2,3,4,5,6],[7,8,9,10,11,12],[13,14,15,16,17,
