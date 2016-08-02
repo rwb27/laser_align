@@ -417,8 +417,8 @@ class Microscope:
             template = self.camera.get_frame(mode='compressed')
             # Crop the central 1/2 of the image - can replace by my central
             # crop function or the general crop function (to be written).
-            frac = 80
-            template = proc.crop_section(template, frac)[0]
+            frac = 0.8
+            template = proc.crop_array(template, mmts='frac', dims=frac)
             self.datafile.add_data(template, gr, 'template', attrs={
                 'crop_frac': frac})
         time.sleep(1)

@@ -16,9 +16,8 @@ Usage:
 import time
 import cv2
 import numpy as np
+from docopt import docopt
 from scipy import ndimage
-import matplotlib.pyplot as plt
-from time import localtime
 
 import data_io as d
 import helpers as h
@@ -26,7 +25,6 @@ import image_proc as pro
 import measurements as m
 import microscope as micro
 from measurements import sharpness_lap
-from docopt import docopt
 
 # Read the relevant config files. microscope_defaults.json is used to
 # set everything about the microscope (see microscope.py), and
@@ -103,8 +101,9 @@ def auto_focus(microscope):
                 microscope.stage.focus_rel(step)
 
             raw_array = microscope.camera.get_frame()
-            (cropped, actual_percent) = pro.crop_section(
-                raw_array, autofocus_defaults["crop_percent"])
+            (cropped, actual_frac) = pro.crop_array(
+                raw_array, mmts='frac', dims=autofocus_defaults[
+                    "crop_fraction"], return_actual_crop=True)
 
             # Down-sample if the image is not already compressed.
             if micro.defaults["mode"] == 'bayer':
@@ -124,26 +123,23 @@ def auto_focus(microscope):
         focus_data.add_data(data_arr, tests, '', attrs={
             'Step size': step, 'Repeats': n,
             'Pixel block': autofocus_defaults["pixel_block"],
-            'Actual percentage cropped': actual_percent})
+            'Actual fraction cropped': actual_frac})
 
 
 def tiled(microscope, func_list=None, save_every_mmt=True):
     """Take a tiled image of a sample, taking account of backlash.
+
     :param microscope: The microscope object, containing the stage and
     camera objects to be controlled. Also can be used for calibration.
-    :param func_list: A list of lists used to specify the functions that
-    should be performed on each image after it has been taken. It has the
-    format: [[function_object_1, arg1, arg2, ...],
-             [function_object_2, ...],
-             ...].
+    :param func_list: A list of curried functions used to specify the
+    functions that should be performed on each image after it has been
+    taken. Use bake_in_args from helpers.py to currify each function. It has
+    the format: [curried_1, curried_2, ...].
     Note that:
-    - Arguments should be passed in the same order that they
-    have been defined, and that this includes optional arguments (all of
-    these must be specified, e.g. for func1(a, b=3, c=4), enter [func1, a,
-    3, 4]).
     - If the modified array for the image being taken is an argument,
-    use the placeholder 'IMAGE_ARR' instead of it - this string will be
-    replaced by the modified image array during execution.
+    use any placeholder such as 'IMAGE_ARR' instead of it - this placeholder
+    will be ignored and substituted by the modified image array during
+    execution.
     - Each of the functions in the list must return only the processed image
     array.
     :param save_every_mmt: Save every measurement immediately after it has
@@ -155,7 +151,7 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
 
     # Set mutable default values.
     if func_list is None:
-        func_list = [[h.passer]]
+        func_list = [h.bake_in_args(h.unchanged, args=['IMAGE_ARR'])]
 
     # Set up the data recording.
     n = tiled_dict["n"]
@@ -177,7 +173,6 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
         # measurement if save_every_mmt is true, or append the calculation
         # to a results file and save it all at the end.
         prev_image = None
-        prev_modified_image = None
         for j in range(n):
             for i in range(n):
 
@@ -185,21 +180,15 @@ def tiled(microscope, func_list=None, save_every_mmt=True):
                 time.sleep(0.5)
                 image = microscope.camera.get_frame(greyscale=False)
                 microscope.datafile.add_data(image, image_set, 'full_image')
-                assert image is not prev_image, "image didn't change"
+
+                assert image is not prev_image, "Image didn't change."
                 prev_image = image
+
                 # Post-process.
                 modified = image
 
-                #modified = pro.crop_section(modified, (12.5, 12.5))[0]
-                #modified = m.brightness(modified)
-
                 for function in func_list:
                     modified = function(modified)
-
-                    if type(modified) is tuple:
-                        # Hacky solution to get around crop-section having a
-                        # tuple output. TODO: Modify crop-section to stop this.
-                        modified = modified[0]
 
                 # Save this array in HDF5 file.
                 if save_every_mmt:
@@ -245,7 +234,8 @@ def centre_spot(scope):
     # need a better way to distinguish the bright spot.
     thresholded = cv2.threshold(frame, 180, 0, cv2.THRESH_TOZERO)[1]
     gr = scope.datafile.new_group('crop')
-    cropped = pro.crop_region(thresholded, (300, 300), (0, 0))
+    cropped = pro.crop_array(thresholded, mmts='pixel', dims=np.array([
+        300, 300]), centre=np.array([0, 0]))
     peak = ndimage.measurements.center_of_mass(thresholded)
     half_dimensions = np.array(np.array(m.get_size(frame)[:2])/2., dtype=int)
 
@@ -258,33 +248,25 @@ def centre_spot(scope):
     return
 
 
-def bake_in_args(fun, args=[], kwargs={}, position_to_pass_through=0):
-    def wrapped(image):
-        return fun(*(args[:position_to_pass_through] + [image] +
-                     args[(position_to_pass_through+1):]),
-                   **kwargs)
-    return wrapped
-
-
 if __name__ == '__main__':
     # Control pre-processing manually.
-    args = docopt(__doc__)
-    print args
+    sys_args = docopt(__doc__)
+    print sys_args
 
     scope = micro.Microscope(filename='dat.hdf5', man=True)
 
     # Calculate brightness of central spot by taking a tiled section of
     # images, cropping the central 1/64, down sampling the bayer image.
     # Return an array of the positions and the brightness.
-    fun_list = [bake_in_args(pro.crop_section,
-                             args=['IMAGE_ARR', (12.5, 12.5), (0, 0)]),
-                bake_in_args(m.brightness, args=['IMAGE_ARR'])]
+    fun_list = [h.bake_in_args(pro.crop_array, args=['IMAGE_ARR'],
+                               kwargs={'mmts': 'frac', 'dims': 1/8.}),
+                h.bake_in_args(m.brightness, args=['IMAGE_ARR'])]
 
-    if args['autofocus']:
+    if sys_args['autofocus']:
         auto_focus(scope)
-    elif args['centre']:
+    elif sys_args['centre']:
         centre_spot(scope)
-    elif args['tiled']:
+    elif sys_args['tiled']:
         tiled(scope, func_list=fun_list, save_every_mmt=False)
 
 

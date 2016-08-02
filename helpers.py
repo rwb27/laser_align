@@ -6,21 +6,12 @@ import numpy as np
 
 
 def frac_round(number, frac, centre_frac):
-    """Function to aid readability, used in crop_section. Note that frac and
-    centre_frac are individual elements of the tuples defined in
-    crop_section."""
-    frac /= 100.
+    """Converts fraction 'frac' to crop a dimension of an image by, say x,
+    centred at centre_frac, to an integer index for the array with 'number'
+    indices along that axis. Refer to crop_array for more info."""
     lower_bound = (number/2.*(1-frac)) + (number * float(centre_frac))
     upper_bound = (number/2.*(1+frac)) + (number * float(centre_frac))
 
-    if lower_bound < 0:
-        lower_bound = 0
-        raise Warning('Lower bound of cropped image exceeds main image '
-                      'dimensions. Setting it to start of main image.')
-    if upper_bound > number:
-        upper_bound = 1
-        raise Warning('Upper bound of cropped image exceeds main image '
-                      'dimensions. Setting it to end of main image.')
     return int(np.round(lower_bound)), int(np.round(upper_bound))
 
 
@@ -45,9 +36,10 @@ def closest_factor(f, n):
     return _one_disallowed(_factors(f), n)
 
 
-def passer(*args):
-    """Does nothing; the empty function object."""
-    pass
+def unchanged(*args):
+    """Returns the arguments; the default function for image
+    post-processing to return the input array unchanged."""
+    return args
 
 
 def _one_disallowed(factors, n):
@@ -76,3 +68,28 @@ def make_greyscale(frame, greyscale):
     # TODO if greyscale is True.
     greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return greyscaled if greyscale else frame
+
+
+def bake_in_args(fun, args=None, kwargs=None, position_to_pass_through=0):
+    """Returns an object given by the function 'fun' with its arguments,
+    known as a curried function or closure. These objects can be passed into
+    other functions to be evaluated.
+
+    :param fun: The function object without any arguments specified.
+    :param args: A list of the positional arguments.
+    :param kwargs: A list of keyword arguments.
+    :param position_to_pass_through: See docstring for 'wrapped'.
+    :return: The object containing the function with its arguments."""
+
+    if args is None:
+        args = []
+    if kwargs is None:
+        kwargs = {}
+
+    def wrapped(image):
+        """Parameter position_to_pass_through specifies the index of the
+        parameter 'image' in the sequence of positional arguments for 'fun'."""
+        return fun(*(args[:position_to_pass_through] + [image] + args[(
+            position_to_pass_through+1):]), **kwargs)
+
+    return wrapped
