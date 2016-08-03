@@ -18,6 +18,7 @@ import cv2
 import numpy as np
 from docopt import docopt
 from scipy import ndimage
+from nplab.experiment.experiment import Experiment
 
 import data_io as d
 import helpers as h
@@ -126,96 +127,90 @@ def auto_focus(microscope):
             'Actual fraction cropped': actual_frac})
 
 
-def tiled(microscope, func_list=None, save_every_mmt=True):
-    """Take a tiled image of a sample, taking account of backlash.
+class Tiled(Experiment):
+    """Class to conduct experiments where a tiled sequence of images is 
+    taken and post-processed. Each such experiments consists of a microscope
+    object and a datafile."""
+    # TODO Modify the data collection and logging in this class.
+    def __init__(self, microscope):
+        super(Tiled, self).__init__()
+        self.scope = microscope
+    
+    def run(self, func_list=None, save_every_mmt=True):
+        # Set up the data recording.
+        n = tiled_dict["n"]
+        steps = tiled_dict["steps"]
+        attributes = {'n': n, 'steps': steps,
+                      'backlash': micro.defaults["backlash"],
+                      'focus': tiled_dict["focus"]}
 
-    :param microscope: The microscope object, containing the stage and
-    camera objects to be controlled. Also can be used for calibration.
-    :param func_list: A list of curried functions used to specify the
-    functions that should be performed on each image after it has been
-    taken. Use bake_in_args from helpers.py to currify each function. It has
-    the format: [curried_1, curried_2, ...].
-    Note that:
-    - If the modified array for the image being taken is an argument,
-    use any placeholder such as 'IMAGE_ARR' instead of it - this placeholder
-    will be ignored and substituted by the modified image array during
-    execution.
-    - Each of the functions in the list must return only the processed image
-    array.
-    :param save_every_mmt: Save every measurement immediately after it has
-    been taken. Otherwise, the entire set of measurements will be saved at
-    the end.
-    :return: A combined array of the tiled image."""
+        # This may not be needed.
+        image_set = self.create_data_group('tiled_images', attrs=attributes)
+        
+        # Set mutable default values.
+        if func_list is None:
+            func_list = [h.bake_in_args(h.unchanged, args=['IMAGE_ARR'])]
+        direction = 1
+        self.scope.stage.move_rel([-n / 2 * steps, -n / 2 * steps, 0])
+        try:
+            # A set of results to be collected if save_every_mmt is False.
+            results = []
 
-    microscope.camera.preview()
+            # For each position in the range specified, take an image, apply
+            # all the functions in func_list on it, then either save the
+            # measurement if save_every_mmt is true, or append the calculation
+            # to a results file and save it all at the end.
+            prev_image = None
+            for j in range(n):
+                for i in range(n):
 
-    # Set mutable default values.
-    if func_list is None:
-        func_list = [h.bake_in_args(h.unchanged, args=['IMAGE_ARR'])]
+                    self.scope.stage.move_rel([steps * direction, 0, 0])
+                    time.sleep(0.5)
+                    image = self.scope.camera.get_frame(greyscale=False)
 
-    # Set up the data recording.
-    n = tiled_dict["n"]
-    steps = tiled_dict["steps"]
-    attributes = {'n': n, 'steps': steps,
-                  'backlash': micro.defaults["backlash"],
-                  'focus': tiled_dict["focus"]}
+                    assert image is not prev_image, "Image didn't change."
+                    prev_image = image
 
-    image_set = microscope.datafile.new_group('tiled_image', attrs=attributes)
+                    # Post-process.
+                    modified = image
 
-    direction = 1
-    microscope.stage.move_rel([-n / 2 * steps, -n / 2 * steps, 0])
-    try:
-        # A set of results to be collected if save_every_mmt is False.
-        results = []
+                    for function in func_list:
+                        modified = function(modified)
 
-        # For each position in the range specified, take an image, apply
-        # all the functions in func_list on it, then either save the
-        # measurement if save_every_mmt is true, or append the calculation
-        # to a results file and save it all at the end.
-        prev_image = None
-        for j in range(n):
-            for i in range(n):
+                    # Save this array in HDF5 file.
+                    if save_every_mmt:
+                        #self.scope.datafile.add_data(
+                        #    modified, image_set, 'img', attrs={
+                        #        'Position': self.scope.stage.position,
+                        #        'Cropped size': 300})
+                        self.create_dataset('modified_image', attrs={
+                                'Position': self.scope.stage.position,
+                                'Cropped size': 300}, data=modified)
+                    else:
+                        results.append([self.scope.stage.position[0],
+                                        self.scope.stage.position[1],
+                                        self.scope.stage.position[2],
+                                        modified])
 
-                microscope.stage.move_rel([steps * direction, 0, 0])
-                time.sleep(0.5)
-                image = microscope.camera.get_frame(greyscale=False)
-                microscope.datafile.add_data(image, image_set, 'full_image')
+                self.scope.stage.move_rel([0, steps, 0])
+                direction *= -1
 
-                assert image is not prev_image, "Image didn't change."
-                prev_image = image
+            # Move back to original position.
+            self.scope.stage.move_rel([-n / 2 * steps, -n / 2 * steps, 0])
 
-                # Post-process.
-                modified = image
+            # Save results if they have been incrementally collected.
+            if not save_every_mmt:
+                results = np.array(results, dtype=np.float)
+                self.create_dataset('brightness_results', data=results)
+                self.log_messages = ""  # This line is needed because
+                # log_messages is only defined if run_in_background is run
+                # in Experiment.
+                self.log("Test - brightness results added.")
+                # self.scope.datafile.add_data(results, image_set, 'data')
 
-                for function in func_list:
-                    modified = function(modified)
-
-                # Save this array in HDF5 file.
-                if save_every_mmt:
-                    microscope.datafile.add_data(
-                        modified, image_set, 'img', attrs={
-                            'Position': microscope.stage.position,
-                            'Cropped size': 300})
-                else:
-                    results.append([microscope.stage.position[0],
-                                    microscope.stage.position[1],
-                                    microscope.stage.position[2], modified])
-
-            microscope.stage.move_rel([0, steps, 0])
-            direction *= -1
-
-        # Move back to original position.
-        microscope.stage.move_rel([-n / 2 * steps, -n / 2 * steps, 0])
-
-        # Save results if they have been incrementally collected.
-        if not save_every_mmt:
-            results = np.array(results, dtype=np.float)
-            print "results", results
-            microscope.datafile.add_data(results, image_set, 'data')
-
-    except KeyboardInterrupt:
-        print "Aborted, moving back to start"
-        microscope.stage.move_to_pos([0, 0, 0])
+        except KeyboardInterrupt:
+            print "Aborted, moving back to start"
+            self.scope.stage.move_to_pos([0, 0, 0])
 
 
 def centre_spot(scope):
@@ -267,9 +262,8 @@ if __name__ == '__main__':
     elif sys_args['centre']:
         centre_spot(scope)
     elif sys_args['tiled']:
-        tiled(scope, func_list=fun_list, save_every_mmt=False)
-
-
+        tiled = Tiled(scope)
+        tiled.run(func_list=fun_list, save_every_mmt=False)
 
 
 # Code to test the sharpness vs position plot, buts needs modification.

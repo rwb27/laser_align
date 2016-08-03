@@ -2,70 +2,11 @@
 
 """image_proc.py
 Functions to process and measure image features."""
-
+import cv2
 import numpy as np
 
 import helpers as h
 from measurements import get_size, get_pixel_step, get_num_subimages
-
-
-def crop_section(bgr_arr, frac, centre_frac=(0, 0)):
-    """Crops a portion of the image by a specified amount.
-    :param bgr_arr: The 3D image array to split, in the format (no. of row
-    pixels in image, no. of column pixels in image, 3 BGR values).
-    :param frac: A tuple with the percentage of the image along (x,
-    y) to retain. For example, x_frac = 30, y_frac = 50 would result in a
-    cropped image 15% either side of the centre along x and 25% either side of
-    the centre along y.
-    :param centre_frac: The centre of the cropped image relative to the main
-    image, as a fraction of the (x, y) length of the main image with centre
-    at (0, 0). For example, (1/4., 1/2.) would result in the cropped image
-    being centred on the top edge of the main image, 3/4 of the way along
-    the edge from the top left corner. Checks exist to ensure the crop
-    covers only the range of the main image.
-    :return: The cropped image BGR array."""
-
-    res = get_size(bgr_arr)[:2]
-    if type(frac) is not tuple:
-        frac = (frac, frac)
-    for each in frac:
-        assert 0. <= each <= 1., "{} is an invalid fraction of the image to " \
-                          "crop.".format(each)
-    for each in centre_frac:
-        assert -1/2. <= each <= 1/2., "Centre lies outside range of image."
-    for i in range(2):
-        pass
-    crop = bgr_arr[h.frac_round(res[1], frac[1], centre_frac[1])[0]:
-                   h.frac_round(res[1], frac[1], centre_frac[1])[1],
-                   h.frac_round(res[0], frac[0], centre_frac[0])[0]:
-                   h.frac_round(res[0], frac[0], centre_frac[0])[1], ...]
-
-    print crop.size, bgr_arr.size
-    actual_fraction = float(crop.size)/bgr_arr.size * 100
-    print r'Cropped {}% of image.'.format(actual_fraction)
-    return crop, actual_fraction
-
-
-def crop_region(grey_arr, dims, centre_pixels=(0, 0)):
-    """Crops a region of a greyscaled array given a cropped image size and
-    centre.
-    :param grey_arr: The 3D image array to split, in the format (no. of row
-    pixels in image, no. of column pixels in image, 3 BGR values).
-    :param dims: A tuple of the dimensions of the cropped image along (x, y).
-    :param centre_pixels: The centre of the cropped image relative to the main
-    image in terms of the (x, y) length of the main image with centre
-    at (0, 0). For example, (280, 300) would result in the cropped image
-    being centred 280 pixels to the right of the centre and 300 pixels above.
-    :return: The cropped image array."""
-
-    res = get_size(grey_arr)[:2]
-    for i in range(2):
-        assert centre_pixels[i] + dims[i]/2. <= res[i]/2. and \
-               centre_pixels[i] - dims[i]/2. >= -res[i]/2.
-    return grey_arr[int(centre_pixels[1] - dims[1] / 2. + res[1] / 2.):
-                    int(centre_pixels[1] + dims[1] / 2. + res[1] / 2.),
-                    int(centre_pixels[0] - dims[0] / 2. + res[0] / 2.):
-                    int(centre_pixels[0] + dims[0] / 2. + res[0] / 2.), ...]
 
 
 def crop_img_into_n(bgr_arr, n):
@@ -165,7 +106,7 @@ def crop_array(arr, mode='spec', **args):
     print res
     if mode == 'spec':
         assert all(var in args.keys() for var in
-                   ['mmts', 'dims', 'centre']), "Invalid keyword arguments."
+                   ['mmts', 'dims']), "Invalid keyword arguments."
         if 'return_actual_crop' not in args.keys():
             args['return_actual_crop'] = False
         if 'centre' not in args.keys():
@@ -176,9 +117,9 @@ def crop_array(arr, mode='spec', **args):
             else:
                 raise TypeError('The parameter \'dims\' is of incorrect '
                                 'type.')
-        elif len([args['dims']]) == 1:
+        elif type(args['dims']) is int or type(args['dims']) is float:
             args['dims'] = np.array([args['dims'], args['dims']])
-        else:
+        elif not (type(args['dims']) is np.ndarray and args['dims'].size == 2):
             raise TypeError('\'dims\' is of incorrect type.')
 
         if args['mmts'] == 'frac':
@@ -205,14 +146,14 @@ def crop_array(arr, mode='spec', **args):
         else:
             raise ValueError('\'mmts\' entry is invalid.')
 
-        assert all(crop_limits[:, 0] <= args['dims']) and \
-            all(args['dims'] <= crop_limits[:, 1]), \
+        assert (crop_limits[:, 0] <= args['dims']).all() and \
+               (args['dims'] <= crop_limits[:, 1]).all(), \
             "Dimensions lie outside allowed crop range."
-        assert all(cent_limits[:, 0] <= args['centre']) and \
-            all(args['centre'] <= cent_limits[:, 1]), \
+        assert (cent_limits[:, 0] <= args['centre']).all() and \
+               (args['centre'] <= cent_limits[:, 1]).all(), \
             "Centre of cropped images lies outside parent image."
-        assert all(args['centre'] + args['dims'] / 2. <= cent_limits[:, 1]) \
-            and all(args['centre'] - args['dims'] / 2. >= cent_limits[:, 0]), \
+        assert (args['centre'] + args['dims'] / 2. <= cent_limits[:, 1]).all()\
+            and (args['centre'] - args['dims'] / 2. >= cent_limits[:, 0]).all(), \
             "Cropped image only partially overlaps the parent image."
 
         crop = arr[final_xmin: final_xmax, final_ymin: final_ymax, ...]
@@ -232,15 +173,7 @@ def crop_array(arr, mode='spec', **args):
         raise ValueError('Invalid mode entry.')
 
 
-
-
-
-
-
-
-if __name__ == '__main__':
-    array = np.reshape(np.linspace(0, 750000, 750000), (500, 500, 3))
-
-    print (crop_array(array, mode='spec', mmts='frac', dims=1/2.,
-                      centre=np.array([0, 0])) == crop_section(array,
-                                                               1/2.)[0]).all()
+def make_greyscale(frame, greyscale=True):
+    """Makes an image 'frame' greyscale if 'greyscale' is True."""
+    greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return greyscaled if greyscale else frame

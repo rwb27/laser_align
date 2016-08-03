@@ -11,6 +11,7 @@ import h5py
 import numpy as np
 import simplejson as json
 from jsmin import jsmin
+import helpers as h
 
 
 class Datafile:
@@ -29,9 +30,11 @@ class Datafile:
         self._date = today.strftime('%Y%m%d')
 
         if filename is None:  # If not explicitly asked for a datafile:
-            self._filename = self._DEFAULT_FILE + "_" + self._date + ".hdf5"
+            self._filename = self._DEFAULT_FILE + "_" + self._date
+            self._filename = h.add_extension(self._filename)
             self._datafile = None  # Don't make one just yet
         else:
+            self._filename = h.add_extension(filename)
             self._datafile = h5py.File(filename, 'a')
 
     def new_group(self, group, attrs=None):

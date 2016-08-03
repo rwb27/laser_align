@@ -25,6 +25,8 @@ import helpers as h
 import image_proc as proc
 
 # import twoLED
+import image_proc
+
 try:
     import picamera
     import picamera.array
@@ -314,9 +316,11 @@ class Microscope:
         :param filename: The name of the data file.
         :param man: Whether to control pre-processing manually or not."""
 
-        self.camera = Camera(width, height, manual=man)
+        self.camera = Camera(width, height, manual=man, cv2camera=cv2camera)
         self.stage = ScopeStage(channel)
         # self.light = twoLED.Lightboard()
+
+        h.make_dirs(filename)   # Create parent directories if needed.
         self.datafile = data_io.Datafile(filename)
 
     def __del__(self):
@@ -516,9 +520,9 @@ class Camera:
             self._camera.resolution = (width, height)
             self._fast_capture_iterator = None
 
-        if manual:
+        if manual and not cv2camera:
             # This only works with RPi camera.
-            self.make_manual()
+            self._make_manual()
 
     def _close(self):
         """Closes the camera devices correctly. Called on deletion, do not call
@@ -563,7 +567,7 @@ class Camera:
         self._camera.capture(stream, format='jpeg', use_video_port=videoport)
         data = np.fromstring(stream.getvalue(), dtype=np.uint8)
         frame = cv2.imdecode(data, 1)
-        return h.make_greyscale(frame, greyscale)
+        return image_proc.make_greyscale(frame, greyscale)
 
     def _bayer_frame(self, greyscale):
         """Capture a raw bayer image, de-mosaic it and output a BGR numpy
@@ -574,7 +578,7 @@ class Camera:
         # true.
         self._camera.capture(self._bayer_stream, 'jpeg', bayer=True)
         frame = (self._bayer_stream.demosaic() >> 2).astype(np.uint8)
-        return h.make_greyscale(frame, greyscale)
+        return image_proc.make_greyscale(frame, greyscale)
 
     def _bgr_frame(self, greyscale, videoport):
         """Captures straight to a BGR array object; a raw format. Use
@@ -586,7 +590,7 @@ class Camera:
         self._rgb_stream.seek(0)
         self._camera.capture(self._rgb_stream, 'bgr', use_video_port=videoport)
         frame = self._rgb_stream.array
-        return h.make_greyscale(frame, greyscale)
+        return image_proc.make_greyscale(frame, greyscale)
 
     def _fast_frame(self, greyscale):
         """Captures really fast with the iterator method. Must be set up to run
@@ -597,9 +601,9 @@ class Camera:
         self._rgb_stream.seek(0)
         self._fast_capture_iterator.next()
         frame = self._rgb_stream.array
-        return h.make_greyscale(frame, greyscale)
+        return image_proc.make_greyscale(frame, greyscale)
 
-    def make_manual(self):
+    def _make_manual(self):
         # Set ISO to the desired value
         self._camera.iso = 100
         # Wait for the automatic gain control to settle

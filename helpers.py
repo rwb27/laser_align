@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 """Contains base-level functions that are required for the others to run."""
-import cv2
 import numpy as np
-
+import os
+import re
 
 def frac_round(number, frac, centre_frac):
     """Converts fraction 'frac' to crop a dimension of an image by, say x,
@@ -62,14 +62,6 @@ def _factors(num):
     return factor_list
 
 
-def make_greyscale(frame, greyscale):
-    """Makes an image 'frame' greyscale if 'greyscale' is True."""
-    # TODO This function appears to flatten the array - it needs reshaping
-    # TODO if greyscale is True.
-    greyscaled = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    return greyscaled if greyscale else frame
-
-
 def bake_in_args(fun, args=None, kwargs=None, position_to_pass_through=0):
     """Returns an object given by the function 'fun' with its arguments,
     known as a curried function or closure. These objects can be passed into
@@ -93,3 +85,35 @@ def bake_in_args(fun, args=None, kwargs=None, position_to_pass_through=0):
             position_to_pass_through+1):]), **kwargs)
 
     return wrapped
+
+
+def make_dirs(file_path):
+    """Extract directory structure from file path and create the directories if
+    necessary.
+    :param file_path: String for the relative or absolute file path."""
+    if file_path[0] == '/':
+        # Allows for Linux ABSOLUTE path format.
+        path = file_path.split('/')[:-1]
+    # The following 2 are relative file paths.
+    elif file_path[:2] == './':
+        path = file_path.split('/')[1:-1]
+    elif re.match(r'\w+', file_path, flags=re.IGNORECASE):
+        path = file_path.split('/')[:-1]
+    else:
+        raise ValueError('The file path has incorrect format.')
+
+    if len(path) >= 1 and '' not in path:
+        dir_path = '/'.join(path)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+    return
+
+
+def add_extension(string, extension='.hdf5'):
+    """Checks if 'string' has 'extension' at end, and appends it if not."""
+    if not re.search(r'{}'.format(extension), string.strip()):
+        string += extension
+    return string
+
+
+print add_extension('hello.hdf5', '.gdg')

@@ -8,6 +8,7 @@ import numpy as np
 from scipy import ndimage as sn
 
 import helpers as h
+import image_proc
 
 
 def sharpness_lap(bgr_array):
@@ -41,7 +42,7 @@ def brightness(arr):
 
     # If the array is BGR, convert to greyscale before calculating brightness.
     if len(arr.shape) == 3:
-        arr = h.make_greyscale(arr, greyscale=True)
+        arr = image_proc.make_greyscale(arr, greyscale=True)
     elif len(arr.shape) != 2:
         raise ValueError('Array has invalid shape: {}'.format(arr.shape))
 
