@@ -133,26 +133,36 @@ def auto_focus(microscope):
 
 class Tiled(Experiment):
     """Class to conduct experiments where a tiled sequence of images is 
-    taken and post-processed. Each such experiments consists of a microscope
-    object and a datafile."""
-    # TODO Modify the data collection and logging in this class.
+    taken and post-processed."""
+
     def __init__(self, microscope):
         super(Tiled, self).__init__()
         self.scope = microscope
     
-    def run(self, func_list=None, save_every_mmt=True):
+    def run(self, func_list=None, save_every_mmt=False):
         # Set up the data recording.
         n = tiled_dict["n"]
         steps = tiled_dict["steps"]
         attributes = {'n': n, 'steps': steps,
                       'backlash': micro.defaults["backlash"],
                       'focus': tiled_dict["focus"]}
-        
+        # TODO Save data into this group, unsure how to do this with nplab.
+        self.create_data_group('a_group', attrs=attributes)
+
         # Set mutable default values.
         if func_list is None:
             func_list = [h.bake_in_args(h.unchanged, args=['IMAGE_ARR'])]
-        direction = 1
-        self.scope.stage.move_rel([-n / 2 * steps, -n / 2 * steps, 0])
+
+        # Get initial position, which may not be [0, 0, 0] if scope object
+        # has been used for something else prior to this experiment.
+        initial_position = self.scope.stage.position
+
+        # Generate array of all positions to move to.
+        x = np.linspace(-n / 2. * steps, n / 2. * steps, n + 1)
+        y = x
+        positions = h.cartesian([x, y, np.array([0])]) + initial_position
+        print positions
+
         try:
             # A set of results to be collected if save_every_mmt is False.
             results = []
@@ -162,56 +172,42 @@ class Tiled(Experiment):
             # measurement if save_every_mmt is true, or append the calculation
             # to a results file and save it all at the end.
             prev_image = None
-            for j in range(n):
-                for i in range(n):
+            for pos in positions:
+                self.scope.stage.move_to_pos(pos)
+                time.sleep(0.5)
+                image = self.scope.camera.get_frame(greyscale=False)
 
-                    self.scope.stage.move_rel([steps * direction, 0, 0])
-                    time.sleep(0.5)
-                    image = self.scope.camera.get_frame(greyscale=False)
+                assert image is not prev_image, "Image didn't change."
+                prev_image = image
 
-                    assert image is not prev_image, "Image didn't change."
-                    prev_image = image
+                # Post-process.
+                modified = image
+                for function in func_list:
+                    modified = function(modified)
 
-                    # Post-process.
-                    modified = image
-
-                    for function in func_list:
-                        modified = function(modified)
-
-                    # Save this array in HDF5 file.
-                    if save_every_mmt:
-                        #self.scope.datafile.add_data(
-                        #    modified, image_set, 'img', attrs={
-                        #        'Position': self.scope.stage.position,
-                        #        'Cropped size': 300})
-                        self.create_dataset('modified_image', attrs={
-                                'Position': self.scope.stage.position,
-                                'Cropped size': 300}, data=modified)
-                    else:
-                        results.append([self.scope.stage.position[0],
-                                        self.scope.stage.position[1],
-                                        self.scope.stage.position[2],
-                                        modified])
-
-                self.scope.stage.move_rel([0, steps, 0])
-                direction *= -1
+                # Save this array in HDF5 file.
+                if save_every_mmt:
+                    self.create_dataset('modified_image', attrs={
+                            'Position': self.scope.stage.position,
+                            'Cropped size': 300}, data=modified)
+                else:
+                    results.append([self.scope.stage.position[0],
+                                    self.scope.stage.position[1],
+                                    self.scope.stage.position[2],
+                                    modified])
 
             # Move back to original position.
-            self.scope.stage.move_rel([-n / 2 * steps, -n / 2 * steps, 0])
+            self.scope.stage.move_to_pos(initial_position)
 
             # Save results if they have been incrementally collected.
             if not save_every_mmt:
                 results = np.array(results, dtype=np.float)
                 self.create_dataset('brightness_results', data=results)
-                self.log_messages = ""  # This line is needed because
-                # log_messages is only defined if run_in_background is run
-                # in Experiment.
                 self.log("Test - brightness results added.")
-                # self.scope.datafile.add_data(results, image_set, 'data')
 
         except KeyboardInterrupt:
-            print "Aborted, moving back to start"
-            self.scope.stage.move_to_pos([0, 0, 0])
+            print "Aborted, moving back to initial position."
+            self.scope.stage.move_to_pos(initial_position)
 
 
 def centre_spot(scope):
@@ -264,29 +260,3 @@ if __name__ == '__main__':
     elif sys_args['tiled']:
         tiled = Tiled(scope)
         tiled.run(func_list=fun_list, save_every_mmt=False)
-
-
-# Code to test the sharpness vs position plot, buts needs modification.
-#if __name__ == "__main__":
-#    with picamera.PiCamera() as camera:
-#        camera.resolution = (640, 480)
-#        camera.start_preview()
-#        time.sleep(3)   # Let camera to receive image clearly before
-    # capturing.
-#        capture_to_bgr_array(camera)
-#        camera.stop_preview()   # Preview must be stopped afterwards to
-#        # prevent Pi freezing on camera screen.
-#
-#        split_img_data = crop_img_into_n(capture_to_bgr_array(camera), 4800)
-#        plotting_data = sharpness_vs_position(*split_img_data)
-#
-#        fig = plt.figure()
-#        ax = fig.add_subplot(111, projection='3d')
-#        [X, Y, Z] = [plotting_data[:, 0], plotting_data[:, 1],
-#                     plotting_data[:, 2]]
-#        ax.plot_wireframe(X, Y, Z)
-#
-#        plt.show()
-
-
-

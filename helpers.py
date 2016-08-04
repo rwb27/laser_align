@@ -5,6 +5,7 @@ import numpy as np
 import os
 import re
 
+
 def frac_round(number, frac, centre_frac):
     """Converts fraction 'frac' to crop a dimension of an image by, say x,
     centred at centre_frac, to an integer index for the array with 'number'
@@ -114,3 +115,40 @@ def add_extension(string, extension='.hdf5'):
     if not re.search(r'{}'.format(extension), string.strip()):
         string += extension
     return string
+
+
+def cartesian(arrays, out=None):
+    """Generate a cartesian product of input arrays.
+    :param arrays: List of M 1-D arrays to form cartesian product of.
+    :param out : ND-array to place the cartesian product in.
+    :return out : 2D-array of shape (M, len(arrays)) containing cartesian
+    products formed of input arrays.
+    Example
+    >>> cartesian(([1, 2, 3], [4, 5], [6, 7]))
+    array([[1, 4, 6],
+           [1, 4, 7],
+           [1, 5, 6],
+           [1, 5, 7],
+           [2, 4, 6],
+           [2, 4, 7],
+           [2, 5, 6],
+           [2, 5, 7],
+           [3, 4, 6],
+           [3, 4, 7],
+           [3, 5, 6],
+           [3, 5, 7]])"""
+
+    arrays = [np.asarray(x) for x in arrays]
+    dtype = arrays[0].dtype
+
+    n = np.prod([x.size for x in arrays])
+    if out is None:
+        out = np.zeros([n, len(arrays)], dtype=dtype)
+
+    m = n / arrays[0].size
+    out[:, 0] = np.repeat(arrays[0], m)
+    if arrays[1:]:
+        cartesian(arrays[1:], out=out[0:m, 1:])
+        for j in xrange(1, arrays[0].size):
+            out[j*m:(j+1)*m, 1:] = out[0:m, 1:]
+    return out
