@@ -11,6 +11,10 @@ Usage:
     experiments.py autofocus
     experiments.py centre
     experiments.py tiled
+    experiments.py (-h | --help)
+
+Options:
+    -h, --help   Display this usage statement.
 """
 
 import time
@@ -143,9 +147,6 @@ class Tiled(Experiment):
         attributes = {'n': n, 'steps': steps,
                       'backlash': micro.defaults["backlash"],
                       'focus': tiled_dict["focus"]}
-
-        # This may not be needed.
-        image_set = self.create_data_group('tiled_images', attrs=attributes)
         
         # Set mutable default values.
         if func_list is None:
@@ -246,7 +247,6 @@ def centre_spot(scope):
 if __name__ == '__main__':
     # Control pre-processing manually.
     sys_args = docopt(__doc__)
-    print sys_args
 
     scope = micro.Microscope(filename='dat.hdf5', man=True)
 

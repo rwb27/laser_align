@@ -114,6 +114,3 @@ def add_extension(string, extension='.hdf5'):
     if not re.search(r'{}'.format(extension), string.strip()):
         string += extension
     return string
-
-
-print add_extension('hello.hdf5', '.gdg')
