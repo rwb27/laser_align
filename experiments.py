@@ -137,8 +137,10 @@ class Tiled(Experiment):
 
     def __init__(self, microscope):
         super(Tiled, self).__init__()
+        print self.log_messages
         self.scope = microscope
-    
+
+    @profile
     def run(self, func_list=None, save_every_mmt=False):
         # Set up the data recording.
         n = tiled_dict["n"]
@@ -193,8 +195,7 @@ class Tiled(Experiment):
                 else:
                     results.append([self.scope.stage.position[0],
                                     self.scope.stage.position[1],
-                                    self.scope.stage.position[2],
-                                    modified])
+                                    self.scope.stage.position[2], modified])
 
             # Move back to original position.
             self.scope.stage.move_to_pos(initial_position)
@@ -203,6 +204,7 @@ class Tiled(Experiment):
             if not save_every_mmt:
                 results = np.array(results, dtype=np.float)
                 self.create_dataset('brightness_results', data=results)
+                print "messages", self.log_messages
                 self.log("Test - brightness results added.")
 
         except KeyboardInterrupt:
@@ -220,7 +222,7 @@ def centre_spot(scope):
     transform = scope.calibrate()
     scope.camera.preview()
     # TODO Need to change this to bayer mode to capture entire array.
-    frame = scope.camera.get_frame(mode='compressed', greyscale=True)
+    frame = scope.camera.get_frame(mode='bayer', greyscale=True)
 
     # This is strongly affected by any other bright patches in the image -
     # need a better way to distinguish the bright spot.

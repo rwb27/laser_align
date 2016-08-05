@@ -306,7 +306,7 @@ class Microscope:
     def __init__(self, width=defaults["resolution"][0],
                  height=defaults["resolution"][1], cv2camera=False,
                  channel=defaults["channel"],
-                 filename=defaults["filename"], man=False):
+                 filename=defaults["filename"], man=True):
         """Create the Microscope object containing a camera, stage and
         datafile. Use this instead of using the Camera and ScopeStage classes!
         :param width: Resolution along x.
