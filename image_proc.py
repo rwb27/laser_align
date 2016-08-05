@@ -103,7 +103,6 @@ def crop_array(arr, mode='spec', **args):
     'return_actual_crop' is specified."""
 
     res = get_size(arr)[:2]
-    print res
     if mode == 'spec':
         assert all(var in args.keys() for var in
                    ['mmts', 'dims']), "Invalid keyword arguments."
@@ -126,7 +125,6 @@ def crop_array(arr, mode='spec', **args):
             # The format for these arrays is [[x_min, x_max], [y_min, y_max]].
             crop_limits = np.array([[0., 1.], [0., 1.]])
             cent_limits = np.array([[-1/2., 1/2.], [-1/2., 1/2.]])
-            print args['dims'], args['centre']
             [final_xmin, final_xmax, final_ymin, final_ymax] = \
                 [h.frac_round(res[1], args['dims'][1], args['centre'][1])[0],
                  h.frac_round(res[1], args['dims'][1], args['centre'][1])[1],

@@ -67,10 +67,3 @@ def get_num_subimages(res, tot_subimages):
     x_split = np.sqrt(res[0] / res[1] * tot_subimages)
     y_split = tot_subimages / x_split
     return x_split, y_split
-
-
-if __name__ == '__main__':
-    thing = np.reshape(np.linspace(0, 255, 51, dtype=np.uint8), (17, 1, 3))
-    print thing
-
-    print brightness(thing)

@@ -137,7 +137,6 @@ class Tiled(Experiment):
 
     def __init__(self, microscope):
         super(Tiled, self).__init__()
-        print self.log_messages
         self.scope = microscope
 
     @profile
@@ -163,7 +162,6 @@ class Tiled(Experiment):
         x = np.linspace(-n / 2. * steps, n / 2. * steps, n + 1)
         y = x
         positions = h.cartesian([x, y, np.array([0])]) + initial_position
-        print positions
 
         try:
             # A set of results to be collected if save_every_mmt is False.
@@ -204,7 +202,6 @@ class Tiled(Experiment):
             if not save_every_mmt:
                 results = np.array(results, dtype=np.float)
                 self.create_dataset('brightness_results', data=results)
-                print "messages", self.log_messages
                 self.log("Test - brightness results added.")
 
         except KeyboardInterrupt:
@@ -221,8 +218,8 @@ def centre_spot(scope):
 
     transform = scope.calibrate()
     scope.camera.preview()
-    # TODO Need to change this to bayer mode to capture entire array.
-    frame = scope.camera.get_frame(mode='bayer', greyscale=True)
+    # TODO 'compressed' mode for speed, 'bayer' for accuracy.
+    frame = scope.camera.get_frame(mode='compressed', greyscale=True)
 
     # This is strongly affected by any other bright patches in the image -
     # need a better way to distinguish the bright spot.

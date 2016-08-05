@@ -442,14 +442,11 @@ class Microscope:
             # measurements.
             self.stage.move_to_pos(np.add(init_stage_vector, p))
             time.sleep(1)
-            print "sleeping"
             cam_pos = np.array(self.camera.find_template(template, box_d=-1,
                                                          decimal=True))
             cam_pos = np.subtract(cam_pos, init_cam_pos)
-            print "subtraction", cam_pos
             stage_pos = np.subtract(self.stage.position[0:2],
                                     init_stage_pos)
-            print "stage_pos", stage_pos
             camera_displacement.append(cam_pos)
             stage_displacement.append(stage_pos)
         self.stage.centre_stage()
@@ -864,7 +861,6 @@ def _move_motors(bus, x, y, z):
     :param y: "
     :param z: "."""
     [x, y, z] = [int(x), int(y), int(z)]
-    print "Moving by [{}, {}, {}]".format(x, y, z)
 
     # The arguments for write_byte_data are: the I2C address of each motor,
     # the register and how much to move it by.
