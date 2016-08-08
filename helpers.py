@@ -152,3 +152,17 @@ def cartesian(arrays, out=None):
         for j in xrange(1, arrays[0].size):
             out[j*m:(j+1)*m, 1:] = out[0:m, 1:]
     return out
+
+
+def positions_maker(x, y, initial_pos=np.array([0, 0, 0])):
+    """Generator to produce N x 3 array of all possible permutations of 1D
+    arrays x and y, such that N = len(x) * len(y). For example x = [1,2] and
+    y = [3,4] yields [1, 3, 0], [1, 4, 0], [2, 3, 0], [2, 4, 0] respectively.
+    This is added to [0, 0, 0] before being output."""
+    i = 0
+    while i < x .size:
+        j = 0
+        while j < y.size:
+            yield np.array([x[i], y[j], 0]) + initial_pos
+            j += 1
+        i += 1

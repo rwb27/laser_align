@@ -810,7 +810,7 @@ class ScopeStage:
         r = h.verify_vector(vector)
 
         # Generate the list of movements to make. If back is [0, 0, 0],
-        # there is nly one motion to make.
+        # there is only one motion to make.
         movements = []
         if np.any(back != np.zeros(3)):
             # Subtract an extra amount where vector is negative.

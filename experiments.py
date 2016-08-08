@@ -21,8 +21,8 @@ import time
 import cv2
 import numpy as np
 from docopt import docopt
-from scipy import ndimage
 from nplab.experiment.experiment import Experiment
+from scipy import ndimage
 
 import data_io as d
 import helpers as h
@@ -139,7 +139,6 @@ class Tiled(Experiment):
         super(Tiled, self).__init__()
         self.scope = microscope
 
-    @profile
     def run(self, func_list=None, save_every_mmt=False):
         # Set up the data recording.
         n = tiled_dict["n"]
@@ -161,7 +160,7 @@ class Tiled(Experiment):
         # Generate array of all positions to move to.
         x = np.linspace(-n / 2. * steps, n / 2. * steps, n + 1)
         y = x
-        positions = h.cartesian([x, y, np.array([0])]) + initial_position
+        pos = h.positions_maker(x, y, initial_pos=initial_position)
 
         try:
             # A set of results to be collected if save_every_mmt is False.
@@ -172,11 +171,13 @@ class Tiled(Experiment):
             # measurement if save_every_mmt is true, or append the calculation
             # to a results file and save it all at the end.
             prev_image = None
-            for pos in positions:
-                self.scope.stage.move_to_pos(pos)
-                time.sleep(0.5)
-                image = self.scope.camera.get_frame(greyscale=False)
 
+            while True:
+                next_pos = next(pos)    # This returns StopIteration at end.
+                self.scope.stage.move_to_pos(next_pos)
+                time.sleep(0.5)
+
+                image = self.scope.camera.get_frame(greyscale=False)
                 assert image is not prev_image, "Image didn't change."
                 prev_image = image
 
@@ -184,6 +185,7 @@ class Tiled(Experiment):
                 modified = image
                 for function in func_list:
                     modified = function(modified)
+                    self.create_dataset('mod_image', data=modified)
 
                 # Save this array in HDF5 file.
                 if save_every_mmt:
@@ -195,7 +197,8 @@ class Tiled(Experiment):
                                     self.scope.stage.position[1],
                                     self.scope.stage.position[2], modified])
 
-            # Move back to original position.
+        except StopIteration:
+            # Iterations finished. Move back to original position.
             self.scope.stage.move_to_pos(initial_position)
 
             # Save results if they have been incrementally collected.
@@ -246,10 +249,10 @@ if __name__ == '__main__':
     scope = micro.Microscope(filename='dat.hdf5', man=True)
 
     # Calculate brightness of central spot by taking a tiled section of
-    # images, cropping the central 1/64, down sampling the bayer image.
-    # Return an array of the positions and the brightness.
+    # images, cropping the central 250 x 250 pixels, down sampling the bayer
+    # image. Return an array of the positions and the brightness.
     fun_list = [h.bake_in_args(pro.crop_array, args=['IMAGE_ARR'],
-                               kwargs={'mmts': 'frac', 'dims': 1/8.}),
+                               kwargs={'mmts': 'pixel', 'dims': 250}),
                 h.bake_in_args(m.brightness, args=['IMAGE_ARR'])]
 
     if sys_args['autofocus']:
