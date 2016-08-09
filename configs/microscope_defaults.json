@@ -9,7 +9,7 @@
     "greyscale":		    false,          // Note the difference in Boolean notation compared to Python's False.
                                             // Whether to convert images to greyscale after capture.
 	"videoport":		    true,           // Whether to capture frames using the videoport setting.
-	"mode":		            "bayer",        // Valid modes are "bayer", "compressed" and "bgr".
+	"mode":		            "compressed",        // Valid modes are "bayer", "compressed" and "bgr".
 	"iterator":			    false,    //check, AND ADD ROI????
 
     // Stage parameters.

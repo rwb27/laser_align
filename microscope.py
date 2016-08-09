@@ -513,7 +513,6 @@ class Camera:
         else:
             self._camera = picamera.PiCamera()
             self._rgb_stream = picamera.array.PiRGBArray(self._camera)
-            self._bayer_stream = picamera.array.PiBayerArray(self._camera)
             self._camera.resolution = (width, height)
             self._fast_capture_iterator = None
 
@@ -573,8 +572,9 @@ class Camera:
         # the camera and are thus of much worse quality if this were done.
         # But the combination of lenses in the Pi means that the reverse is
         # true.
-        self._camera.capture(self._bayer_stream, 'jpeg', bayer=True)
-        frame = (self._bayer_stream.demosaic() >> 2).astype(np.uint8)
+        frame = picamera.array.PiBayerArray(self._camera)
+        self._camera.capture(frame, 'jpeg', bayer=True)
+        frame = (frame.demosaic() >> 2).astype(np.uint8)
         return image_proc.make_greyscale(frame, greyscale)
 
     def _bgr_frame(self, greyscale, videoport):

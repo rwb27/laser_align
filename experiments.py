@@ -12,6 +12,7 @@ Usage:
     experiments.py centre
     experiments.py tiled
     experiments.py (-h | --help)
+    experiments.py memoryleak
 
 Options:
     -h, --help   Display this usage statement.
@@ -30,6 +31,9 @@ import image_proc as pro
 import measurements as m
 import microscope as micro
 from measurements import sharpness_lap
+from guppy import hpy
+hp = hpy()
+hp.setref()
 
 # Read the relevant config files. microscope_defaults.json is used to
 # set everything about the microscope (see microscope.py), and
@@ -131,6 +135,26 @@ def auto_focus(microscope):
             'Actual fraction cropped': actual_frac})
 
 
+class TestMemoryLeak(Experiment):
+    """Class to take lots of images, and crash the Pi."""
+    def __init__(self, microscope):
+        super(TestMemoryLeak, self).__init__()
+        self.scope = microscope
+        self.N = 1
+
+    def run(self, N=None):
+        if N is None:
+            N = self.N
+        prev_time = time.time()
+        for i in range(N):
+            print "acquiring image %d" % i
+            image = self.scope.camera.get_frame(greyscale=False,
+                                                mode='compressed')
+            print "dt: {} seconds".format(time.time() - prev_time)
+            prev_time = time.time()
+        print "done"
+
+
 class Tiled(Experiment):
     """Class to conduct experiments where a tiled sequence of images is 
     taken and post-processed."""
@@ -147,7 +171,7 @@ class Tiled(Experiment):
                       'backlash': micro.defaults["backlash"],
                       'focus': tiled_dict["focus"]}
         # TODO Save data into this group, unsure how to do this with nplab.
-        self.create_data_group('a_group', attrs=attributes)
+        # self.create_data_group('a_group', attrs=attributes)
 
         # Set mutable default values.
         if func_list is None:
@@ -170,19 +194,15 @@ class Tiled(Experiment):
             # all the functions in func_list on it, then either save the
             # measurement if save_every_mmt is true, or append the calculation
             # to a results file and save it all at the end.
-            prev_image = None
-
             while True:
                 next_pos = next(pos)    # This returns StopIteration at end.
                 self.scope.stage.move_to_pos(next_pos)
                 time.sleep(0.5)
 
                 image = self.scope.camera.get_frame(greyscale=False)
-                assert image is not prev_image, "Image didn't change."
-                prev_image = image
+                modified = image
 
                 # Post-process.
-                modified = image
                 for function in func_list:
                     modified = function(modified)
                     self.create_dataset('mod_image', data=modified)
@@ -198,8 +218,7 @@ class Tiled(Experiment):
                                     self.scope.stage.position[2], modified])
 
         except StopIteration:
-            # Iterations finished. Move back to original position.
-            self.scope.stage.move_to_pos(initial_position)
+            # Iterations finished.
 
             # Save results if they have been incrementally collected.
             if not save_every_mmt:
@@ -209,6 +228,9 @@ class Tiled(Experiment):
 
         except KeyboardInterrupt:
             print "Aborted, moving back to initial position."
+
+        finally:
+            # Move bak to the start
             self.scope.stage.move_to_pos(initial_position)
 
 
@@ -252,7 +274,7 @@ if __name__ == '__main__':
     # images, cropping the central 250 x 250 pixels, down sampling the bayer
     # image. Return an array of the positions and the brightness.
     fun_list = [h.bake_in_args(pro.crop_array, args=['IMAGE_ARR'],
-                               kwargs={'mmts': 'pixel', 'dims': 250}),
+                               kwargs={'mmts': 'pixel', 'dims': 200}),
                 h.bake_in_args(m.brightness, args=['IMAGE_ARR'])]
 
     if sys_args['autofocus']:
@@ -262,3 +284,10 @@ if __name__ == '__main__':
     elif sys_args['tiled']:
         tiled = Tiled(scope)
         tiled.run(func_list=fun_list, save_every_mmt=False)
+    elif sys_args['memoryleak']:
+        leak = TestMemoryLeak(scope)
+        leak.N = 100
+        leak.run()
+
+
+print hp.heap()

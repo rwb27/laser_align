@@ -2,7 +2,7 @@
 
 {
     "filename":         "tiled_images.hdf5",
-    "n":                9,      // The number of steps per axis to take, i.e. generates an n+1 x n+1 images in total.
+    "n":                5,      // The number of steps per axis to take, i.e. generates an n+1 x n+1 images in total.
     "steps":            500,    // The number of steps to take between each image.
     "focus":            false,  // Whether to autofocus between each tile. For the first image, a full auto-focus is
                                 // performed, and a quick one on subsequent tiles.
