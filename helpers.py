@@ -63,7 +63,7 @@ def _factors(num):
     return factor_list
 
 
-def bake_in_args(fun, args=None, kwargs=None, position_to_pass_through=0):
+def bake(fun, args=None, kwargs=None, position_to_pass_through=0):
     """Returns an object given by the function 'fun' with its arguments,
     known as a curried function or closure. These objects can be passed into
     other functions to be evaluated.
@@ -154,7 +154,8 @@ def cartesian(arrays, out=None):
     return out
 
 
-def positions_maker(x, y, initial_pos=np.array([0, 0, 0])):
+def positions_maker(x=np.array([0]), y=np.array([0]), z=np.array([0]),
+                    initial_pos=np.array([0, 0, 0])):
     """Generator to produce N x 3 array of all possible permutations of 1D
     arrays x and y, such that N = len(x) * len(y). For example x = [1,2] and
     y = [3,4] yields [1, 3, 0], [1, 4, 0], [2, 3, 0], [2, 4, 0] respectively.
@@ -163,6 +164,10 @@ def positions_maker(x, y, initial_pos=np.array([0, 0, 0])):
     while i < x .size:
         j = 0
         while j < y.size:
-            yield np.array([x[i], y[j], 0]) + initial_pos
+            k = 0
+            while k < z.size:
+                yield np.array([x[i], y[j], z[k]]) + initial_pos
+                k += 1
             j += 1
         i += 1
+

@@ -31,9 +31,6 @@ import image_proc as pro
 import measurements as m
 import microscope as micro
 from measurements import sharpness_lap
-from guppy import hpy
-hp = hpy()
-hp.setref()
 
 # Read the relevant config files. microscope_defaults.json is used to
 # set everything about the microscope (see microscope.py), and
@@ -72,67 +69,78 @@ def sharpness_vs_position(pixel_step, list_of_arrs):
     return np.array(results)
 
 
-def auto_focus(microscope):
-    """Autofocus the image on the camera by varying z only, using a given
-    method of calculating the sharpness.
-    :param microscope: The microscope object, containing the camera and stage.
-    """
+class AutoFocus(Experiment):
+    """Autofocus the image on the camera by varying z only, using the Laplacian
+    method of calculating the sharpness and compressed JPEG image."""
 
-    # Preview the microscope so we can see auto-focusing.
-    microscope.camera.preview()
+    def __init__(self, microscope):
+        super(AutoFocus, self).__init__()
+        self.scope = microscope
+        # Preview the microscope so we can see auto-focusing.
+        self.scope.camera.preview()
 
-    # Set up the data recording.
-    attributes = {'resolution': microscope.camera.resolution,
-                  'backlash':   micro.defaults["backlash"]}
-    if autofocus_defaults["sharpness_func"] == 'laplacian':
-        sharpness_func = m.sharpness_lap
-        attributes["sharpness_func"] = 'laplacian'
-    # Add more conditions here if other sharpness functions are added.
-    else:
-        raise ValueError('Invalid sharpness function entered.')
+    def run(self):
+        # Set up the data recording.
 
-    attributes['capture_func'] = micro.defaults["mode"]
-    focus_data = d.Datafile(filename=autofocus_defaults["filename"])
-    tests = focus_data.new_group(autofocus_defaults["group_name"],
-                                 attrs=attributes)
+        attributes = {'resolution': self.scope.camera.resolution,
+                      'backlash': micro.defaults["backlash"]}
+        attributes['capture_func'] = micro.defaults["mode"]
 
-    # Take measurements and focus.
-    for step, n in autofocus_defaults["mmt_range"]:
-        sharpness_list = []
-        positions = []
+        z = autofocus_defaults["mmt_range"]
 
-        for i in range(n + 1):
-            if i == 0:
-                # Initial capture
-                microscope.stage.focus_rel(-step * n / 2)
-            else:
-                # Remaining n measurements.
-                microscope.stage.focus_rel(step)
+        funcs = [h.bake(pro.crop_array, args=['IMAGE_ARR'],
+                        kwargs={'mmts': 'frac',
+                                'dims': autofocus_defaults["crop_fraction"]}),
+                 h.bake(m.sharpness_lap, args=['IMAGE_ARR'])]
+        end = h.bake(max_fourth_col, args=['IMAGE_ARR', self.scope])
 
-            raw_array = microscope.camera.get_frame()
-            (cropped, actual_frac) = pro.crop_array(
-                raw_array, mmts='frac', dims=autofocus_defaults[
-                    "crop_fraction"], return_actual_crop=True)
+        _move_capture(self, {'z': z}, 'bayer', func_list=funcs,
+                      save_mode=None, end_func=end)
 
-            # Down-sample if the image is not already compressed.
-            if micro.defaults["mode"] == 'bayer':
-                compressed = pro.down_sample(
-                    cropped, autofocus_defaults["pixel_block"])
-            else:
-                compressed = raw_array
 
-            sharpness_list.append(sharpness_func(compressed))
-            positions.append(microscope.stage.position[2])
+#def auto_focus(microscope):
+#    """Autofocus the image on the camera by varying z only, using a given
+#    method of calculating the sharpness.
+#    :param microscope: The microscope object, containing the camera and stage.
+#    """
 
-        # Move to where the sharpness is maximised and measure about it.
-        new_position = np.argmax(sharpness_list)
-        microscope.stage.focus_rel(-(n - new_position) * step)
+#    # Take measurements and focus.
+#    for step, n in autofocus_defaults["mmt_range"]:
+#        sharpness_list = []
+#        positions = []
 
-        data_arr = np.vstack((positions, sharpness_list)).T
-        focus_data.add_data(data_arr, tests, '', attrs={
-            'Step size': step, 'Repeats': n,
-            'Pixel block': autofocus_defaults["pixel_block"],
-            'Actual fraction cropped': actual_frac})
+#        for i in range(n + 1):
+#            if i == 0:
+#                # Initial capture
+#                microscope.stage.focus_rel(-step * n / 2)
+#            else:
+#                # Remaining n measurements.
+#                microscope.stage.focus_rel(step)
+
+#            raw_array = microscope.camera.get_frame()
+#            (cropped, actual_frac) = pro.crop_array(
+#                raw_array, mmts='frac', dims=autofocus_defaults[
+#                    "crop_fraction"])
+
+#            # Down-sample if the image is not already compressed.
+#            if micro.defaults["mode"] == 'bayer':
+#                compressed = pro.down_sample(
+#                    cropped, autofocus_defaults["pixel_block"])
+#            else:
+#                compressed = raw_array
+
+#            sharpness_list.append(sharpness_func(compressed))
+#            positions.append(microscope.stage.position[2])
+
+#        # Move to where the sharpness is maximised and measure about it.
+#        new_position = np.argmax(sharpness_list)
+#        microscope.stage.focus_rel(-(n - new_position) * step)
+
+#        data_arr = np.vstack((positions, sharpness_list)).T
+#        focus_data.add_data(data_arr, tests, '', attrs={
+#            'Step size': step, 'Repeats': n,
+#            'Pixel block': autofocus_defaults["pixel_block"],
+#            'Actual fraction cropped': actual_frac})
 
 
 class TestMemoryLeak(Experiment):
@@ -163,75 +171,27 @@ class Tiled(Experiment):
         super(Tiled, self).__init__()
         self.scope = microscope
 
-    def run(self, func_list=None, save_every_mmt=False):
+    def run(self, func_list=None, save_mode='save_each'):
         # Set up the data recording.
         n = tiled_dict["n"]
         steps = tiled_dict["steps"]
         attributes = {'n': n, 'steps': steps,
                       'backlash': micro.defaults["backlash"],
                       'focus': tiled_dict["focus"]}
-        # TODO Save data into this group, unsure how to do this with nplab.
-        # self.create_data_group('a_group', attrs=attributes)
 
         # Set mutable default values.
         if func_list is None:
-            func_list = [h.bake_in_args(h.unchanged, args=['IMAGE_ARR'])]
+            func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
 
         # Get initial position, which may not be [0, 0, 0] if scope object
         # has been used for something else prior to this experiment.
         initial_position = self.scope.stage.position
+        end = h.bake(max_fourth_col, args=['IMAGE_ARR', self.scope])
 
-        # Generate array of all positions to move to.
-        x = np.linspace(-n / 2. * steps, n / 2. * steps, n + 1)
-        y = x
-        pos = h.positions_maker(x, y, initial_pos=initial_position)
-
-        try:
-            # A set of results to be collected if save_every_mmt is False.
-            results = []
-
-            # For each position in the range specified, take an image, apply
-            # all the functions in func_list on it, then either save the
-            # measurement if save_every_mmt is true, or append the calculation
-            # to a results file and save it all at the end.
-            while True:
-                next_pos = next(pos)    # This returns StopIteration at end.
-                self.scope.stage.move_to_pos(next_pos)
-                time.sleep(0.5)
-
-                image = self.scope.camera.get_frame(greyscale=False)
-                modified = image
-
-                # Post-process.
-                for function in func_list:
-                    modified = function(modified)
-                    self.create_dataset('mod_image', data=modified)
-
-                # Save this array in HDF5 file.
-                if save_every_mmt:
-                    self.create_dataset('modified_image', attrs={
-                            'Position': self.scope.stage.position,
-                            'Cropped size': 300}, data=modified)
-                else:
-                    results.append([self.scope.stage.position[0],
-                                    self.scope.stage.position[1],
-                                    self.scope.stage.position[2], modified])
-
-        except StopIteration:
-            # Iterations finished.
-
-            # Save results if they have been incrementally collected.
-            if not save_every_mmt:
-                results = np.array(results, dtype=np.float)
-                self.create_dataset('brightness_results', data=results)
-                self.log("Test - brightness results added.")
-
-        except KeyboardInterrupt:
-            print "Aborted, moving back to initial position."
-
-        finally:
-            # Move bak to the start
-            self.scope.stage.move_to_pos(initial_position)
+        # Move to position of maximum brightness.
+        _move_capture(self, {'x': [(n, steps)], 'y': [(n, steps)]},
+                      image_mode='compressed', func_list=func_list,
+                      save_mode=save_mode, end_func=end)
 
 
 def centre_spot(scope):
@@ -264,6 +224,172 @@ def centre_spot(scope):
     return
 
 
+def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
+                  save_mode='save_subset', end_func=None):
+    """Function to carry out a sequence of measurements as per iter_list,
+    take an image at each position, post-process it and return a final result.
+
+    :param exp_obj: The experiment object.
+
+    :param iter_dict: A dictionary of lists of 2-tuples to indicate all
+    positions where images should be taken:
+        {'x': [(n_x1, step_x1), ...], 'y': [(n_y1, step_y1), ...], 'z': ...],
+    where each key indicates the axis to move, n is the number of steps to
+    take (resulting in n+1 images) and step is the number of microsteps
+    between each subsequent image. So {'x': [(3, 100)]} would move only the
+    x-axis of the microscope, taking 4 images at x=-150, x=-50, x=50,
+    x=150 microsteps relative to the initial position. Note that:
+    - Not all keys need to be specified.
+    - All lists must be the same length.
+    - All measurements will be taken symmetrically about the initial position.
+
+    The position of each tuple in the list is important. If we have
+    {'x': [(1, 100), (0, 100)],
+     'y': [(2,  50), (3,  40)]},
+    then tuples of the same index from each list will be combined into an
+    array. This means that for the 0th index, for x we have the positions
+    [-50, 50] and [0] and for y [-50, 0, 50] and [-60, -20, 20, 60]
+    respectively. [-50, 50] and [-50, 0, 50] will be combined to get the
+    resulting array of [[-50, -50], [-50, 0], [-50, 50], [50, -50], [50, 0],
+    [50, 50]], and the latter two to get [[0, -60], [0, -20], [0, 20],
+    [0, 60]]. These are all the positions the stage will move to (the format
+    here is [x, y]), iterating through each array in the order given.
+
+    If you prefer to take images once for all the 'x' and, separately, once
+    for all the 'y', run this function twice, once for 'x', once for 'y'.
+
+    :param image_mode: The camera's capture mode: 'bayer', 'bgr' or
+    'compressed'. Greyscale is off by default.
+
+    :param func_list: The post-processing curried function list, created using
+    the bake function in the helpers.py module.
+
+    :param save_mode: How to save at the end of each iteration.
+    - 'save_each': Every single measurement is saved: {'x': [(3, 100)]}
+      would result in 4 post-processed results being saved, which is useful if
+      the post-processed results are image arrays.
+    - 'save_final': Every single measurement is made before the entire set of
+      results, as an array, is saved along with their positions, in the
+      format [[x-column], [y-column], [z-column], [measurements-column]]. This
+      is good for the post-processed results that are single numerical value.
+    - 'save_subset': Each array is measured before being saved (for example, in
+      the description of iter_dict, there are two arrays being iterated
+      through).
+    - None: Data is not saved at all, but is returned. Might be useful if
+      this is intermediate step.
+
+    :param end_func: A curried function, which is executed on the array of
+    final results. This can be useful to move to a position where the final
+    measurement is maximised."""
+
+    # Verify iter_dict format:
+    valid_keys = ['x', 'y', 'z']
+    len_lists = []
+    assert len(iter_dict) <= len(valid_keys)
+    for key in iter_dict.keys():
+        for tup in iter_dict[key]:
+            assert len(tup) == 2, 'Invalid tuple format.'
+        assert np.any(key == np.array(valid_keys)), 'Invalid key.'
+        # For robustness, the lengths of the lists for each key must be
+        # the same length.
+        len_lists.append(len(iter_dict[key]))
+    if len(len_lists) > 1:
+        assert [len_lists[0] == element for element in len_lists[1:]], \
+            'Lists of unequal lengths.'
+
+    # Get initial position, which may not be [0, 0, 0] if scope object
+    # has been used for something else prior to this experiment.
+    initial_position = exp_obj.scope.stage.position
+
+    # A set of results to be collected if save_mode == 'save_final'.
+    results = []
+
+    for i in range(len_lists[0]):
+        # For the length of each list, combine every group of tuples in the
+        # same position to get array of positions to move to.
+        move_by = {}
+        for key in valid_keys:
+            try:
+                (n, steps) = iter_dict[key][i]
+                move_by[key] = np.linspace(-n / 2. * steps, n / 2. * steps,
+                                           n + 1)
+            except KeyError:
+                # If key does not exist, then keep this axis fixed.
+                move_by[key] = np.array([0])
+        print "move-by", move_by
+        # Generate array of positions to move to.
+        pos = h.positions_maker(x=move_by['x'], y=move_by['y'],
+                                z=move_by['z'], initial_pos=initial_position)
+
+        try:
+            # For each position in the range specified, take an image, apply
+            # all the functions in func_list on it, then either save the
+            # measurement if save_mode = 'save_final', or append the
+            # calculation to a results file and save it all at the end.
+            while True:
+                next_pos = next(pos)  # This returns StopIteration at end.
+                print next_pos
+                exp_obj.scope.stage.move_to_pos(next_pos)
+
+                image = exp_obj.scope.camera.get_frame(greyscale=False,
+                                                       mode=image_mode)
+                modified = image
+
+                # Post-process.
+                for function in func_list:
+                    modified = function(modified)
+
+                # Save this array in HDF5 file.
+                if save_mode == 'save_each':
+                    exp_obj.create_dataset('modified_image', attrs={
+                        'Position': exp_obj.scope.stage.position,
+                        'Cropped size': 300}, data=modified)
+                else:
+                    # The curried function and 'save_final' both use the
+                    # array of final results.
+                    results.append([scope.stage.position[0],
+                                    scope.stage.position[1],
+                                    scope.stage.position[2], modified])
+
+        except StopIteration:
+            # Iterations finished - save the subset of results and take the
+            # next set.
+            if save_mode == 'save_subset':
+                results = np.array(results, dtype=np.float)
+                exp_obj.create_dataset('brightness_results', data=results)
+                exp_obj.log("Test - brightness results added.")
+
+        except KeyboardInterrupt:
+            print "Aborted, moving back to initial position."
+            exp_obj.scope.stage.move_to_pos(initial_position)
+
+    results = np.array(results, dtype=np.float)
+    if save_mode == 'save_final':
+        exp_obj.create_dataset('brightness_results', data=results)
+        exp_obj.log("Test - brightness results added.")
+    elif save_mode is None:
+        return results
+    #CHANGE THIS
+    #elif save_mode != :
+    #    raise ValueError('Invalid save mode.')
+
+    if end_func is not None:
+        # Process the result and return it.
+        try:
+            return end_func(results)
+        except:
+            raise NameError('Invalid function name.')
+
+
+def max_fourth_col(results_arr, scope_obj):
+    """Given a results array made of [[x_pos], [y_pos], [z_pos], [quantity]]
+    format, moves scope stage to the position with the maximum value of
+    'quantity'."""
+    new_position = results_arr[np.argmax(results_arr[:, 3]), :][:3]
+    print new_position
+    scope_obj.stage.move_to_pos(new_position)
+
+
 if __name__ == '__main__':
     # Control pre-processing manually.
     sys_args = docopt(__doc__)
@@ -273,21 +399,20 @@ if __name__ == '__main__':
     # Calculate brightness of central spot by taking a tiled section of
     # images, cropping the central 250 x 250 pixels, down sampling the bayer
     # image. Return an array of the positions and the brightness.
-    fun_list = [h.bake_in_args(pro.crop_array, args=['IMAGE_ARR'],
-                               kwargs={'mmts': 'pixel', 'dims': 200}),
-                h.bake_in_args(m.brightness, args=['IMAGE_ARR'])]
+    fun_list = [h.bake(pro.crop_array, args=['IMAGE_ARR'],
+                       kwargs={'mmts': 'pixel', 'dims': 200}),
+                h.bake(m.brightness, args=['IMAGE_ARR'])]
 
     if sys_args['autofocus']:
-        auto_focus(scope)
+        # auto_focus(scope)
+        focus = AutoFocus(scope)
+        focus.run()
     elif sys_args['centre']:
         centre_spot(scope)
     elif sys_args['tiled']:
         tiled = Tiled(scope)
-        tiled.run(func_list=fun_list, save_every_mmt=False)
+        tiled.run(func_list=fun_list)
     elif sys_args['memoryleak']:
         leak = TestMemoryLeak(scope)
         leak.N = 100
         leak.run()
-
-
-print hp.heap()

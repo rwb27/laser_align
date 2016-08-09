@@ -5,12 +5,12 @@
     "group_name":       "tests",
     "sharpness_func":   "laplacian",    // Algorithm used to calculate sharpness. Currently, valid inputs include
                                         // 'laplacian'. Change as more sharpness functions are added.
-    "mmt_range":        [[1000, 20],    // List of positions to make sharpness measurements for. The format is
-                         [200,  10],    // [[z_microsteps, n], ...]. For example, [[1000, 20], ...] will take sharpness
-                         [200,  10],    // measurements in intervals of 1000 microsteps from -1000 * 20 / 2 to
-                         [100,  12]],   // +1000 * 20 / 2, resulting in 21 total measurements. It will then move to the
+    "mmt_range":        [[5, 100]],    // List of positions to make sharpness measurements for. The format is
+                        // [10,  200],    // [[n, z microsteps], ...]. For example, [[20, 1000], ...] will take sharpness
+                        // [10,  200],    // measurements in intervals of 1000 microsteps from -1000 * 20 / 2 to
+                        // [12,  100]],   // +1000 * 20 / 2, resulting in 21 total measurements. It will then move to the
                                         // region of highest sharpness and continue with the next set in the main list.
-    "crop_fraction":     0.5,            // Fraction of each image to crop per dimension. The centre of the image will
+    "crop_fraction":     0.3,           // Fraction of each image to crop per dimension. The centre of the image will
                                         // be cropped by default. For a value of 0.5, the central 50% of x and y will be
                                         // cropped, so the central 25% of the image's area will be retained.
     "pixel_block":      4               // The number of pixels per dimension to group. For a value of 4, the image will
