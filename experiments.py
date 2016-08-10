@@ -11,12 +11,12 @@ Usage:
     experiments.py autofocus
     experiments.py centre
     experiments.py tiled
-    experiments.py (-h | --help)
     experiments.py memoryleak
+    experiments.py align
+    experiments.py (-h | --help)
 
 Options:
-    -h, --help   Display this usage statement.
-"""
+    -h, --help   Display this usage statement."""
 
 import time
 import cv2
@@ -38,35 +38,7 @@ from measurements import sharpness_lap
 # images procedure.
 autofocus_defaults = d.config_read('./configs/autofocus.json')
 tiled_dict = d.config_read('./configs/tiled_image.json')
-
-
-def sharpness_vs_position(pixel_step, list_of_arrs):
-    """Calculates the sharpness of a set of sub-images as a function of
-    position.
-    :param pixel_step: A tuple of no. of pixels per sub-image along (x, y).
-    :param list_of_arrs: A list of lists containing the sub-image arrays,
-    in the format returned by crop_img_into_n.
-    :return: An array in the form [x_position, y_position, sharpness],
-    where each of the three are column vectors."""
-
-    sharpness_arr = []
-    for arr_list in list_of_arrs:
-        sharpness_col = []
-        for arr in arr_list:
-            sharpness_col.append(sharpness_lap(arr))
-        sharpness_arr.append(sharpness_col)
-
-    sharpness_arr = np.array(sharpness_arr)
-
-    it = np.nditer(sharpness_arr, flags=['multi_index'])
-    results = []
-    while not it.finished:
-        results.append([it.multi_index[0] * pixel_step[0] + pixel_step[0]/2,
-                        it.multi_index[1] * pixel_step[1] + pixel_step[1]/2,
-                        it[0]])
-        it.iternext()
-
-    return np.array(results)
+align_dict = d.config_read('./configs/align.json')
 
 
 class AutoFocus(Experiment):
@@ -79,68 +51,27 @@ class AutoFocus(Experiment):
         # Preview the microscope so we can see auto-focusing.
         self.scope.camera.preview()
 
-    def run(self):
+    def run(self, backlash):
         # Set up the data recording.
-
         attributes = {'resolution': self.scope.camera.resolution,
                       'backlash': micro.defaults["backlash"]}
         attributes['capture_func'] = micro.defaults["mode"]
-
         z = autofocus_defaults["mmt_range"]
+        print z
 
         funcs = [h.bake(pro.crop_array, args=['IMAGE_ARR'],
                         kwargs={'mmts': 'frac',
                                 'dims': autofocus_defaults["crop_fraction"]}),
                  h.bake(m.sharpness_lap, args=['IMAGE_ARR'])]
+        # Move to the position of maximum brightness.
         end = h.bake(max_fourth_col, args=['IMAGE_ARR', self.scope])
 
-        _move_capture(self, {'z': z}, 'bayer', func_list=funcs,
-                      save_mode=None, end_func=end)
-
-
-#def auto_focus(microscope):
-#    """Autofocus the image on the camera by varying z only, using a given
-#    method of calculating the sharpness.
-#    :param microscope: The microscope object, containing the camera and stage.
-#    """
-
-#    # Take measurements and focus.
-#    for step, n in autofocus_defaults["mmt_range"]:
-#        sharpness_list = []
-#        positions = []
-
-#        for i in range(n + 1):
-#            if i == 0:
-#                # Initial capture
-#                microscope.stage.focus_rel(-step * n / 2)
-#            else:
-#                # Remaining n measurements.
-#                microscope.stage.focus_rel(step)
-
-#            raw_array = microscope.camera.get_frame()
-#            (cropped, actual_frac) = pro.crop_array(
-#                raw_array, mmts='frac', dims=autofocus_defaults[
-#                    "crop_fraction"])
-
-#            # Down-sample if the image is not already compressed.
-#            if micro.defaults["mode"] == 'bayer':
-#                compressed = pro.down_sample(
-#                    cropped, autofocus_defaults["pixel_block"])
-#            else:
-#                compressed = raw_array
-
-#            sharpness_list.append(sharpness_func(compressed))
-#            positions.append(microscope.stage.position[2])
-
-#        # Move to where the sharpness is maximised and measure about it.
-#        new_position = np.argmax(sharpness_list)
-#        microscope.stage.focus_rel(-(n - new_position) * step)
-
-#        data_arr = np.vstack((positions, sharpness_list)).T
-#        focus_data.add_data(data_arr, tests, '', attrs={
-#            'Step size': step, 'Repeats': n,
-#            'Pixel block': autofocus_defaults["pixel_block"],
-#            'Actual fraction cropped': actual_frac})
+        for n_step_pair in z:
+            # Allow the iteration to take place as many times as specified
+            # in the config file.
+            _move_capture(self, {'z': n_step_pair}, 'bayer', func_list=funcs,
+                          save_mode=None, end_func=end)
+            print self.scope.stage.position
 
 
 class TestMemoryLeak(Experiment):
@@ -170,12 +101,12 @@ class Tiled(Experiment):
     def __init__(self, microscope):
         super(Tiled, self).__init__()
         self.scope = microscope
+        self.scope.camera.preview()
 
-    def run(self, func_list=None, save_mode='save_each'):
+    def run(self, func_list=None, save_mode='save_subset',
+            step_pair=(tiled_dict["n"], tiled_dict["steps"])):
         # Set up the data recording.
-        n = tiled_dict["n"]
-        steps = tiled_dict["steps"]
-        attributes = {'n': n, 'steps': steps,
+        attributes = {'n': step_pair[0], 'steps': step_pair[1],
                       'backlash': micro.defaults["backlash"],
                       'focus': tiled_dict["focus"]}
 
@@ -186,30 +117,85 @@ class Tiled(Experiment):
         # Get initial position, which may not be [0, 0, 0] if scope object
         # has been used for something else prior to this experiment.
         initial_position = self.scope.stage.position
+
         end = h.bake(max_fourth_col, args=['IMAGE_ARR', self.scope])
 
-        # Move to position of maximum brightness.
-        _move_capture(self, {'x': [(n, steps)], 'y': [(n, steps)]},
+        # Take measurements and move to position of maximum brightness.
+        _move_capture(self, {'x': [step_pair], 'y': [step_pair]},
+                      image_mode='compressed', func_list=func_list,
+                      save_mode=save_mode, end_func=end)
+        print self.scope.stage.position
+
+
+class Align(Experiment):
+    """Class to align the spot to position of maximum brightness."""
+
+    def __init__(self, microscope):
+        super(Align, self).__init__()
+        self.scope = microscope
+
+    def run(self, func_list=None, save_mode='save_final'):
+        """Algorithm for alignment is to iterate the Tiled procedure several
+        times with decreasing width and increasing precision, and then using
+        the parabola of brightness to try and find the maximum point by
+        shifting slightly."""
+        # Set mutable default values.
+        if func_list is None:
+            func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
+
+        #tiled_set = Tiled(self.scope)
+        #for step_pairs in align_dict["n_steps"]:
+        #    # Take measurements and move to position of maximum brightness.
+        #    tiled_set.run(func_list=func_list, save_mode=save_mode,
+        #                  step_pair=step_pairs)
+
+        par = ParabolicMax(self.scope)
+
+        for i in range(3):
+            for ax in ['x', 'y']:
+                par.run(func_list=func_list, save_mode=save_mode, axis=ax)
+        image = self.scope.camera.get_frame(greyscale=False)
+        mod = pro.crop_array(image, mmts='pixel', dims=55)
+        self.create_dataset('FINAL', data=mod)
+
+
+class ParabolicMax(Experiment):
+    """Takes a sequence of N measurements, fits a parabola to them and moves to
+    the maximum brightness value."""
+
+    def __init__(self, microscope):
+        super(ParabolicMax, self).__init__()
+        self.scope = microscope
+
+    def run(self, func_list=None, save_mode='save_final', axis='x',
+            step_pair=(align_dict["parabola_N"], align_dict["parabola_step"])):
+        """Operates on one axis at a time."""
+        # Set mutable default values.
+        if func_list is None:
+            func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
+
+        end = h.bake(move_to_parmax, args=['IMAGE_ARR', self.scope, axis])
+        _move_capture(self, {axis: [step_pair]},
                       image_mode='compressed', func_list=func_list,
                       save_mode=save_mode, end_func=end)
 
 
-def centre_spot(scope):
+def centre_spot(scope_obj):
     """Find the spot on the screen, if it exists, and bring it to the
     centre. If no spot is found, an error is raised.
-    :param scope: A microscope object."""
+    :param scope_obj: A microscope object."""
 
     # TODO Need some way to identify if spot is not on screen.
 
-    transform = scope.calibrate()
-    scope.camera.preview()
+    transform = scope_obj.calibrate()
+    scope_obj.camera.preview()
     # TODO 'compressed' mode for speed, 'bayer' for accuracy.
-    frame = scope.camera.get_frame(mode='compressed', greyscale=True)
+    frame = scope_obj.camera.get_frame(mode='compressed', greyscale=True)
 
     # This is strongly affected by any other bright patches in the image -
     # need a better way to distinguish the bright spot.
     thresholded = cv2.threshold(frame, 180, 0, cv2.THRESH_TOZERO)[1]
-    gr = scope.datafile.new_group('crop')
+    gr = scope_obj.datafile.new_group('crop')
     cropped = pro.crop_array(thresholded, mmts='pixel', dims=np.array([
         300, 300]), centre=np.array([0, 0]))
     peak = ndimage.measurements.center_of_mass(thresholded)
@@ -219,8 +205,71 @@ def centre_spot(scope):
     # by to centre the spot, we need half_dimensions - peak.
     thing = np.dot(half_dimensions - peak[::-1], transform)
     move_by = np.concatenate((thing, np.array([0])))
-    scope.stage.move_rel(move_by)
-    scope.datafile.add_data(cropped, gr, 'cropped')
+    scope_obj.stage.move_rel(move_by)
+    scope_obj.datafile.add_data(cropped, gr, 'cropped')
+    return
+
+
+def sharpness_vs_position(pixel_step, list_of_arrs):
+    """Calculates the sharpness of a set of sub-images as a function of
+    position.
+    :param pixel_step: A tuple of no. of pixels per sub-image along (x, y).
+    :param list_of_arrs: A list of lists containing the sub-image arrays,
+    in the format returned by crop_img_into_n.
+    :return: An array in the form [x_position, y_position, sharpness],
+    where each of the three are column vectors."""
+
+    sharpness_arr = []
+    for arr_list in list_of_arrs:
+        sharpness_col = []
+        for arr in arr_list:
+            sharpness_col.append(sharpness_lap(arr))
+        sharpness_arr.append(sharpness_col)
+
+    sharpness_arr = np.array(sharpness_arr)
+    it = np.nditer(sharpness_arr, flags=['multi_index'])
+    results = []
+    while not it.finished:
+        results.append([it.multi_index[0] * pixel_step[0] + pixel_step[0]/2,
+                        it.multi_index[1] * pixel_step[1] + pixel_step[1]/2,
+                        it[0]])
+        it.iternext()
+
+    return np.array(results)
+
+
+def max_fourth_col(results_arr, scope_obj):
+    """Given a results array made of [[x_pos], [y_pos], [z_pos], [quantity]]
+    format, moves scope stage to the position with the maximum value of
+    'quantity'."""
+    print results_arr
+    new_position = results_arr[np.argmax(results_arr[:, 3]), :][:3]
+    print new_position
+    scope_obj.stage.move_to_pos(new_position)
+    print "Moved to " + str(new_position)
+    return
+
+
+def move_to_parmax(results_arr, scope_obj, axis):
+    """Given a results array from _move_capture, and an axis to look at,
+    fits that axis's positions with the measured quantities to a parabola,
+    returns the error and moves the scope_obj stage to the maximum point of the
+    parabola. Experiment can only be performed on a single axis."""
+    x = results_arr[:, ['x', 'y', 'z'].index(axis)]
+    y = results_arr[:, 3]
+    assert np.where(y == np.max(y)) != 0 and \
+        np.where(y == np.max(y)) != len(y), 'Extrapolation occurred - ' \
+                                            'measure over a wider range.'
+
+    coeffs = np.polyfit(x, y, 2) # Find some way to get errors from this.
+    print "coeffs", coeffs
+    coeffs_deriv = np.array([2, 1]) * coeffs[:2]    # Simulate differentiation.
+    x_stat = -coeffs_deriv[1] / coeffs_deriv[0]
+
+    new_pos = results_arr[0, :3]     # Get the values that stay the same.
+    new_pos[['x', 'y', 'z'].index(axis)] = x_stat   # Overlay with max.
+    print "new pos parmax", new_pos
+    scope_obj.stage.move_to_pos(new_pos)
     return
 
 
@@ -234,8 +283,8 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
     :param iter_dict: A dictionary of lists of 2-tuples to indicate all
     positions where images should be taken:
         {'x': [(n_x1, step_x1), ...], 'y': [(n_y1, step_y1), ...], 'z': ...],
-    where each key indicates the axis to move, n is the number of steps to
-    take (resulting in n+1 images) and step is the number of microsteps
+    where each key indicates the axis to move, 'n' is the number of times
+    to step (resulting in n+1 images) and 'step' is the number of microsteps
     between each subsequent image. So {'x': [(3, 100)]} would move only the
     x-axis of the microscope, taking 4 images at x=-150, x=-50, x=50,
     x=150 microsteps relative to the initial position. Note that:
@@ -247,8 +296,8 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
     {'x': [(1, 100), (0, 100)],
      'y': [(2,  50), (3,  40)]},
     then tuples of the same index from each list will be combined into an
-    array. This means that for the 0th index, for x we have the positions
-    [-50, 50] and [0] and for y [-50, 0, 50] and [-60, -20, 20, 60]
+    array. This means that for the 0th index of the list, for x we have the
+    positions [-50, 50] and [0] and for y [-50, 0, 50] and [-60, -20, 20, 60]
     respectively. [-50, 50] and [-50, 0, 50] will be combined to get the
     resulting array of [[-50, -50], [-50, 0], [-50, 50], [50, -50], [50, 0],
     [50, 50]], and the latter two to get [[0, -60], [0, -20], [0, 20],
@@ -280,7 +329,8 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
 
     :param end_func: A curried function, which is executed on the array of
     final results. This can be useful to move to a position where the final
-    measurement is maximised."""
+    measurement is maximised. Note: if save_mode is 'save_each', the results
+    array will be empty so end_func must be None."""
 
     # Verify iter_dict format:
     valid_keys = ['x', 'y', 'z']
@@ -338,6 +388,7 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
                 # Post-process.
                 for function in func_list:
                     modified = function(modified)
+                    exp_obj.create_dataset('modd', data=modified)
 
                 # Save this array in HDF5 file.
                 if save_mode == 'save_each':
@@ -362,6 +413,7 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
         except KeyboardInterrupt:
             print "Aborted, moving back to initial position."
             exp_obj.scope.stage.move_to_pos(initial_position)
+            exp_obj.wait_or_stop(10)
 
     results = np.array(results, dtype=np.float)
     if save_mode == 'save_final':
@@ -369,38 +421,33 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
         exp_obj.log("Test - brightness results added.")
     elif save_mode is None:
         return results
-    #CHANGE THIS
-    #elif save_mode != :
-    #    raise ValueError('Invalid save mode.')
+    elif save_mode != 'save_each' and save_mode != 'save_subset':
+        raise ValueError('Invalid save mode.')
 
     if end_func is not None:
-        # Process the result and return it.
-        try:
-            return end_func(results)
-        except:
-            raise NameError('Invalid function name.')
-
-
-def max_fourth_col(results_arr, scope_obj):
-    """Given a results array made of [[x_pos], [y_pos], [z_pos], [quantity]]
-    format, moves scope stage to the position with the maximum value of
-    'quantity'."""
-    new_position = results_arr[np.argmax(results_arr[:, 3]), :][:3]
-    print new_position
-    scope_obj.stage.move_to_pos(new_position)
+        if save_mode != 'save_each':
+            # Process the result and return it.
+            try:
+                return end_func(results)
+            except:
+                raise NameError('Invalid function name.')
+        elif save_mode == 'save_each':
+            raise ValueError('end_func must be None if save_mode = '
+                             '\'save_each\', because the results array is '
+                             'empty.')
 
 
 if __name__ == '__main__':
-    # Control pre-processing manually.
     sys_args = docopt(__doc__)
 
+    # Control pre-processing manually.
     scope = micro.Microscope(filename='dat.hdf5', man=True)
 
     # Calculate brightness of central spot by taking a tiled section of
     # images, cropping the central 250 x 250 pixels, down sampling the bayer
     # image. Return an array of the positions and the brightness.
     fun_list = [h.bake(pro.crop_array, args=['IMAGE_ARR'],
-                       kwargs={'mmts': 'pixel', 'dims': 200}),
+                       kwargs={'mmts': 'pixel', 'dims': 55}),
                 h.bake(m.brightness, args=['IMAGE_ARR'])]
 
     if sys_args['autofocus']:
@@ -416,3 +463,6 @@ if __name__ == '__main__':
         leak = TestMemoryLeak(scope)
         leak.N = 100
         leak.run()
+    elif sys_args['align']:
+        align = Align(scope)
+        align.run(func_list=fun_list)
