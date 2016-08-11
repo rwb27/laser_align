@@ -27,7 +27,7 @@ class Datafile:
         read/write privilege errors until late in execution."""
 
         today = datetime.date.today()
-        self._date = today.strftime('%Y%m%d')
+        self._date = today.strftime('%Y%mmts%d')
 
         if filename is None:  # If not explicitly asked for a datafile:
             self._filename = self._DEFAULT_FILE + "_" + self._date

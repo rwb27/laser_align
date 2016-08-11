@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 
 import helpers as h
-from measurements import get_size, get_pixel_step, get_num_subimages
+import measurements as mmts
 
 
 def crop_img_into_n(bgr_arr, n):
@@ -18,15 +18,16 @@ def crop_img_into_n(bgr_arr, n):
     tuple of number of subimages per (row, column), list of lists of each
     sub-image array."""
 
-    [x_res, y_res, tot_res] = get_size(bgr_arr)
+    [x_res, y_res, tot_res] = mmts.get_size(bgr_arr)
 
     # Round n to the nearest factor of the total resolution so the image is
     # cropped while maintaining the same aspect ratio per crop.
     num_subimages = h.closest_factor(tot_res, n)
     print "Splitting image into {} sub-images.".format(num_subimages)
 
-    [x_subimgs, y_subimgs] = get_num_subimages((x_res, y_res), num_subimages)
-    pixel_step = get_pixel_step((x_res, y_res), (x_subimgs, y_subimgs))
+    [x_subimgs, y_subimgs] = mmts.get_num_subimages((x_res, y_res),
+                                                    num_subimages)
+    pixel_step = mmts.get_pixel_step((x_res, y_res), (x_subimgs, y_subimgs))
 
     # Split image along y, then x. Lists have been used here instead of
     # arrays because although it may be slower, memory leaks are less likely.
@@ -102,7 +103,7 @@ def crop_array(arr, mode='spec', **args):
     :return: A tuple of the cropped image array, and other parameters if
     'return_actual_crop' is specified."""
 
-    res = get_size(arr)[:2]
+    res = mmts.get_size(arr)[:2]
     if mode == 'spec':
         assert all(var in args.keys() for var in
                    ['mmts', 'dims']), "Invalid keyword arguments."

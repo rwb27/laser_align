@@ -5,7 +5,7 @@ Contains functions to perform a set of measurements and output the results
 to a datafile or graph. These functions are built on top of measurements.py,
 microscope.py, image_proc.py and data_io.py and come with their own JSON
 config files. NOTE: Whenever using microscope.py, ensure that its module-wide
-variable 'defaults' is correctly defined.
+variable 'scope_defs' is correctly defined.
 
 Usage:
     experiments.py autofocus
@@ -23,22 +23,21 @@ import cv2
 import numpy as np
 from docopt import docopt
 from nplab.experiment.experiment import Experiment
-from scipy import ndimage
+from scipy import ndimage as sn
 
 import data_io as d
 import helpers as h
-import image_proc as pro
-import measurements as m
+import image_proc as proc
+import measurements as mmts
 import microscope as micro
-from measurements import sharpness_lap
 
-# Read the relevant config files. microscope_defaults.json is used to
+# Read the relevant config files. microscope.json is used to
 # set everything about the microscope (see microscope.py), and
 # autofocus.json for autofocusing. tiled_images.json is used for the tiled
-# images procedure.
-autofocus_defaults = d.config_read('./configs/autofocus.json')
-tiled_dict = d.config_read('./configs/tiled_image.json')
-align_dict = d.config_read('./configs/align.json')
+# images procedure. align.json is for the laser alignment class.
+focus_defs = d.config_read('./configs/autofocus.json')
+tiled_defs = d.config_read('./configs/tiled_image.json')
+align_defs = d.config_read('./configs/align.json')
 
 
 class AutoFocus(Experiment):
@@ -51,25 +50,26 @@ class AutoFocus(Experiment):
         # Preview the microscope so we can see auto-focusing.
         self.scope.camera.preview()
 
-    def run(self, backlash):
+    def run(self, backlash=micro.scope_defs["backlash"],
+            capt_mode=micro.scope_defs["mode"]):
         # Set up the data recording.
-        attributes = {'resolution': self.scope.camera.resolution,
-                      'backlash': micro.defaults["backlash"]}
-        attributes['capture_func'] = micro.defaults["mode"]
-        z = autofocus_defaults["mmt_range"]
-        print z
+        attributes = {'resolution':     self.scope.camera.resolution,
+                      'backlash':       backlash,
+                      'capture_func':   capt_mode}
+        z_range = focus_defs["mmt_range"]
 
-        funcs = [h.bake(pro.crop_array, args=['IMAGE_ARR'],
+        funcs = [h.bake(proc.crop_array,
+                        args=['IMAGE_ARR'],
                         kwargs={'mmts': 'frac',
-                                'dims': autofocus_defaults["crop_fraction"]}),
-                 h.bake(m.sharpness_lap, args=['IMAGE_ARR'])]
-        # Move to the position of maximum brightness.
+                                'dims': focus_defs["crop_fraction"]}),
+                 h.bake(mmts.sharpness_lap, args=['IMAGE_ARR'])]
+        # At the end, move to the position of maximum brightness.
         end = h.bake(max_fourth_col, args=['IMAGE_ARR', self.scope])
 
-        for n_step_pair in z:
+        for n_step in z_range:
             # Allow the iteration to take place as many times as specified
             # in the config file.
-            _move_capture(self, {'z': n_step_pair}, 'bayer', func_list=funcs,
+            _move_capture(self, {'z': n_step}, 'bayer', func_list=funcs,
                           save_mode=None, end_func=end)
             print self.scope.stage.position
 
@@ -104,19 +104,15 @@ class Tiled(Experiment):
         self.scope.camera.preview()
 
     def run(self, func_list=None, save_mode='save_subset',
-            step_pair=(tiled_dict["n"], tiled_dict["steps"])):
+            step_pair=(tiled_defs["n"], tiled_defs["steps"])):
         # Set up the data recording.
         attributes = {'n': step_pair[0], 'steps': step_pair[1],
-                      'backlash': micro.defaults["backlash"],
-                      'focus': tiled_dict["focus"]}
+                      'backlash': micro.scope_defs["backlash"],
+                      'focus': tiled_defs["focus"]}
 
         # Set mutable default values.
         if func_list is None:
             func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
-
-        # Get initial position, which may not be [0, 0, 0] if scope object
-        # has been used for something else prior to this experiment.
-        initial_position = self.scope.stage.position
 
         end = h.bake(max_fourth_col, args=['IMAGE_ARR', self.scope])
 
@@ -144,7 +140,7 @@ class Align(Experiment):
             func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
 
         #tiled_set = Tiled(self.scope)
-        #for step_pairs in align_dict["n_steps"]:
+        #for step_pairs in align_defs["n_steps"]:
         #    # Take measurements and move to position of maximum brightness.
         #    tiled_set.run(func_list=func_list, save_mode=save_mode,
         #                  step_pair=step_pairs)
@@ -155,7 +151,7 @@ class Align(Experiment):
             for ax in ['x', 'y']:
                 par.run(func_list=func_list, save_mode=save_mode, axis=ax)
         image = self.scope.camera.get_frame(greyscale=False)
-        mod = pro.crop_array(image, mmts='pixel', dims=55)
+        mod = proc.crop_array(image, mmts='pixel', dims=55)
         self.create_dataset('FINAL', data=mod)
 
 
@@ -168,7 +164,7 @@ class ParabolicMax(Experiment):
         self.scope = microscope
 
     def run(self, func_list=None, save_mode='save_final', axis='x',
-            step_pair=(align_dict["parabola_N"], align_dict["parabola_step"])):
+            step_pair=(align_defs["parabola_N"], align_defs["parabola_step"])):
         """Operates on one axis at a time."""
         # Set mutable default values.
         if func_list is None:
@@ -196,10 +192,10 @@ def centre_spot(scope_obj):
     # need a better way to distinguish the bright spot.
     thresholded = cv2.threshold(frame, 180, 0, cv2.THRESH_TOZERO)[1]
     gr = scope_obj.datafile.new_group('crop')
-    cropped = pro.crop_array(thresholded, mmts='pixel', dims=np.array([
+    cropped = proc.crop_array(thresholded, mmts='pixel', dims=np.array([
         300, 300]), centre=np.array([0, 0]))
-    peak = ndimage.measurements.center_of_mass(thresholded)
-    half_dimensions = np.array(np.array(m.get_size(frame)[:2])/2., dtype=int)
+    peak = sn.measurements.center_of_mass(thresholded)
+    half_dimensions = np.array(np.array(mmts.get_size(frame)[:2]) / 2., dtype=int)
 
     # Note that the stage moves in x and y, so to calculate how much to move
     # by to centre the spot, we need half_dimensions - peak.
@@ -223,7 +219,7 @@ def sharpness_vs_position(pixel_step, list_of_arrs):
     for arr_list in list_of_arrs:
         sharpness_col = []
         for arr in arr_list:
-            sharpness_col.append(sharpness_lap(arr))
+            sharpness_col.append(mmts.sharpness_lap(arr))
         sharpness_arr.append(sharpness_col)
 
     sharpness_arr = np.array(sharpness_arr)
@@ -271,6 +267,12 @@ def move_to_parmax(results_arr, scope_obj, axis):
     print "new pos parmax", new_pos
     scope_obj.stage.move_to_pos(new_pos)
     return
+
+
+def grad_feedback(results_arr, scope_obj, axis):
+    """Given three nearby points with only one axis's values varying,
+    calculate a gradient by working out the straight line between the
+    points. Move to make gradient equal 0."""
 
 
 def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
@@ -446,9 +448,9 @@ if __name__ == '__main__':
     # Calculate brightness of central spot by taking a tiled section of
     # images, cropping the central 250 x 250 pixels, down sampling the bayer
     # image. Return an array of the positions and the brightness.
-    fun_list = [h.bake(pro.crop_array, args=['IMAGE_ARR'],
+    fun_list = [h.bake(proc.crop_array, args=['IMAGE_ARR'],
                        kwargs={'mmts': 'pixel', 'dims': 55}),
-                h.bake(m.brightness, args=['IMAGE_ARR'])]
+                h.bake(mmts.brightness, args=['IMAGE_ARR'])]
 
     if sys_args['autofocus']:
         # auto_focus(scope)

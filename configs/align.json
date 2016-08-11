@@ -6,5 +6,5 @@
                                [10, 300],
                                [10, 50]],
     "parabola_N":           10,
-    "parabola_step":        25
+    "parabola_step":        50
 }
