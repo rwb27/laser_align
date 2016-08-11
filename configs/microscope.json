@@ -1,8 +1,6 @@
 // Contains default parameters for the microscope (including the stage and camera).
 
 {
-    "filename":             "./data/microscope_datafile",
-
     // Camera parameters.
 	"max_resolution":	    [2592, 1944],   // Tuples are not supported, use lists instead. Format is [x, y].
     "resolution":	    	[640, 480],
@@ -17,7 +15,7 @@
     "xyz_bound":            [320000, 320000, 320000],  // Stage cannot be displaced by > [x_bound, y_bound, z_bound]
                                                     // microsteps from original position. Set 'override' to true to
                                                     // ignore these bounds.
-    "microsteps":           16,         // Microsteps per step???
+    "microsteps":           16,                     // Microsteps per step???
     "backlash":             [128, 128, 128],        // Backlash in microsteps for [x, y, z] gears.
     "override":             false,
 

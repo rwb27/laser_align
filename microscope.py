@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
 """microscope.py
-This script contains all the classes required to make the microscope
-work. This includes the abstract Camera and Stage classes and
-their combination into a single Microscope class that allows both to be
-controlled together. It is based on the script by James Sharkey, which was used
-for the paper in Review of Scientific Instruments titled: A one-piece 3D
-printed flexure translation stage for open-source microscopy. NOTE: Whenever
-using microscope.py, ensure that its module-wide variable 'scope_defs' is
-correctly defined."""
+This script contains all the classes required to make the microscope work. This
+includes the abstract Camera and Stage classes and their combination into a
+single Microscope class that allows both to be controlled together. It is based
+on the script by James Sharkey, which was used for the paper in Review of
+Scientific Instruments titled: A one-piece 3D printed flexure translation stage
+for open-source microscopy. NOTE: Whenever using microscope.py, ensure that its
+module-wide variable 'scope_defs' is correctly defined."""
 
 import io
 import sys
@@ -17,11 +16,11 @@ import cv2
 import numpy as np
 import smbus
 from scipy import ndimage as sn
+from nplab.instrument import Instrument
 
 import data_io
 import helpers as h
 import image_proc as proc
-
 
 try:
     import picamera
@@ -33,7 +32,7 @@ except ImportError:
 scope_defs = data_io.config_read('./configs/microscope.json')
 
 
-class Microscope:
+class Microscope(Instrument):
     """Class to combine camera and stage into a single usable class. The
     microscope may be slow to be created; it must wait for the camera,
     stage and the datafile to be ready for use."""
@@ -43,29 +42,26 @@ class Microscope:
 
     def __init__(self, width=scope_defs["resolution"][0],
                  height=scope_defs["resolution"][1], cv2camera=False,
-                 channel=scope_defs["channel"],
-                 filename=scope_defs["filename"], man=True):
+                 channel=scope_defs["channel"], man=True):
         """Create the Microscope object containing a camera, stage and
         datafile. Use this instead of using the Camera and Stage classes!
         :param width: Resolution along x.
         :param height: " along y.
         :param cv2camera: Set to True if cv2-type camera will be used.
         :param channel: Channel of I2C bus to connect to motors for the stage.
-        :param filename: The name of the data file.
         :param man: Whether to control pre-processing manually or not."""
-
+        super(Microscope, self).__init__()
         self.camera = Camera(width, height, manual=man, cv2camera=cv2camera)
         self.stage = Stage(channel)
         # self.light = twoLED.Lightboard()
 
-        h.make_dirs(filename)   # Create parent directories if needed.
-        self.datafile = data_io.Datafile(filename)
+        # Set up data recording. Default values will be saved with the group.
+        self.gr = self.create_data_group('scope', attrs=scope_defs)
 
     def __del__(self):
         del self.camera
         del self.stage
         # del self.light
-        del self.datafile
 
     def camera_centre_move(self, template, mode=scope_defs["mode"]):
         """Code to return the movement in pixels needed to centre a template
@@ -86,6 +82,7 @@ class Microscope:
                 (camera_move[0] <= (width/2.0)))
         assert ((camera_move[1] >= -(height/2.0)) and
                 (camera_move[1] <= (height/2.0)))
+
         return camera_move, template_pos
 
     def camera_move_distance(self, camera_move):
@@ -132,6 +129,11 @@ class Microscope:
         if iteration == max_iterations:
             print "Abort: Tolerance not reached in %d iterations" % iteration
             iteration *= -1
+
+        self.gr.create_dataset('template_centred',
+                               data=(iteration, np.array(camera_positions),
+                                     np.array(stage_moves)),
+                               attrs={'tolerance': tolerance})
         return iteration, np.array(camera_positions), np.array(stage_moves)
 
     def calibrate(self, template=None, d=1000):
@@ -146,7 +148,7 @@ class Microscope:
 
         # Set up the necessary variables:
         self.camera.preview()
-        gr = self.datafile.new_group('templates')
+        gr = self.create_data_group('templates')
         pos = [np.array([d, d, 0]), np.array([d, -d, 0]),
                np.array([-d, -d, 0]), np.array([-d, d, 0])]
         camera_displacement = []
@@ -161,7 +163,8 @@ class Microscope:
             # crop function or the general crop function (to be written).
             frac = 0.8
             template = proc.crop_array(template, mmts='frac', dims=frac)
-            self.datafile.add_data(template, gr, 'template', attrs={
+            # TODO check this line is correct below
+            gr.create_dataset('template', data=template, attrs={
                 'crop_frac': frac})
         time.sleep(1)
 
@@ -350,13 +353,14 @@ class Camera:
         self._camera.awb_mode = 'off'
         self._camera.awb_gains = g
 
-    def preview(self):
-        """If using picamera, turn preview on and off."""
+    def preview(self, show=True):
+        """If using picamera, turn preview on and off. Set 'show' to False
+        to turn off."""
         if not self._usecv2:
-            if self._view:
+            if self._view and not show:
                 self._camera.stop_preview()
                 self._view = False
-            else:
+            elif not self._view and show:
                 self._camera.start_preview(fullscreen=False, window=(
                     20, 20, int(640*1.5), int(480*1.5)))
                 self._view = True
@@ -610,3 +614,8 @@ def _move_motors(bus, x, y, z):
     # Empirical formula for how micro step values relate to rotational speed.
     # This is only valid for the specific set of motors tested.
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
+
+
+if __name__ == '__main__':
+    scope = Microscope()
+    scope.calibrate()

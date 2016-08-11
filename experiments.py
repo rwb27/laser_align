@@ -195,7 +195,7 @@ def centre_spot(scope_obj):
     cropped = proc.crop_array(thresholded, mmts='pixel', dims=np.array([
         300, 300]), centre=np.array([0, 0]))
     peak = sn.measurements.center_of_mass(thresholded)
-    half_dimensions = np.array(np.array(mmts.get_size(frame)[:2]) / 2., dtype=int)
+    half_dimensions = np.array(np.array(h.get_size(frame)[:2]) / 2., dtype=int)
 
     # Note that the stage moves in x and y, so to calculate how much to move
     # by to centre the spot, we need half_dimensions - peak.
