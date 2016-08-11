@@ -37,10 +37,10 @@ def closest_factor(f, n):
     return _one_disallowed(_factors(f), n)
 
 
-def unchanged(*args):
-    """Returns the arguments; the default function for image
+def unchanged(arg):
+    """Returns the single input argument; the default function for image
     post-processing to return the input array unchanged."""
-    return args
+    return arg
 
 
 def _one_disallowed(factors, n):
@@ -86,35 +86,6 @@ def bake(fun, args=None, kwargs=None, position_to_pass_through=0):
             position_to_pass_through+1):]), **kwargs)
 
     return wrapped
-
-
-def make_dirs(file_path):
-    """Extract directory structure from file path and create the directories if
-    necessary.
-    :param file_path: String for the relative or absolute file path."""
-    if file_path[0] == '/':
-        # Allows for Linux ABSOLUTE path format.
-        path = file_path.split('/')[:-1]
-    # The following 2 are relative file paths.
-    elif file_path[:2] == './':
-        path = file_path.split('/')[1:-1]
-    elif re.match(r'\w+', file_path, flags=re.IGNORECASE):
-        path = file_path.split('/')[:-1]
-    else:
-        raise ValueError('The file path has incorrect format.')
-
-    if len(path) >= 1 and '' not in path:
-        dir_path = '/'.join(path)
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-    return
-
-
-def add_extension(string, extension='.hdf5'):
-    """Checks if 'string' has 'extension' at end, and appends it if not."""
-    if not re.search(r'{}'.format(extension), string.strip()):
-        string += extension
-    return string
 
 
 def positions_maker(x=np.array([0]), y=np.array([0]), z=np.array([0]),

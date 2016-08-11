@@ -101,12 +101,13 @@ class Tiled(Experiment):
     def __init__(self, microscope):
         super(Tiled, self).__init__()
         self.scope = microscope
+        self.scope.gr.log('INFO: Initiating Tiled experiment.')
         self.scope.camera.preview()
 
     def run(self, func_list=None, save_mode='save_subset',
             step_pair=(tiled_defs["n"], tiled_defs["steps"])):
         # Set up the data recording.
-        attributes = {'n': step_pair[0], 'steps': step_pair[1],
+        attributes = {'n': step_pair[0], 'step_increment': step_pair[1],
                       'backlash': micro.scope_defs["backlash"],
                       'focus': tiled_defs["focus"]}
 
@@ -390,11 +391,11 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
                 # Post-process.
                 for function in func_list:
                     modified = function(modified)
-                    exp_obj.create_dataset('modd', data=modified)
+                    exp_obj.scope.gr.create_dataset('modd', data=modified)
 
                 # Save this array in HDF5 file.
                 if save_mode == 'save_each':
-                    exp_obj.create_dataset('modified_image', attrs={
+                    exp_obj.scope.gr.create_dataset('modified_image', attrs={
                         'Position': exp_obj.scope.stage.position,
                         'Cropped size': 300}, data=modified)
                 else:

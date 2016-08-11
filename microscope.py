@@ -56,14 +56,14 @@ class Microscope(Instrument):
         # self.light = twoLED.Lightboard()
 
         # Set up data recording. Default values will be saved with the group.
-        self.gr = self.create_data_group('scope', attrs=scope_defs)
+        self.gr = self.create_data_group('Run', attrs=scope_defs)
 
     def __del__(self):
         del self.camera
         del self.stage
         # del self.light
 
-    def camera_centre_move(self, template, mode=scope_defs["mode"]):
+    def _camera_centre_move(self, template, mode=scope_defs["mode"]):
         """Code to return the movement in pixels needed to centre a template
         image, as well as the actual camera position of the template."""
         if mode == 'bayer':
@@ -82,10 +82,11 @@ class Microscope(Instrument):
                 (camera_move[0] <= (width/2.0)))
         assert ((camera_move[1] >= -(height/2.0)) and
                 (camera_move[1] <= (height/2.0)))
-
+        self.log('INFO: Template is at {}; the camera needs to move '
+                 '{}.'.format(camera_move, template_pos))
         return camera_move, template_pos
 
-    def camera_move_distance(self, camera_move):
+    def _camera_move_distance(self, camera_move):
         """Code to convert an (x,y) displacement in pixels to a distance in
         microns."""
         camera_move = np.array(camera_move)
@@ -110,12 +111,12 @@ class Microscope(Instrument):
         absolute value denoting the maximum number of iterations.
        - If centre_on_template(...)[0] < 0 then failure."""
 
-        stage_move = np.array([0, 0, 0])
         stage_moves = []
-        camera_move, position = self.camera_centre_move(template)
+        camera_move, position = self._camera_centre_move(template)
         camera_positions = [position]
         iteration = 0
-        while ((self.camera_move_distance(camera_move)) > tolerance) and \
+        self.log('INFO: Begun centering template on image.')
+        while ((self._camera_move_distance(camera_move)) > tolerance) and \
                 (iteration < max_iterations):
             iteration += 1
             stage_move = np.dot(camera_move, self.CAMERA_TO_STAGE_MATRIX)   # Rotate to stage coords
@@ -124,19 +125,23 @@ class Microscope(Instrument):
             self.stage.move_rel(stage_move)
             stage_moves.append(stage_move)
             time.sleep(0.5)
-            camera_move, position = self.camera_centre_move(template)
+            camera_move, position = self._camera_centre_move(template)
             camera_positions.append(position)
         if iteration == max_iterations:
+            self.log('ERROR: Aborted - tolerance not reached in %d '
+                     'iterations.') % iteration
             print "Abort: Tolerance not reached in %d iterations" % iteration
             iteration *= -1
 
-        self.gr.create_dataset('template_centred',
-                               data=(iteration, np.array(camera_positions),
-                                     np.array(stage_moves)),
-                               attrs={'tolerance': tolerance})
+        self.gr.create_dataset('centre_on_template',
+                               data=np.hstack((np.array(camera_positions),
+                                               np.array(stage_moves))),
+                               attrs={'num_iterations': iteration,
+                                      'tolerance': tolerance,
+                                      'data_labels': 'camera_xy, stage _xy'})
         return iteration, np.array(camera_positions), np.array(stage_moves)
 
-    def calibrate(self, template=None, d=1000):
+    def calibrate(self, template=None, d=1000, crop_frac=0.8):
         """Calibrate the stage-camera coordinates by finding the transformation
         between them.
         - If a template is specified, it will be used as the calibration track
@@ -148,7 +153,6 @@ class Microscope(Instrument):
 
         # Set up the necessary variables:
         self.camera.preview()
-        gr = self.create_data_group('templates')
         pos = [np.array([d, d, 0]), np.array([d, -d, 0]),
                np.array([-d, -d, 0]), np.array([-d, d, 0])]
         camera_displacement = []
@@ -158,14 +162,13 @@ class Microscope(Instrument):
         self.stage.move_to_pos([0, 0, 0])
         if template is None:
             # Default capture mode is bayer.
+            self.log('INFO: No template specified. Capturing image.')
             template = self.camera.get_frame(mode='compressed')
             # Crop the central 1/2 of the image - can replace by my central
             # crop function or the general crop function (to be written).
-            frac = 0.8
-            template = proc.crop_array(template, mmts='frac', dims=frac)
-            # TODO check this line is correct below
-            gr.create_dataset('template', data=template, attrs={
-                'crop_frac': frac})
+            template = proc.crop_array(template, mmts='frac', dims=crop_frac)
+            self.log('INFO: Cropped central {}\% of image.'.format(
+                crop_frac * 100))
         time.sleep(1)
 
         # Store the initial configuration:
@@ -173,14 +176,11 @@ class Microscope(Instrument):
                                                           decimal=True))
         init_stage_vector = self.stage.position  # 3 component form
         init_stage_pos = init_stage_vector[0:2]  # xy part
-        time.sleep(1)
 
         # Now make the motions in square specified by pos
         for p in pos:
             # Relate the microstep motion to the pixels measured on the
-            # camera. To do it with millimetres, you need to relate the
-            # pixels to the graticule image. Use ImageJ to make manual
-            # measurements.
+            # camera.
             self.stage.move_to_pos(np.add(init_stage_vector, p))
             time.sleep(1)
             cam_pos = np.array(self.camera.find_template(template, box_d=-1,
@@ -190,21 +190,36 @@ class Microscope(Instrument):
                                     init_stage_pos)
             camera_displacement.append(cam_pos)
             stage_displacement.append(stage_pos)
+
+        self.log('INFO: Measurements complete.')
         self.stage.centre_stage()
+        self.log('INFO: Moving to initial position.')
+
+        camera_displacement = np.array(camera_displacement)
+        stage_displacement = np.array(stage_displacement)
+        self.gr.create_dataset('calibration_raw', data=np.hstack((
+            camera_displacement, stage_displacement)), attrs={
+            'microstep_increment': d, 'crop_fraction': crop_frac,
+            'data_labels': 'camera_xy_stage_xy'})
 
         # Do the required analysis:
-        camera_displacement = np.array(camera_displacement)
+        self.log('INFO: Performing regression analysis.')
         camera_displacement -= np.mean(camera_displacement, axis=0)
-        print camera_displacement
-        stage_displacement = np.array(stage_displacement)
-        print stage_displacement
-
         a, res, rank, s = np.linalg.lstsq(camera_displacement,
                                           stage_displacement)
+
+        cali_results = {'pixel_microstep_transform': a, 'residuals': res,
+                        'norm': np.linalg.norm(a)}
+        for key in cali_results:
+            self.gr.create_dataset(key, data=cali_results[key])
+
+        print "matrix:  ", a
         print "residuals:  ", res
         print "norm:  ", np.linalg.norm(a)
-        self.camera.preview()
+
+        self.camera.preview(show=False)
         self.CAMERA_TO_STAGE_MATRIX = a
+        self.log('INFO: CAMERA_TO_STAGE_MATRIX updated with new values.')
         return a
 
 
