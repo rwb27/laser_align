@@ -1,0 +1,138 @@
+--- # Contains default parameters for the microscope and all associated experiments.
+
+# ------------------------------------------------- Camera parameters -------------------------------------------------
+
+# Tuples are not supported; use lists instead. Format is [x y].
+max_resolution:        [2592, 1944]
+
+# Actual resolution of the image. Irrelevant for bayer images, which are always full resolution.
+resolution:            [640, 480]
+
+# Whether to convert images to greyscale after capture. Note difference in Boolean notation compared to Python's False.
+greyscale:             false
+
+# Whether to capture frames using the videoport setting.
+videoport:             true
+
+# Valid image capture modes are bayer, compressed and bgr.
+mode:                  compressed
+
+# check AND ADD ROI????
+iterator:              false
+
+cv2camera:             false
+
+manual:                true
+
+# ------------------------------------------------- Stage parameters  -------------------------------------------------
+
+# I2C channel used to connect to motors. Varies depending on RPi model.
+channel:              1
+
+# Stage cannot be displaced by more than [x_bound, y_bound, z_bound] microsteps from [0, 0, 0] in any direction. Set
+# 'override' to true to ignore these bounds.
+xyz_bound:            [320000, 320000, 320000]
+
+# Microsteps per step???
+microsteps:           16
+
+# Backlash in microsteps for the [x, y, z] motors respectively.
+backlash:             [128, 128, 128]
+
+override:             false
+
+# --------------------------------------------- Microscope GUI parameters ---------------------------------------------
+
+# No. of microsteps per key press on GUI.
+key_stepsize:         1000
+
+# Control keys for the GUI.
+
+exit:                 x
+
+save:                 g
+
+save_stored_image:    t
+
+stop_tracking:        z
+
++x:                   s
+
+-x:                   w
+
++y:                   d
+
+-y:                   a
+
+# Not sure about the exact direction of +z and -z.
++z:                   e
+
+-z:                   q
+
+# Inverts the selection box colour.
+invert_colour:        i
+
+# ---------------------------------------------- Experimental parameters ----------------------------------------------
+
+# Spatial conversions from pixels to microns. This needs to be updated by manual measurement of the graticule.
+microns_per_pixel:        0.4846
+
+# Store a conversion matrix can be manually updated with result of calibrate() if necessary. Multiply [x, y] pixels by
+# this matrix to get [x, y] in microsteps.
+camera_stage_transform:  [[5.2,  7.0],
+                          [6.3, -5.6]]
+
+# ---------------------------------------------------- Tiled images ---------------------------------------------------
+
+# The number of steps per axis to take i.e. generates an n+1 x n+1 images in total.
+n:                20
+
+# The number of steps to take between each image.
+steps:            100
+
+# Whether to autofocus between each tile. For the first image a full auto-focus is performed and a quick one on
+# subsequent tiles.
+focus:            false
+
+crop_fraction:    50
+
+pixel_block:      4
+
+# -------------------------------------------------- Laser alignment --------------------------------------------------
+
+# The number of steps per axis to take i.e. generates an n+1 x n+1 images in total.
+n_steps:            [[10, 200]]
+
+parabola_N:           10
+
+parabola_step:        50
+
+# Align parabolically along each of x and y this many times.
+parabola_iterations:  3
+
+# ----------------------------------------------------- Autofocus -----------------------------------------------------
+
+group_name:       tests
+
+# Algorithm used to calculate sharpness. Currently valid inputs include 'laplacian'. Change as more sharpness functions
+# are added.
+sharpness_func:   laplacian
+
+# List of positions to make sharpness measurements for. The format is [[n_z, microsteps], ...]. For example [[20, 1000],
+# ...] will take sharpness measurements in intervals of 1000 microsteps from -1000 * 20 / 2 to +1000 * 20 / 2 resulting
+# in 21 total measurements. It will then move to the region of highest sharpness and continue with the next set in the
+# main list.
+mmt_range:        [[5, 100]]
+               #   [10, 200]
+               #   [10  200]
+               #   [12  100]]
+
+# Fraction of each image to crop per dimension. The centre of the image will be cropped by default. For a value of 0.5
+# the central 50% of x and y will be cropped so the central 25% of the image's area will be retained.
+crop_fraction:     0.3
+
+# The number of pixels per dimension to group. For a value of 4 the image will be down-sampled by a factor of 16 by
+# grouping pixels into 4x4 squares.
+pixel_block:       4
+
+...

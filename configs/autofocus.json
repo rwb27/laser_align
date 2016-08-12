@@ -1,7 +1,6 @@
 // Config file for autofocus function in experiments.py. Remaining defaults are defined in microscope_defaults.json.
 
 {
-    "filename":         "autofocus.hdf5",
     "group_name":       "tests",
     "sharpness_func":   "laplacian",    // Algorithm used to calculate sharpness. Currently, valid inputs include
                                         // 'laplacian'. Change as more sharpness functions are added.

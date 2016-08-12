@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 """Contains base-level functions that are required for the others to run."""
+
 import numpy as np
-import os
-import re
 
 
 def frac_round(number, frac, centre_frac):
@@ -41,26 +40,6 @@ def unchanged(arg):
     """Returns the single input argument; the default function for image
     post-processing to return the input array unchanged."""
     return arg
-
-
-def _one_disallowed(factors, n):
-    """For a list of integers 'factors' in ascending order, return the
-    number closest to n (choose the smallest if 2 are equidistant) as long as
-    it is not 1. If it is 1, return the second closest factor."""
-    closest = min(factors, key=lambda x: abs(x - n))
-    try:
-        return closest if closest != 1 else factors[1]
-    except:
-        raise Exception('Only common factor is 1. Crop or zero-pad the image '
-                        'before down-sampling.')
-
-
-def _factors(num):
-    """Returns the factors of a number, in ascending order as a list."""
-    factor_list = list(reduce(list.__add__, ([j, num // j] for j in range(
-        1, int(num ** 0.5) + 1) if num % j == 0)))
-    factor_list.sort()
-    return factor_list
 
 
 def bake(fun, args=None, kwargs=None, position_to_pass_through=0):
@@ -138,3 +117,23 @@ def get_num_subimages(res, tot_subimages):
     x_split = np.sqrt(res[0] / res[1] * tot_subimages)
     y_split = tot_subimages / x_split
     return x_split, y_split
+
+
+def _one_disallowed(factors, n):
+    """For a list of integers 'factors' in ascending order, return the
+    number closest to n (choose the smallest if 2 are equidistant) as long as
+    it is not 1. If it is 1, return the second closest factor."""
+    closest = min(factors, key=lambda x: abs(x - n))
+    try:
+        return closest if closest != 1 else factors[1]
+    except:
+        raise Exception('Only common factor is 1. Crop or zero-pad the image '
+                        'before down-sampling.')
+
+
+def _factors(num):
+    """Returns the factors of a number, in ascending order as a list."""
+    factor_list = list(reduce(list.__add__, ([j, num // j] for j in range(
+        1, int(num ** 0.5) + 1) if num % j == 0)))
+    factor_list.sort()
+    return factor_list

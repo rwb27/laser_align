@@ -54,7 +54,8 @@ def down_sample(array, factor_int=4):
     print "Using {} x {} pixel blocks for down-sampling.".format(factor_int,
                                                                  factor_int)
     if len(array.shape) == 3:
-        # BGR array. Why is dtype uint16?
+        # BGR array. The dtype is np.uint16 to prevent very high numbers
+        # looping around zero to become small.
         bin_y = np.mean(np.reshape(
             array, (array.shape[0], array.shape[1]/factor_int, factor_int, 3),
             order='C'), axis=2, dtype=np.uint16)

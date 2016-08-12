@@ -7,6 +7,8 @@ microscope via a GUI."""
 import datetime
 import cv2
 
+import caller
+import data_io
 import microscope as micro
 
 
@@ -26,19 +28,17 @@ class ScopeGUI:
     _GUI_KEY_SPACE = 32
     _GUI_KEY_ENTER = 13
 
-    _ARROW_STEP_SIZE = micro.scope_defs["key_stepsize"]
+    _ARROW_STEP_SIZE = data_io.scope_defs["key_stepsize"]
 
-    def __init__(self, width=micro.scope_defs["resolution"][0],
-                 height=micro.scope_defs["resolution"][1], cv2camera=False,
-                 channel=micro.scope_defs["channel"],
-                 filename=micro.scope_defs["filename"]):
+    def __init__(self, width=data_io.scope_defs["resolution"][0],
+                 height=data_io.scope_defs["resolution"][1], cv2camera=False,
+                 channel=data_io.scope_defs["channel"]):
         """Optionally specify a width and height for Camera object, the channel
         for the Stage object and a filename for the attached datafile.
         cv2camera allows non-RPi systems to be tested also."""
 
         # Create a new Microscope object.
-        self.microscope = micro.Microscope(width, height, cv2camera, channel,
-                                           filename)
+        self.microscope = micro.Microscope(width, height, cv2camera, channel)
 
         # Set up the GUI variables:
         self._gui_quit = False
@@ -122,9 +122,9 @@ class ScopeGUI:
                 keypress &= 0xFF
 
             # Now process the keypress:
-            if keypress == ord(micro.scope_defs["exit"]):
+            if keypress == ord(data_io.scope_defs["exit"]):
                 self._gui_quit = True
-            elif keypress == ord(micro.scope_defs["save"]):
+            elif keypress == ord(data_io.scope_defs["save"]):
                 # The g key will 'grab' (save) the box region or the whole
                 # frame if nothing selected.
                 fname = datetime.datetime.now().strftime("%Y%mmts%d_%H%M%S")
@@ -137,31 +137,31 @@ class ScopeGUI:
                            self._gui_sel[0]: self._gui_sel[0]+w]
                     cv2.imwrite("microscope_img_%s.jpg" % fname, crop)
 
-            elif keypress == ord(micro.scope_defs["save_stored_image"]):
+            elif keypress == ord(data_io.scope_defs["save_stored_image"]):
                 # The t key will save the stored template image.
                 fname = datetime.datetime.now().strftime("%Y%mmts%d_%H%M%S")
                 cv2.imwrite("template_%s.jpg" % fname, self.template_selection)
-            elif keypress == ord(micro.scope_defs["stop_tracking"]):
+            elif keypress == ord(data_io.scope_defs["stop_tracking"]):
                 # Reset the template selection box and stop tracking.
                 self._stop_gui_tracking()
             # QWEASD for 3D motion: WASD are motion in +y, -x, -y,
             # +x directions, QE are motion in +z, -z directions. Note these
             # need to be CHANGED DEPENDING ON THE CAMERA ORIENTATION. NOT
             # SURE ABOUT Q AND E YET.
-            elif keypress == ord(micro.scope_defs["+x"]):
+            elif keypress == ord(data_io.scope_defs["+x"]):
                 # The arrow keys will move the stage
                 self.microscope.stage.move_rel([self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == ord(micro.scope_defs["-x"]):
+            elif keypress == ord(data_io.scope_defs["-x"]):
                 self.microscope.stage.move_rel([-self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == ord(micro.scope_defs["+y"]):
+            elif keypress == ord(data_io.scope_defs["+y"]):
                 self.microscope.stage.move_rel([0, self._ARROW_STEP_SIZE, 0])
-            elif keypress == ord(micro.scope_defs["-y"]):
+            elif keypress == ord(data_io.scope_defs["-y"]):
                 self.microscope.stage.move_rel([0, -self._ARROW_STEP_SIZE, 0])
-            elif keypress == ord(micro.scope_defs["-z"]):
+            elif keypress == ord(data_io.scope_defs["-z"]):
                 self.microscope.stage.move_rel([0, 0, -self._ARROW_STEP_SIZE])
-            elif keypress == ord(micro.scope_defs["+z"]):
+            elif keypress == ord(data_io.scope_defs["+z"]):
                 self.microscope.stage.move_rel([0, 0, self._ARROW_STEP_SIZE])
-            elif keypress == ord(micro.scope_defs["invert_colour"]):
+            elif keypress == ord(data_io.scope_defs["invert_colour"]):
                 # Inverts the selection box colour.
                 if self._gui_color == (0, 0, 0):
                     self._gui_color = (255, 255, 255)  # White
@@ -266,8 +266,3 @@ class ScopeGUI:
         cv2.destroyWindow('Controls')
         self.microscope.camera.preview()
         self._gui_quit = False  # This allows restarting of the GUI
-
-
-if __name__ == '__main__':
-    scope = ScopeGUI()
-    scope.run_gui()

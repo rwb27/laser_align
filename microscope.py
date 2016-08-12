@@ -12,24 +12,22 @@ module-wide variable 'scope_defs' is correctly defined."""
 import io
 import sys
 import time
+
 import cv2
 import numpy as np
 import smbus
-from scipy import ndimage as sn
 from nplab.instrument import Instrument
+from scipy import ndimage as sn
 
-import data_io
 import helpers as h
 import image_proc as proc
+from data_io import scope_defs
 
 try:
     import picamera
     import picamera.array
 except ImportError:
     pass  # Don't fail on error; simply force cv2 camera later
-
-# Read defaults from config file.
-scope_defs = data_io.config_read('./configs/microscope.json')
 
 
 class Microscope(Instrument):
@@ -39,10 +37,11 @@ class Microscope(Instrument):
 
     _UM_PER_PIXEL = scope_defs["microns_per_pixel"]
     CAMERA_TO_STAGE_MATRIX = np.array(scope_defs["camera_stage_transform"])
-
+    
     def __init__(self, width=scope_defs["resolution"][0],
-                 height=scope_defs["resolution"][1], cv2camera=False,
-                 channel=scope_defs["channel"], man=True):
+                 height=scope_defs["resolution"][1],
+                 cv2camera=scope_defs["cv2camera"],
+                 channel=scope_defs["channel"], man=scope_defs["manual_mode"]):
         """Create the Microscope object containing a camera, stage and
         datafile. Use this instead of using the Camera and Stage classes!
         :param width: Resolution along x.
@@ -119,9 +118,12 @@ class Microscope(Instrument):
         while ((self._camera_move_distance(camera_move)) > tolerance) and \
                 (iteration < max_iterations):
             iteration += 1
-            stage_move = np.dot(camera_move, self.CAMERA_TO_STAGE_MATRIX)   # Rotate to stage coords
-            stage_move = np.append(stage_move, [0], axis=1)                 # Append the z-component of zero
-            stage_move = np.trunc(stage_move).astype(int)                   # Need integer microsteps (round to zero)
+            # Rotate to stage coordinates.
+            stage_move = np.dot(camera_move, self.CAMERA_TO_STAGE_MATRIX)
+            # Append the z-component of zero.
+            stage_move = np.append(stage_move, [0], axis=1)
+            # Need integer microsteps (round to zero).
+            stage_move = np.trunc(stage_move).astype(int)
             self.stage.move_rel(stage_move)
             stage_moves.append(stage_move)
             time.sleep(0.5)
@@ -227,19 +229,14 @@ class Camera:
 
     (FULL_RPI_WIDTH, FULL_RPI_HEIGHT) = scope_defs["max_resolution"]
 
-    def __init__(self, width=scope_defs["resolution"][0],
-                 height=scope_defs["resolution"][1], cv2camera=False,
-                 manual=False):
-        """An abstracted camera class. Use through the Microscope class
-        wherever possible.
-           - Optionally specify an image width and height.
-           - Choosing cv2camera=True allows testing on non RPi systems,
-             though code will detect if picamera is not present and assume
-             that cv2 must be used instead.
-           - Set greyscale to False if measurements are to be done with a
-           full colour image.
-           - manual specifies whether pre-processing (ISO, white balance,
-           exposure) are to be manually controlled or not."""
+    def __init__(self, width, height, cv2camera, manual):
+        """An abstracted camera class. Always use through the Microscope class.
+        :param width, height: Specify an image width and height.
+        :param cv2camera: Choosing cv2camera=True allows testing on non RPi
+        systems, though code will detect if picamera is not present and
+        assume that cv2 must be used instead.
+        :param manual: Specifies whether pre-processing (ISO, white balance,
+        exposure) are to be manually controlled or not."""
 
         if "picamera" not in sys.modules:  # If cannot use picamera, force cv2
             cv2camera = True
@@ -250,7 +247,6 @@ class Camera:
         self.latest_frame = None
 
         # Check the resolution is valid.
-
         if 0 < width <= self.FULL_RPI_WIDTH and 0 < height <= \
                 self.FULL_RPI_HEIGHT:
             # Note this is irrelevant for bayer images which always capture
@@ -324,10 +320,10 @@ class Camera:
     def _bayer_frame(self, greyscale):
         """Capture a raw bayer image, de-mosaic it and output a BGR numpy
         array."""
-        # Normally bayer images are not processed via white balance, etc in
-        # the camera and are thus of much worse quality if this were done.
-        # But the combination of lenses in the Pi means that the reverse is
-        # true.
+        # Normally bayer images are not post-processed via white balance,
+        # etc in # the camera and are thus of much worse quality if this were
+        # done. But the combination of lenses in the Pi means that the
+        # reverse is true.
         frame = picamera.array.PiBayerArray(self._camera)
         self._camera.capture(frame, 'jpeg', bayer=True)
         frame = (frame.demosaic() >> 2).astype(np.uint8)
@@ -384,16 +380,16 @@ class Camera:
     def get_frame(self, greyscale=scope_defs["greyscale"],
                   videoport=scope_defs["videoport"], mode=scope_defs["mode"]):
         """Manages obtaining a frame from the camera device.
-            - Toggle greyscale to obtain either a grey frame or BGR colour one.
-            - Use videoport to select RPi option "use_video_port",
-            which speeds up capture of images but has an offset compared to not
-            using it.
-            - mode allows choosing RPi camera method; via a
-            compressed 'compressed', 'bgr' or 'bayer'. 'bgr' is less CPU
-            intensive than 'compressed'.
-            - If use_iterator(True) has been used to initiate the iterator
-            method of capture, this method will be overridden to use that,
-            regardless of jpg/array choice."""
+        :param greyscale: Toggle to obtain either a grey frame or BGR colour
+        one.
+        :param videoport: Use to select RPi option "use_video_port",
+        which speeds up capture of images but has an offset compared to not
+        using it.
+        :param mode: Allows choosing RPi camera method; via 'compressed', 'bgr'
+        or 'bayer'. 'bgr' is less CPU intensive than 'compressed'. If
+        use_iterator(True) has been used to initiate the iterator method of
+        capture, this method will be overridden to use that, regardless of
+        choice."""
 
         if self._usecv2:
             frame = self._cv2_frame(greyscale)
@@ -414,9 +410,9 @@ class Camera:
     def use_iterator(self, iterator=scope_defs["iterator"]):
         """For the RPi camera only, use the capture_continuous iterator to
         capture frames many times faster.
-           - Call this function with iterator=True to turn on the method, and
-           use get_frame() as usual. To turn off the iterator and allow
-           capture via jpeg/raw then call with iterator=False."""
+        :param iterator: Call this function with iterator=True to turn on the
+        method, and use get_frame() as usual. To turn off the iterator and
+        allow capture via jpeg/raw then call with iterator=False."""
         if self._usecv2:
             return
         if iterator:
@@ -426,62 +422,64 @@ class Camera:
         else:
             self._fast_capture_iterator = None
 
-    def set_roi(self, (x, y, w, h)=(0, 0, -1, -1), normed=False):
+    def set_roi(self, (x, y, width, height)=(0, 0, -1, -1), normed=False):
         """For the RPi camera only, set the Region of Interest on the sensor
         itself.
-            - The tuple should be (x,y,w,gen) so x,y position then width and
-            height in pixels. Setting w,gen negative will use maximum size.
-            Reset by calling as set_roi().
-            - Take great care: changing this will change the camera coordinate
-            system, since the zoomed in region will be treated as the whole
-            image afterwards.
-            - Will NOT behave as expected if applied when already zoomed!
-            - Set normed to True to adjust raw normalise coordinates."""
+        - The tuple should be (x,y,width, height) so x,y position then width
+        and height in pixels. Setting width, height negative will use maximum
+        size. Reset by calling as set_roi().
+        - Take great care: changing this will change the camera coordinate
+        system, since the zoomed in region will be treated as the whole
+        image afterwards.
+        - Will NOT behave as expected if applied when already zoomed!
+        - Set normed to True to adjust raw normalise coordinates."""
         if self._usecv2:
             pass
         else:
             # TODO Binning and native resolution hard coding
             (frame_w, frame_h) = self.resolution
-            if w <= 0:
-                w = frame_w
-            if h <= 0:
-                h = frame_h
+            if width <= 0:
+                width = frame_w
+            if height <= 0:
+                height = frame_h
             if not normed:
-                self._camera.zoom = (x*1.0/frame_w, y*1.0/frame_h,
-                                     w*1.0/frame_w, h*1.0/frame_h)
+                self._camera.zoom = (x * 1.0 / frame_w,
+                                     y * 1.0 / frame_h,
+                                     width * 1.0 / frame_w,
+                                     height * 1.0 / frame_h)
             else:
-                self._camera.zoom = (x, y, w, h)
+                self._camera.zoom = (x, y, width, height)
 
     def find_template(self, template, frame=None, bead_pos=(-1, -1),
-                      box_d=-1,
-                      centre_mass=True, cross_corr=True, tolerance=0.05,
-                      decimal=False):
+                      box_d=-1, centre_mass=True, cross_corr=True,
+                      tolerance=0.05, decimal=False):
         """Finds a dot given a camera and a template image. Returns a camera
         coordinate for the centre of where the template has matched a part
-        of the image.
-        - Default behaviour is to search a 100x100px box at the centre of the
-        image.
-        - Providing a frame as an argument will allow searching of an existing
-        image, which avoids taking a frame from the camera.
-        - Specifying a bead_pos will centre the search on that location; use
-        when a previous location is known and bead has not moved. The camera
-        co-ordinate system should be used. Default is (-1,-1) which actually
-        looks at the centre.
-        - Specifying box_d allows the dimensions of the search box to be
-        altered. A negative or zero value will search the whole image. box_d
-        ought to be larger that the template dimensions.
-        - Toggle centremass to use Centre of Mass searching (default: True) or
-        Maximum Value (False).
-        - Use either Cross Correlation (cross_corr=True, the default) or
-        Square Difference (False) to find the likely position of the template.
-        - Fraction is the tolerance in the thresholding when filtering.
-        - decimal determines whether a float or int is returned."""
+        of the image. Default behaviour is to search the entire image.
+        :param template: The template image array to search for.
+        :param frame: Providing a frame as an argument will allow searching
+        of an existing image, which avoids taking a frame from the camera.
+        :param bead_pos: Specifying a bead_pos will centre the search on that
+        location; use when a previous location is known and bead has not moved.
+        The camera co-ordinate system should be used. Default is (-1,-1) which
+        actually looks at the centre.
+        :param box_d = Specifying box_d allows the dimensions of the search
+        box to be altered. A negative or zero value will search the whole
+        image. box_d ought to be larger than the template dimensions.
+        :param centre_mass: Toggle to use Centre of Mass searching (default:
+        True) or Maximum Value (False).
+        :param cross_corr: Use either Cross Correlation (cross_corr=True,
+        the default) or Square Difference (False) to find the likely position
+        of the template.
+        :param tolerance: The tolerance in the thresholding when filtering.
+        :param decimal: Determines whether a float or int is returned."""
 
         # If the template is a colour image (3 channels), make greyscale.
         if len(template.shape) == 3:
             template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+
+        # Take an image if one is not supplied.
         if frame is None:
-            # The default mode is a bayer image.
             frame = self.get_frame(greyscale=True, mode='compressed')
         else:
             frame = frame.copy()
@@ -513,67 +511,60 @@ class Camera:
             corr = cv2.matchTemplate(frame, template, cv2.TM_CCORR_NORMED)
         else:
             corr = cv2.matchTemplate(frame, template, cv2.TM_SQDIFF_NORMED)
-            corr *= -1.0  # Actually want minima with this method so reverse
-            # values.
-        corr += (corr.max()-corr.min()) * tolerance - corr.max()
+            # Actually want minima with this method so reverse values.
+            corr *= -1.0
 
-        """Use this section of the code for brightness centering."""
+        corr += (corr.max()-corr.min()) * tolerance - corr.max()
         corr = cv2.threshold(corr, 0, 0, cv2.THRESH_TOZERO)[1]
         if centre_mass:  # Either centre of mass:
             # Get co-ordinates of peak from origin at top left of array.
             peak = sn.measurements.center_of_mass(corr)
-            """Ends here."""
             # Array indexing means peak has (y,x) not (x,y):
             centre = (peak[1] + temp_w/2.0, peak[0] + temp_h/2.0)
         else:  # or crudely using max pixel
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(corr)
             centre = (max_loc[0] + temp_w/2.0, max_loc[1] + temp_h/2.0)
-        centre = (centre[0]+frame_x_off, frame_y_off+centre[1])
+        centre = (centre[0] + frame_x_off, frame_y_off + centre[1])
 
-        # To see what the correlations look like.
         corr *= 255/corr.max()
-        #cv2.imwrite("corr_%f.jpg" % time.time(), corr)
         if not decimal:
             centre = (int(centre[0]), int(centre[1]))
-
-        print "tem plate found at {}".format(centre)
+        print "Template found at {}".format(centre)
         return centre
 
 
 class Stage:
     # Check these bounds.
     _XYZ_BOUND = np.array(scope_defs["xyz_bound"])
-    _MICROSTEPS = scope_defs["microsteps"]  # How many micro-steps per step.
+    _MICROSTEPS = scope_defs["microsteps"]  # How many micro-steps per step?
 
     def __init__(self, channel=scope_defs["channel"]):
         """Class representing a 3-axis microscope stage."""
         self.bus = smbus.SMBus(channel)
-        time.sleep(3)
+        time.sleep(2)
         self.position = np.array([0, 0, 0])
 
-    def move_rel(self, vector, back=scope_defs["backlash"],
+    def move_rel(self, vector, backlash=scope_defs["backlash"],
                  override=scope_defs["override"]):
         """Move the stage by (x,y,z) micro steps.
         :param vector: The increment to move by along [x, y, z].
-        :param back: An array of the backlash along [x, y, z]. If None,
-        it is set to the default value of [128, 128, 128].
+        :param backlash: An array of the backlash along [x, y, z].
         :param override: Set to True to ignore the limits set by _XYZ_BOUND,
         otherwise an error is raised when the bounds are exceeded."""
 
-        # Check back has correct format.
-        assert np.all(back >= 0), "Backlash must >= 0 for all [x, y, z]."
-        back = h.verify_vector(back)
-
+        # Check backlash  and the vector to move by have the correct format.
+        assert np.all(backlash >= 0), "Backlash must >= 0 for all [x, y, z]."
+        backlash = h.verify_vector(backlash)
         r = h.verify_vector(vector)
 
-        # Generate the list of movements to make. If back is [0, 0, 0],
+        # Generate the list of movements to make. If backlash is [0, 0, 0],
         # there is only one motion to make.
         movements = []
-        if np.any(back != np.zeros(3)):
+        if np.any(backlash != np.zeros(3)):
             # Subtract an extra amount where vector is negative.
-            r[r < 0] -= back[np.where(r < 0)]
+            r[r < 0] -= backlash[np.where(r < 0)]
             r2 = np.zeros(3)
-            r2[r < 0] = back[np.where(r < 0)]
+            r2[r < 0] = backlash[np.where(r < 0)]
             movements.append(r2)
         movements.insert(0, r)
 
@@ -602,9 +593,6 @@ class Stage:
         centres it."""
         self.move_to_pos([0, 0, 0])
 
-    def current_pos(self):
-        print self.position
-
     def _reset_pos(self):
         # Hard resets the stored position, just in case things go wrong.
         self.position = np.array([0, 0, 0])
@@ -620,8 +608,7 @@ def _move_motors(bus, x, y, z):
     [x, y, z] = [int(x), int(y), int(z)]
 
     # The arguments for write_byte_data are: the I2C address of each motor,
-    # the register and how much to move it by.
-    # Currently hardcoded in, consider looking this up upon program run.
+    # the register and how much to move it by. Currently hardcoded in.
     bus.write_byte_data(0x50, x >> 8, x & 255)
     bus.write_byte_data(0x58, y >> 8, y & 255)
     bus.write_byte_data(0x6a, z >> 8, z & 255)
