@@ -1,8 +1,0 @@
-// Config file for tiled image generating function. Remaining parameters defined in microscope_defaults.json.
-
-{
-    "n_steps":            [[10, 200]],  // The number of steps per axis to take, i.e. generates an n+1 x n+1 images in total.
-    "parabola_N":           10,
-    "parabola_step":        50,
-    "parabola_iterations":  3           // Align parabolically along each of x and y this many times.
-}

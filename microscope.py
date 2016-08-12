@@ -12,7 +12,7 @@ module-wide variable 'scope_defs' is correctly defined."""
 import io
 import sys
 import time
-
+import data_io as d
 import cv2
 import numpy as np
 import smbus
@@ -21,7 +21,6 @@ from scipy import ndimage as sn
 
 import helpers as h
 import image_proc as proc
-from data_io import scope_defs
 
 try:
     import picamera
@@ -38,20 +37,29 @@ class Microscope(Instrument):
     _UM_PER_PIXEL = scope_defs["microns_per_pixel"]
     CAMERA_TO_STAGE_MATRIX = np.array(scope_defs["camera_stage_transform"])
     
-    def __init__(self, width=scope_defs["resolution"][0],
-                 height=scope_defs["resolution"][1],
-                 cv2camera=scope_defs["cv2camera"],
-                 channel=scope_defs["channel"], man=scope_defs["manual_mode"]):
+    def __init__(self, config_file, **kwargs):
         """Create the Microscope object containing a camera, stage and
         datafile. Use this instead of using the Camera and Stage classes!
+        :param config_file: Either a string specifying a path to the file,
+        ending in .yaml, or the dictionary of default configuration parameters.
+
+        :param kwargs: Valid kwargs are:
+            resolution, cv2camera, channel, manual and the two above
         :param width: Resolution along x.
         :param height: " along y.
         :param cv2camera: Set to True if cv2-type camera will be used.
         :param channel: Channel of I2C bus to connect to motors for the stage.
         :param man: Whether to control pre-processing manually or not."""
         super(Microscope, self).__init__()
-        self.camera = Camera(width, height, manual=man, cv2camera=cv2camera)
-        self.stage = Stage(channel)
+
+        # If config_file is entered as a path string, the file from the path
+        # will be read. If it is a dictionary, it is not changed. This
+        # prevents the config file being read repeatedly by different
+        # objects, rather than once and its value passed around.
+        config_dict = d.make_dict(config_file, **kwargs)
+
+        self.camera = Camera(config_dict)
+        self.stage = Stage(config_dict)
         # self.light = twoLED.Lightboard()
 
         # Set up data recording. Default values will be saved with the group.
@@ -229,14 +237,27 @@ class Camera:
 
     (FULL_RPI_WIDTH, FULL_RPI_HEIGHT) = scope_defs["max_resolution"]
 
-    def __init__(self, width, height, cv2camera, manual):
+    def __init__(self, config_file, **kwargs):
         """An abstracted camera class. Always use through the Microscope class.
+        :param kwargs:
+        Valid ones include resolution, cv2camera, manual, and above two^
         :param width, height: Specify an image width and height.
         :param cv2camera: Choosing cv2camera=True allows testing on non RPi
         systems, though code will detect if picamera is not present and
         assume that cv2 must be used instead.
         :param manual: Specifies whether pre-processing (ISO, white balance,
         exposure) are to be manually controlled or not."""
+
+        # If config_file is entered as a path string, the file from the path
+        # will be read. If it is a dictionary, it is not changed. This
+        # prevents the config file being read repeatedly by different
+        # objects, rather than once and its value passed around.
+        config_dict = d.make_dict(config_file, **kwargs)
+
+        width = config_dict["resolution"][0]
+        height = config_dict["resolution"][1]
+        cv2camera = config_dict["cv2camera"]
+        manual = config_dict["manual"]
 
         if "picamera" not in sys.modules:  # If cannot use picamera, force cv2
             cv2camera = True
@@ -538,9 +559,17 @@ class Stage:
     _XYZ_BOUND = np.array(scope_defs["xyz_bound"])
     _MICROSTEPS = scope_defs["microsteps"]  # How many micro-steps per step?
 
-    def __init__(self, channel=scope_defs["channel"]):
-        """Class representing a 3-axis microscope stage."""
-        self.bus = smbus.SMBus(channel)
+    def __init__(self, config_file, **kwargs):
+        """Class representing a 3-axis microscope stage.
+        :param config_file: Either file path or dictionary.
+        :param kwargs: Valid ones are the two above and channel."""
+
+        # If config_file is entered as a path string, the file from the path
+        # will be read. If it is a dictionary, it is not changed. This
+        # prevents the config file being read repeatedly by different
+        # objects, rather than once and its value passed around.
+        config_dict = d.make_dict(config_file, **kwargs)
+        self.bus = smbus.SMBus(config_dict["channel"])
         time.sleep(2)
         self.position = np.array([0, 0, 0])
 

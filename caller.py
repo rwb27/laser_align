@@ -24,7 +24,10 @@ import helpers as h
 import image_proc as proc
 import measurements as mmts
 import microscope as micro
-from data_io import scope_defs, focus_defs, tiled_defs, align_defs
+
+# Edit the paths of the config files.
+CONFIG_PATH = './configs/config.yaml'
+
 
 if __name__ == '__main__':
     sys_args = docopt(__doc__)

@@ -8,12 +8,6 @@ flexure translation stage for open-source microscopy."""
 
 import yaml
 
-# Edit the paths of the config files. DO NOT CHANGE ANYTHING ELSE DURING USE!
-SCOPE_CONFIG_PATH = './configs/config.json'
-FOCUS_CONFIG_PATH = './configs/autofocus.json'
-TILED_CONFIG_PATH = './configs/tiled_image.json'
-ALIGN_CONFIG_PATH = './configs/align.json'
-
 
 def yaml_read(yaml_file):
     """Parses a YAML file and returns the resulting dictionary.
@@ -23,18 +17,24 @@ def yaml_read(yaml_file):
     return config_dict
 
 
-def make_dict(config_path, **kwargs):
-    """Given a path to configuration dictionary from a JSON file, read the
-    dictionary and replace any optionally specified named parameters by those
-    from kwargs. Returns the modified dictionary."""
+def make_dict(config, **kwargs):
+    """Read the dictionary, or create one from a YAML file, and replace any
+    optionally specified named parameters by those from kwargs. Returns the
+    modified dictionary.
+    :param config: Either a string specifying a path to the config file,
+    or the dictionary of config parameters."""
 
-    # Read default values from dictionary.
-    config_dict = yaml_read(config_path)
-
+    if type(config) is str:
+        # Read default values from dictionary.
+        config = yaml_read(config)
+    elif type(config) is not dict:
+        raise TypeError('Variable \'config\' is neither a string nor a '
+                        'dictionary.')
     for key in kwargs:
-        assert key in config_dict.keys(), "The key {} is not present in the " \
-                                      "file {}. Ensure it has been typed " \
-                                      "correctly.".format(key, config_path)
-        config_dict[key] = kwargs[key]
+        # Only existing parameters can be changed.
+        assert key in config.keys(), "The key \'{}\' is not present in the " \
+                                     "file. Ensure it has been typed " \
+                                     "correctly.".format(key)
+        config[key] = kwargs[key]
 
-    return config_dict
+    return config
