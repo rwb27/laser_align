@@ -75,15 +75,33 @@ invert_colour:        i
 # ---------------------------------------------- Experimental parameters ----------------------------------------------
 
 # Spatial conversions from pixels to microns. This needs to be updated by manual measurement of the graticule.
-microns_per_pixel:        0.4846
+microns_per_pixel:          0.4846
 
 # Store a conversion matrix can be manually updated with result of calibrate() if necessary. Multiply [x, y] pixels by
 # this matrix to get [x, y] in microsteps.
-camera_stage_transform:  [[5.2,  7.0],
-                          [6.3, -5.6]]
+camera_stage_transform:     [[5.2,  7.0],
+                             [6.3, -5.6]]
+
+# Tolerance for camera's centre_on_template method, measured in microns.
+tolerance:                  1
+
+# Max number of iterations to attempt for centre_on_template method.
+max_iterations:             10
+
+# For calibrate.
+d:                          1000
+crop_frac:                  0.8
+
+# Find template method in Camera().
+bead_pos:                   [-1, -1]
+box_d:                      -1
+centre_mass:                true
+cross_corr:                 true
+tol      :                  0.05
+decimal:                    false
 
 # ---------------------------------------------------- Tiled images ---------------------------------------------------
-
+Tiled:
 # The number of steps per axis to take i.e. generates an n+1 x n+1 images in total.
 n:                20
 
@@ -98,6 +116,7 @@ crop_fraction:    50
 
 pixel_block:      4
 
+save_mode:        save_subset
 # -------------------------------------------------- Laser alignment --------------------------------------------------
 
 # The number of steps per axis to take i.e. generates an n+1 x n+1 images in total.

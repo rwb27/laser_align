@@ -7,7 +7,7 @@ the paper in Review of Scientific Instruments titled: A one-piece 3D printed
 flexure translation stage for open-source microscopy."""
 
 import yaml
-
+import pprint
 
 def yaml_read(yaml_file):
     """Parses a YAML file and returns the resulting dictionary.
@@ -38,3 +38,6 @@ def make_dict(config, **kwargs):
         config[key] = kwargs[key]
 
     return config
+
+
+pprint.pprint(yaml_read('./configs/config.yaml'))

@@ -33,9 +33,6 @@ class Microscope(Instrument):
     """Class to combine camera and stage into a single usable class. The
     microscope may be slow to be created; it must wait for the camera,
     stage and the datafile to be ready for use."""
-
-    _UM_PER_PIXEL = scope_defs["microns_per_pixel"]
-    CAMERA_TO_STAGE_MATRIX = np.array(scope_defs["camera_stage_transform"])
     
     def __init__(self, config_file, **kwargs):
         """Create the Microscope object containing a camera, stage and
@@ -44,7 +41,8 @@ class Microscope(Instrument):
         ending in .yaml, or the dictionary of default configuration parameters.
 
         :param kwargs: Valid kwargs are:
-            resolution, cv2camera, channel, manual and the two above
+            resolution, cv2camera, channel, manual and microns_per_pixel and
+            camera_stage_transform, mode, tolerance, max_iterations.
         :param width: Resolution along x.
         :param height: " along y.
         :param cv2camera: Set to True if cv2-type camera will be used.
@@ -56,23 +54,39 @@ class Microscope(Instrument):
         # will be read. If it is a dictionary, it is not changed. This
         # prevents the config file being read repeatedly by different
         # objects, rather than once and its value passed around.
-        config_dict = d.make_dict(config_file, **kwargs)
+        self.config_dict = d.make_dict(config_file, **kwargs)
 
-        self.camera = Camera(config_dict)
-        self.stage = Stage(config_dict)
+        self._UM_PER_PIXEL = self.config_dict["microns_per_pixel"]
+        self.CAMERA_TO_STAGE_MATRIX = np.array(self.config_dict[
+                                               "camera_stage_transform"])
+        self.camera = Camera(self.config_dict)
+        self.stage = Stage(self.config_dict)
         # self.light = twoLED.Lightboard()
 
-        # Set up data recording. Default values will be saved with the group.
-        self.gr = self.create_data_group('Run', attrs=scope_defs)
+        # Set up data recording. Default values will be saved with the
+        # group. TODO MOVE TO EACH METHOD.
+        attrs = {}
+        for key in ["max_resolution", "resolution", "greyscale", "videoport",
+                    "mode", "iterator", "cv2camera", "manual", "channel",
+                    "xyz_bound", "microsteps", "backlash", "override",
+                    "microns_per_pixel", "camera_stage_transform"]:
+            attrs[key] = self.config_dict[key]
+
+        self.gr = self.create_data_group('Run', attrs=attrs)
 
     def __del__(self):
         del self.camera
         del self.stage
         # del self.light
 
-    def _camera_centre_move(self, template, mode=scope_defs["mode"]):
+    def _camera_centre_move(self, template, mode=None):
         """Code to return the movement in pixels needed to centre a template
         image, as well as the actual camera position of the template."""
+        # Mode values can either be specified in the config file itself,
+        # at the __init__ stage or when using this method (by replacing the
+        # default value of None).
+        [mode] = check_defaults([mode], self.config_dict, ['mode'])
+
         if mode == 'bayer':
             width, height = self.camera.FULL_RPI_WIDTH, \
                             self.camera.FULL_RPI_HEIGHT
@@ -101,7 +115,8 @@ class Microscope(Instrument):
         return np.power(np.sum(np.power(camera_move, 2.0)), 0.5) * \
             self._UM_PER_PIXEL
 
-    def centre_on_template(self, template, tolerance=1, max_iterations=10):
+    def centre_on_template(self, template, tolerance=None,
+                           max_iterations=None):
         """Given a template image, move the stage until the template is
         centred. Returns a tuple containing the number of iterations, the
         camera positions and the stage moves as (number, camera_positions,
@@ -109,7 +124,7 @@ class Microscope(Instrument):
         to converge.
         - If a tolerance is specified, keep iterating until the template is
         within this distance from the centre or the maximum number of
-        iterations is exceeded.
+        iterations is exceeded. Measured in microns.
         - The max_iterations is how many times the code will run to attempt to
         centre the template image to within tolerance before aborting.
         - The stage will be held in position after motion, unless release is
@@ -117,6 +132,13 @@ class Microscope(Instrument):
         - A return value for iteration less than zero denotes failure, with the
         absolute value denoting the maximum number of iterations.
        - If centre_on_template(...)[0] < 0 then failure."""
+        # TODO LINK THIS WITH THE CENTRE SPOT FUNCTION IN EXPERIMENTS.PY
+
+        # Tolerance can be specified in init, for this function or config
+        # file directly.
+        [tolerance, max_iterations] = check_defaults(
+            [tolerance, max_iterations], self.config_dict,
+            ['tolerance', 'max_iterations'])
 
         stage_moves = []
         camera_move, position = self._camera_centre_move(template)
@@ -151,7 +173,7 @@ class Microscope(Instrument):
                                       'data_labels': 'camera_xy, stage _xy'})
         return iteration, np.array(camera_positions), np.array(stage_moves)
 
-    def calibrate(self, template=None, d=1000, crop_frac=0.8):
+    def calibrate(self, template=None, d=None, crop_frac=None):
         """Calibrate the stage-camera coordinates by finding the transformation
         between them.
         - If a template is specified, it will be used as the calibration track
@@ -160,6 +182,10 @@ class Microscope(Instrument):
         - The size of the calibration square can be adjusted using d,
         in microsteps. Care should be taken that the template or central part
         of the image does not leave the field of view!"""
+
+        # Get the default values - specify here, in init or config file.
+        [d, crop_frac] = check_defaults([d, crop_frac], self.config_dict,
+                                        ['d', 'crop_frac'])
 
         # Set up the necessary variables:
         self.camera.preview()
@@ -235,12 +261,10 @@ class Microscope(Instrument):
 
 class Camera:
 
-    (FULL_RPI_WIDTH, FULL_RPI_HEIGHT) = scope_defs["max_resolution"]
-
     def __init__(self, config_file, **kwargs):
         """An abstracted camera class. Always use through the Microscope class.
         :param kwargs:
-        Valid ones include resolution, cv2camera, manual, and above two^
+        Valid ones include resolution, cv2camera, manual, and max_resolution
         :param width, height: Specify an image width and height.
         :param cv2camera: Choosing cv2camera=True allows testing on non RPi
         systems, though code will detect if picamera is not present and
@@ -252,12 +276,14 @@ class Camera:
         # will be read. If it is a dictionary, it is not changed. This
         # prevents the config file being read repeatedly by different
         # objects, rather than once and its value passed around.
-        config_dict = d.make_dict(config_file, **kwargs)
+        self.config_dict = d.make_dict(config_file, **kwargs)
 
-        width = config_dict["resolution"][0]
-        height = config_dict["resolution"][1]
-        cv2camera = config_dict["cv2camera"]
-        manual = config_dict["manual"]
+        (self.FULL_RPI_WIDTH, self.FULL_RPI_HEIGHT) = self.config_dict[
+            "max_resolution"]
+        width = self.config_dict["resolution"][0]
+        height = self.config_dict["resolution"][1]
+        cv2camera = self.config_dict["cv2camera"]
+        manual = self.config_dict["manual"]
 
         if "picamera" not in sys.modules:  # If cannot use picamera, force cv2
             cv2camera = True
@@ -398,8 +424,7 @@ class Camera:
                 self._view = True
                 time.sleep(2)   # Let the image be properly received.
 
-    def get_frame(self, greyscale=scope_defs["greyscale"],
-                  videoport=scope_defs["videoport"], mode=scope_defs["mode"]):
+    def get_frame(self, greyscale=None, videoport=None, mode=None):
         """Manages obtaining a frame from the camera device.
         :param greyscale: Toggle to obtain either a grey frame or BGR colour
         one.
@@ -411,6 +436,10 @@ class Camera:
         use_iterator(True) has been used to initiate the iterator method of
         capture, this method will be overridden to use that, regardless of
         choice."""
+
+        [greyscale, videoport, mode] = check_defaults(
+            [greyscale, videoport, mode], self.config_dict, [
+                'greyscale', 'videoport', 'mode'])
 
         if self._usecv2:
             frame = self._cv2_frame(greyscale)
@@ -428,12 +457,14 @@ class Camera:
         self.latest_frame = frame
         return frame
 
-    def use_iterator(self, iterator=scope_defs["iterator"]):
+    def use_iterator(self, iterator=None):
         """For the RPi camera only, use the capture_continuous iterator to
         capture frames many times faster.
         :param iterator: Call this function with iterator=True to turn on the
         method, and use get_frame() as usual. To turn off the iterator and
         allow capture via jpeg/raw then call with iterator=False."""
+        [iterator] = check_defaults([iterator], self.config_dict, ['iterator'])
+
         if self._usecv2:
             return
         if iterator:
@@ -471,9 +502,9 @@ class Camera:
             else:
                 self._camera.zoom = (x, y, width, height)
 
-    def find_template(self, template, frame=None, bead_pos=(-1, -1),
-                      box_d=-1, centre_mass=True, cross_corr=True,
-                      tolerance=0.05, decimal=False):
+    def find_template(self, template, frame=None, bead_pos=None, box_d=None,
+                      centre_mass=None, cross_corr=None, tol=None,
+                      decimal=None, mode=None):
         """Finds a dot given a camera and a template image. Returns a camera
         coordinate for the centre of where the template has matched a part
         of the image. Default behaviour is to search the entire image.
@@ -492,8 +523,15 @@ class Camera:
         :param cross_corr: Use either Cross Correlation (cross_corr=True,
         the default) or Square Difference (False) to find the likely position
         of the template.
-        :param tolerance: The tolerance in the thresholding when filtering.
-        :param decimal: Determines whether a float or int is returned."""
+        :param tol: The tolerance in the thresholding when filtering.
+        :param decimal: Determines whether a float or int is returned.
+        :param mode: Mode of image capture."""
+
+        [bead_pos, box_d, centre_mass, cross_corr, tol, decimal, mode] = \
+            check_defaults([bead_pos, box_d, centre_mass, cross_corr, tol,
+                            decimal, mode], self.config_dict,
+                           ['bead_pos', 'box_d', 'centre_mass', 'cross_corr',
+                            'tol', 'decimal', 'mode'])
 
         # If the template is a colour image (3 channels), make greyscale.
         if len(template.shape) == 3:
@@ -501,7 +539,7 @@ class Camera:
 
         # Take an image if one is not supplied.
         if frame is None:
-            frame = self.get_frame(greyscale=True, mode='compressed')
+            frame = self.get_frame(greyscale=True, mode=mode)
         else:
             frame = frame.copy()
 
@@ -535,7 +573,7 @@ class Camera:
             # Actually want minima with this method so reverse values.
             corr *= -1.0
 
-        corr += (corr.max()-corr.min()) * tolerance - corr.max()
+        corr += (corr.max()-corr.min()) * tol - corr.max()
         corr = cv2.threshold(corr, 0, 0, cv2.THRESH_TOZERO)[1]
         if centre_mass:  # Either centre of mass:
             # Get co-ordinates of peak from origin at top left of array.
@@ -555,31 +593,36 @@ class Camera:
 
 
 class Stage:
-    # Check these bounds.
-    _XYZ_BOUND = np.array(scope_defs["xyz_bound"])
-    _MICROSTEPS = scope_defs["microsteps"]  # How many micro-steps per step?
 
     def __init__(self, config_file, **kwargs):
         """Class representing a 3-axis microscope stage.
         :param config_file: Either file path or dictionary.
-        :param kwargs: Valid ones are the two above and channel."""
+        :param kwargs: Valid ones are the xyz_bound, microsteps and channel."""
 
         # If config_file is entered as a path string, the file from the path
         # will be read. If it is a dictionary, it is not changed. This
         # prevents the config file being read repeatedly by different
         # objects, rather than once and its value passed around.
-        config_dict = d.make_dict(config_file, **kwargs)
-        self.bus = smbus.SMBus(config_dict["channel"])
+        self.config_dict = d.make_dict(config_file, **kwargs)
+
+        # Check these bounds.
+        self._XYZ_BOUND = np.array(self.config_dict["xyz_bound"])
+        # How many micro-steps per step?
+        self._MICROSTEPS = self.config_dict["microsteps"]
+
+        self.bus = smbus.SMBus(self.config_dict["channel"])
         time.sleep(2)
         self.position = np.array([0, 0, 0])
 
-    def move_rel(self, vector, backlash=scope_defs["backlash"],
-                 override=scope_defs["override"]):
+    def move_rel(self, vector, backlash=None, override=None):
         """Move the stage by (x,y,z) micro steps.
         :param vector: The increment to move by along [x, y, z].
         :param backlash: An array of the backlash along [x, y, z].
         :param override: Set to True to ignore the limits set by _XYZ_BOUND,
         otherwise an error is raised when the bounds are exceeded."""
+
+        [backlash, override] = check_defaults(
+            [backlash, override], self.config_dict, ['backlash', 'override'])
 
         # Check backlash  and the vector to move by have the correct format.
         assert np.all(backlash >= 0), "Backlash must >= 0 for all [x, y, z]."
@@ -608,10 +651,13 @@ class Stage:
             else:
                 raise ValueError('New position is outside allowed range.')
 
-    def move_to_pos(self, final, over=scope_defs["override"]):
+    def move_to_pos(self, final, override=None):
+
+        [override] = check_defaults([override], self.config_dict, ["override"])
+
         new_position = h.verify_vector(final)
         rel_mov = np.subtract(new_position, self.position)
-        return self.move_rel(rel_mov, override=over)
+        return self.move_rel(rel_mov, override=override)
 
     def focus_rel(self, z):
         """Move the stage in the Z direction by z micro steps."""
@@ -647,6 +693,17 @@ def _move_motors(bus, x, y, z):
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
 
 
-if __name__ == '__main__':
-    scope = Microscope()
-    scope.calibrate()
+def check_defaults(list_of_vars, config_dict, list_of_keys):
+    """Check if each variable in list_of_vars is None, and change it to the
+    corresponding value in config_dict if so.
+    :param list_of_vars: List of variables to check.
+    :param config_dict: Configuuration dictionary.
+    :param list_of_keys: List of respective key names.
+    :return: The modified list_of_vars."""
+    for i in range(len(list_of_vars)):
+        if list_of_vars[i] is None:
+            list_of_vars[i] = config_dict[list_of_keys[i]]
+
+    return list_of_vars
+
+

@@ -3,7 +3,8 @@
 """experiments.py
 Contains functions to perform a set of measurements and output the results to a
 datafile or graph. These functions are built on top of measurements.py,
-microscope.py, image_proc.py and data_io.py and come with their own JSON scope_dict
+microscope.py, image_proc.py and data_io.py and come with their own
+YAML scope_dict
 files. NOTE: Whenever using microscope.py, ensure that its module-wide variable
 'scope_defs' is correctly defined."""
 
@@ -18,41 +19,40 @@ import end_functions as e
 import helpers as h
 import image_proc as proc
 import measurements as mmts
+import microscope as micro
 
 
 class AutoFocus(Experiment):
     """Autofocus the image on the camera by varying z only, using the Laplacian
     method of calculating the sharpness and compressed JPEG image."""
 
-    def __init__(self, microscope, **kwargs, focus_dict):
+    def __init__(self, microscope, config_file, **kwargs):
         """
         :param microscope: A microscope object.
+        :param config_file: A string with a path to the YAML config file.
         :param scope_dict: An appropriately keyed dictionary of
         configuration parameters."""
         super(AutoFocus, self).__init__()
-        self.scope_dict = d.make_dict(d.SCOPE_CONFIG_PATH, **kwargs)
-        self.focus_dict = focus_dict
+        self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
         # Preview the microscope so we can see auto-focusing.
         self.scope.camera.preview()
 
-    def run(self, backlash=None, mode=None):
+    def run(self, backlash=None, mode=None, z_range=None, crop_frac=None):
         # Read the default parameters.
-        if backlash is None:
-            backlash = self.scope_dict["backlash"]
-        if mode is None:
-            mode = self.scope_dict["mode"]
+        [backlash, mode, z_range, crop_frac] = micro.check_defaults(
+            [backlash, mode, z_range, crop_frac], self.config_dict,
+            ['backlash', 'mode', 'mmt_range', 'crop_fraction'])
 
         # Set up the data recording.
         attributes = {'resolution':     self.scope.camera.resolution,
                       'backlash':       backlash,
                       'capture_func':   mode}
-        z_range = self.focus_dict["mmt_range"]
 
         funcs = [h.bake(proc.crop_array,
                         args=['IMAGE_ARR'],
                         kwargs={'mmts': 'frac',
-                                'dims': self.focus_dict["crop_fraction"]}),
+                                'dims': crop_frac}),
                  h.bake(mmts.sharpness_lap, args=['IMAGE_ARR'])]
         # At the end, move to the position of maximum brightness.
         end = h.bake(e.max_fourth_col, args=['IMAGE_ARR', self.scope])
@@ -69,23 +69,24 @@ class Tiled(Experiment):
     """Class to conduct experiments where a tiled sequence of images is 
     taken and post-processed."""
 
-    def __init__(self, microscope, scope_dict, tiled_dict):
+    def __init__(self, microscope, config_file, **kwargs):
         super(Tiled, self).__init__()
-        self.scope_dict = scope_dict
-        self.tiled_dict = tiled_dict
+        self.config_file = d.make_dict(config_file, **kwargs)
         self.scope = microscope
         self.scope.log('INFO: Initiating Tiled experiment.')
         self.scope.camera.preview()
 
-    def run(self, func_list=None, save_mode='save_subset', step_pair=None):
+    def run(self, func_list=None, save_mode=None, step_pair=None):
         # Get default values.
         if step_pair is None:
-            step_pair = (self.tiled_dict["n"], self.tiled_dict["steps"])
+            [save_mode, step_pair] = micro.check_defaults(
+                [save_mode, step_pair], self.config_file, [
+                    self.config_file["n"], self.config_file["steps"]])
 
         # Set up the data recording.
         attributes = {'n': step_pair[0], 'step_increment': step_pair[1],
-                      'backlash': self.scope_dict["backlash"],
-                      'focus': self.tiled_dict["focus"]}
+                      'backlash': self.config_file["backlash"],
+                      'focus': self.config_file["focus"]}
 
         # Set mutable default values.
         if func_list is None:
@@ -103,11 +104,9 @@ class Tiled(Experiment):
 class Align(Experiment):
     """Class to align the spot to position of maximum brightness."""
 
-    def __init__(self, microscope, scope_dict, tiled_dict, align_dict):
+    def __init__(self, microscope, config_file, **kwargs):
         super(Align, self).__init__()
-        self.scope_dict = scope_dict
-        self.tiled_dict = tiled_dict
-        self.align_dict = align_dict
+        self.config_file = d.make_dict(config_file, **kwargs)
         self.scope = microscope
 
     def run(self, func_list=None, save_mode='save_final'):
@@ -140,10 +139,9 @@ class ParabolicMax(Experiment):
     the maximum brightness value. Make sure the microstep size is not too
     small, otherwise noise will affect the parabola shape."""
 
-    def __init__(self, microscope, scope_dict, align_dict):
+    def __init__(self, microscope, config_file, **kwargs):
         super(ParabolicMax, self).__init__()
-        self.scope_dict = scope_dict
-        self.align_dict = align_dict
+        self.config_file = d.make_dict(config_file, **kwargs)
         self.scope = microscope
 
     def run(self, func_list=None, save_mode='save_final', axis='x',
@@ -169,11 +167,9 @@ class DriftReCentre(Experiment):
     position for some time, then bring it back to the centre and measure
     the drift."""
 
-    def __init__(self, microscope, scope_dict, tiled_dict, align_dict):
+    def __init__(self, microscope, config_file, **kwargs):
         super(DriftReCentre, self).__init__()
-        self.scope_dict = scope_dict
-        self.tiled_dict = tiled_dict
-        self.align_dict = align_dict
+        self.config_file = d.make_dict(config_file, **kwargs)
         self.scope = microscope
 
     def run(self, func_list=None, save_mode='save_final', sleep_for=600):
@@ -181,7 +177,7 @@ class DriftReCentre(Experiment):
         # Do an initial alignment and then take that position as the initial
         # position.
         align = Align(self.scope, self.scope_dict, self.tiled_dict,
-                           self.align_dict)
+                      self.align_dict)
         align.run(func_list=func_list, save_mode=save_mode)
         initial_pos = self.scope.stage.position
 
@@ -199,14 +195,13 @@ class DriftReCentre(Experiment):
 class KeepCentred(Experiment):
     """Iterate the parabolic method repeatedly after the initial alignment """
 
-    def __init__(self, microscope, scope_dict, tiled_dict, align_dict):
+    def __init__(self, microscope, config_file, **kwargs):
         super(KeepCentred, self).__init__()
-        self.scope_dict = scope_dict
-        self.tiled_dict = tiled_dict
-        self.align_dict = align_dict
+        self.config_file = d.make_dict(config_file, **kwargs)
         self.scope = microscope
 
     def run(self, func_list=None, save_mode='save_final'):
+        pass
 
 
 def centre_spot(scope_obj):
@@ -364,9 +359,9 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
                 else:
                     # The curried function and 'save_final' both use the
                     # array of final results.
-                    results.append([scope.stage.position[0],
-                                    scope.stage.position[1],
-                                    scope.stage.position[2], modified])
+                    results.append([exp_obj.scope.stage.position[0],
+                                    exp_obj.scope.stage.position[1],
+                                    exp_obj.scope.stage.position[2], modified])
 
         except StopIteration:
             # Iterations finished - save the subset of results and take the

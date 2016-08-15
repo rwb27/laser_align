@@ -17,6 +17,7 @@ Options:
     -h, --help   Display this usage statement."""
 
 from docopt import docopt
+import nplab
 
 import experiments as exp
 import gui as g
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     sys_args = docopt(__doc__)
 
     # Control pre-processing manually.
-    scope = micro.Microscope(man=True)
+    scope = micro.Microscope(CONFIG_PATH, manual=True)
 
     # Calculate brightness of central spot by taking a tiled section of
     # images, cropping the central 55 x 55 pixels, moving to the region of 
@@ -59,3 +60,5 @@ if __name__ == '__main__':
     elif sys_args['gui']:
         gui = g.ScopeGUI()
         gui.run_gui()
+
+    nplab.close_current_datafile()
