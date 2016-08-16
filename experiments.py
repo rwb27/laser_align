@@ -72,12 +72,10 @@ class Tiled(Experiment):
         self.scope.log('INFO: Initiating Tiled experiment.')
         self.scope.camera.preview()
 
-    def run(self, func_list=None, save_mode=None, step_pair=None):
+    def run(self, func_list=None, save_mode=None, step_pair=[None, None]):
         # Get default values.
-        if step_pair is None:
-            [save_mode, step_pair] = h.check_defaults(
-                [save_mode, step_pair], self.config_file, [
-                    self.config_file["n"], self.config_file["steps"]])
+        [step_pair[0], step_pair[1]] = h.check_defaults([
+            step_pair[0], step_pair[1]], self.config_file, ["n", "steps"])
 
         # Set up the data recording.
         attributes = {'n': step_pair[0], 'step_increment': step_pair[1],

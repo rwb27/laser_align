@@ -40,7 +40,7 @@ class ScopeGUI:
         self.config_dict = d.make_dict(config_file, **kwargs)
 
         # Create a new CamScope object.
-        self.microscope = micro.CamScope(self.config_dict)
+        self.microscope = micro.CamScope(self.config_dict, **kwargs)
 
         # Set up the GUI variables:
         self._ARROW_STEP_SIZE = self.config_dict["key_stepsize"]

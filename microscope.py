@@ -710,3 +710,7 @@ def _move_motors(bus, x, y, z):
     # Empirical formula for how micro step values relate to rotational speed.
     # This is only valid for the specific set of motors tested.
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
+
+if __name__ == '__main__':
+    scope = CamScope('./configs/config.yaml')
+    scope.calibrate()
