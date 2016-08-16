@@ -3,23 +3,19 @@
 """experiments.py
 Contains functions to perform a set of measurements and output the results to a
 datafile or graph. These functions are built on top of measurements.py,
-microscope.py, image_proc.py and data_io.py and come with their own
-YAML scope_dict
-files. NOTE: Whenever using microscope.py, ensure that its module-wide variable
-'scope_defs' is correctly defined."""
+microscope.py, image_proc.py and data_io.py."""
 
 import time as t
 import cv2
 import numpy as np
 from nplab.experiment.experiment import Experiment
 from scipy import ndimage as sn
-import data_io as d
 
+import data_io as d
 import end_functions as e
 import helpers as h
 import image_proc as proc
 import measurements as mmts
-import microscope as micro
 
 
 class AutoFocus(Experiment):
@@ -30,8 +26,7 @@ class AutoFocus(Experiment):
         """
         :param microscope: A microscope object.
         :param config_file: A string with a path to the YAML config file.
-        :param scope_dict: An appropriately keyed dictionary of
-        configuration parameters."""
+        :param kwargs: Valid kwargs are: backlash, z_range, crop_frac, mode."""
         super(AutoFocus, self).__init__()
         self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
@@ -40,10 +35,10 @@ class AutoFocus(Experiment):
 
     def run(self, backlash=None, mode=None, z_range=None, crop_frac=None):
         # Read the default parameters.
-        [backlash, mode, z_range, crop_frac] = micro.check_defaults(
+        [backlash, mode, z_range, crop_frac] = h.check_defaults(
             [backlash, mode, z_range, crop_frac], self.config_dict,
             ['backlash', 'mode', 'mmt_range', 'crop_fraction'])
-
+        print mode
         # Set up the data recording.
         attributes = {'resolution':     self.scope.camera.resolution,
                       'backlash':       backlash,
@@ -60,14 +55,15 @@ class AutoFocus(Experiment):
         for n_step in z_range:
             # Allow the iteration to take place as many times as specified
             # in the scope_dict file.
-            _move_capture(self, {'z': n_step}, 'bayer', func_list=funcs,
+            _move_capture(self, {'z': [n_step]}, 'bayer', func_list=funcs,
                           save_mode=None, end_func=end)
             print self.scope.stage.position
 
 
 class Tiled(Experiment):
     """Class to conduct experiments where a tiled sequence of images is 
-    taken and post-processed."""
+    taken and post-processed.
+    Valid kwargs are: step_pair, backlash, focus."""
 
     def __init__(self, microscope, config_file, **kwargs):
         super(Tiled, self).__init__()
@@ -79,7 +75,7 @@ class Tiled(Experiment):
     def run(self, func_list=None, save_mode=None, step_pair=None):
         # Get default values.
         if step_pair is None:
-            [save_mode, step_pair] = micro.check_defaults(
+            [save_mode, step_pair] = h.check_defaults(
                 [save_mode, step_pair], self.config_file, [
                     self.config_file["n"], self.config_file["steps"]])
 
@@ -107,6 +103,7 @@ class Align(Experiment):
     def __init__(self, microscope, config_file, **kwargs):
         super(Align, self).__init__()
         self.config_file = d.make_dict(config_file, **kwargs)
+        # Valid kwargs are step_pair, backlash, focus.
         self.scope = microscope
 
     def run(self, func_list=None, save_mode='save_final'):
@@ -118,15 +115,15 @@ class Align(Experiment):
         if func_list is None:
             func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
 
-        tiled_set = Tiled(self.scope, self.scope_dict, self.tiled_dict)
-        for step_pairs in self.align_dict["n_steps"]:
+        tiled_set = Tiled(self.scope, self.config_file)
+        for step_pairs in self.config_file["n_steps"]:
             # Take measurements and move to position of maximum brightness.
             tiled_set.run(func_list=func_list, save_mode=save_mode,
                           step_pair=step_pairs)
 
-        par = ParabolicMax(self.scope, self.scope, self.align_dict)
+        par = ParabolicMax(self.scope, self.config_file)
 
-        for i in range(self.align_dict["parabola_iterations"]):
+        for i in range(self.config_file["parabola_iterations"]):
             for ax in ['x', 'y']:
                 par.run(func_list=func_list, save_mode=save_mode, axis=ax)
         image = self.scope.camera.get_frame(greyscale=False)
@@ -149,8 +146,8 @@ class ParabolicMax(Experiment):
         """Operates on one axis at a time."""
         # Get default values.
         if step_pair is None:
-            step_pair = (self.align_dict["parabola_N"],
-                         self.align_dict["parabola_step"])
+            step_pair = (self.config_file["parabola_N"],
+                         self.config_file["parabola_step"])
 
         # Set mutable default values.
         if func_list is None:
@@ -176,8 +173,7 @@ class DriftReCentre(Experiment):
         """Default is to sleep for 10 minutes."""
         # Do an initial alignment and then take that position as the initial
         # position.
-        align = Align(self.scope, self.scope_dict, self.tiled_dict,
-                      self.align_dict)
+        align = Align(self.scope, self.config_file)
         align.run(func_list=func_list, save_mode=save_mode)
         initial_pos = self.scope.stage.position
 
@@ -298,7 +294,10 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
     len_lists = []
     assert len(iter_dict) <= len(valid_keys)
     for key in iter_dict.keys():
+        print iter_dict
+        print key
         for tup in iter_dict[key]:
+            print tup
             assert len(tup) == 2, 'Invalid tuple format.'
         assert np.any(key == np.array(valid_keys)), 'Invalid key.'
         # For robustness, the lengths of the lists for each key must be
@@ -396,6 +395,3 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
             raise ValueError('end_func must be None if save_mode = '
                              '\'save_each\', because the results array is '
                              'empty.')
-
-
-

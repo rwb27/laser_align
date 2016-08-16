@@ -3,22 +3,22 @@
 """microscope.py
 This script contains all the classes required to make the microscope work. This
 includes the abstract Camera and Stage classes and their combination into a
-single Microscope class that allows both to be controlled together. It is based
+single CamScope class that allows both to be controlled together. It is based
 on the script by James Sharkey, which was used for the paper in Review of
 Scientific Instruments titled: A one-piece 3D printed flexure translation stage
-for open-source microscopy. NOTE: Whenever using microscope.py, ensure that its
-module-wide variable 'scope_defs' is correctly defined."""
+for open-source microscopy."""
 
 import io
 import sys
 import time
-import data_io as d
 import cv2
-import numpy as np
 import smbus
-from nplab.instrument import Instrument
+import serial
+import numpy as np
 from scipy import ndimage as sn
+from nplab.instrument import Instrument
 
+import data_io as d
 import helpers as h
 import image_proc as proc
 
@@ -29,36 +29,38 @@ except ImportError:
     pass  # Don't fail on error; simply force cv2 camera later
 
 
-class Microscope(Instrument):
+class CamScope(Instrument):
     """Class to combine camera and stage into a single usable class. The
-    microscope may be slow to be created; it must wait for the camera,
-    stage and the datafile to be ready for use."""
+    microscope may be slow to be created; it must wait for the camera,and stage
+    to be ready for use."""
     
-    def __init__(self, config_file, **kwargs):
-        """Create the Microscope object containing a camera, stage and
-        datafile. Use this instead of using the Camera and Stage classes!
-        :param config_file: Either a string specifying a path to the file,
+    def __init__(self, config, **kwargs):
+        """Use this class instead of using the Camera and Stage classes!
+        :param config: Either a string specifying a path to the config file,
         ending in .yaml, or the dictionary of default configuration parameters.
+        :param kwargs: Specify optional keyword arguments, which will
+        override the defaults specified in the config file. Valid kwargs are:
+        - resolution: A tuple of the image's resolution along (x, y).
+        - max_resolution: A tuple of the camera's max resolution along (x, y).
+        - cv2camera: Set to True if cv2-type camera will be used.
+        - channel: Channel of I2C bus to connect to motors for the stage.
+        - manual: Boolean for whether to control pre-processing manually.
+        - um_per_pixel:
+        - camera_stage_transform
+        - mode
+        - tolerance
+        - max_iterations:"""
+        super(CamScope, self).__init__()
 
-        :param kwargs: Valid kwargs are:
-            resolution, cv2camera, channel, manual and microns_per_pixel and
-            camera_stage_transform, mode, tolerance, max_iterations.
-        :param width: Resolution along x.
-        :param height: " along y.
-        :param cv2camera: Set to True if cv2-type camera will be used.
-        :param channel: Channel of I2C bus to connect to motors for the stage.
-        :param man: Whether to control pre-processing manually or not."""
-        super(Microscope, self).__init__()
-
-        # If config_file is entered as a path string, the file from the path
+        # If config is entered as a path string, the file from the path
         # will be read. If it is a dictionary, it is not changed. This
         # prevents the config file being read repeatedly by different
         # objects, rather than once and its value passed around.
-        self.config_dict = d.make_dict(config_file, **kwargs)
+        self.config_dict = d.make_dict(config, **kwargs)
 
-        self._UM_PER_PIXEL = self.config_dict["microns_per_pixel"]
+        self._UM_PER_PIXEL = self.config_dict["um_per_pixel"]
         self.CAMERA_TO_STAGE_MATRIX = np.array(self.config_dict[
-                                               "camera_stage_transform"])
+                                                   "camera_stage_transform"])
         self.camera = Camera(self.config_dict)
         self.stage = Stage(self.config_dict)
         # self.light = twoLED.Lightboard()
@@ -69,7 +71,7 @@ class Microscope(Instrument):
         for key in ["max_resolution", "resolution", "greyscale", "videoport",
                     "mode", "iterator", "cv2camera", "manual", "channel",
                     "xyz_bound", "microsteps", "backlash", "override",
-                    "microns_per_pixel", "camera_stage_transform"]:
+                    "um_per_pixel", "camera_stage_transform"]:
             attrs[key] = self.config_dict[key]
 
         self.gr = self.create_data_group('Run', attrs=attrs)
@@ -85,7 +87,7 @@ class Microscope(Instrument):
         # Mode values can either be specified in the config file itself,
         # at the __init__ stage or when using this method (by replacing the
         # default value of None).
-        [mode] = check_defaults([mode], self.config_dict, ['mode'])
+        [mode] = h.check_defaults([mode], self.config_dict, ['mode'])
 
         if mode == 'bayer':
             width, height = self.camera.FULL_RPI_WIDTH, \
@@ -136,7 +138,7 @@ class Microscope(Instrument):
 
         # Tolerance can be specified in init, for this function or config
         # file directly.
-        [tolerance, max_iterations] = check_defaults(
+        [tolerance, max_iterations] = h.check_defaults(
             [tolerance, max_iterations], self.config_dict,
             ['tolerance', 'max_iterations'])
 
@@ -184,7 +186,7 @@ class Microscope(Instrument):
         of the image does not leave the field of view!"""
 
         # Get the default values - specify here, in init or config file.
-        [d, crop_frac] = check_defaults([d, crop_frac], self.config_dict,
+        [d, crop_frac] = h.check_defaults([d, crop_frac], self.config_dict,
                                         ['d', 'crop_frac'])
 
         # Set up the necessary variables:
@@ -262,7 +264,7 @@ class Microscope(Instrument):
 class Camera:
 
     def __init__(self, config_file, **kwargs):
-        """An abstracted camera class. Always use through the Microscope class.
+        """An abstracted camera class. Always use through the CamScope class.
         :param kwargs:
         Valid ones include resolution, cv2camera, manual, and max_resolution
         :param width, height: Specify an image width and height.
@@ -342,7 +344,7 @@ class Camera:
             raise TypeError("_cv2_frame() should ONLY be used when camera is "
                             "cv2.VideoCapture(0)")
         # We seem to be one frame behind always. So simply get current frame by
-        # updating twice .
+        # updating twice.
         frame = self._camera.read()[1]
         frame = self._camera.read()[1]
         if greyscale:
@@ -437,7 +439,7 @@ class Camera:
         capture, this method will be overridden to use that, regardless of
         choice."""
 
-        [greyscale, videoport, mode] = check_defaults(
+        [greyscale, videoport, mode] = h.check_defaults(
             [greyscale, videoport, mode], self.config_dict, [
                 'greyscale', 'videoport', 'mode'])
 
@@ -463,7 +465,7 @@ class Camera:
         :param iterator: Call this function with iterator=True to turn on the
         method, and use get_frame() as usual. To turn off the iterator and
         allow capture via jpeg/raw then call with iterator=False."""
-        [iterator] = check_defaults([iterator], self.config_dict, ['iterator'])
+        [iterator] = h.check_defaults([iterator], self.config_dict, ['iterator'])
 
         if self._usecv2:
             return
@@ -528,7 +530,7 @@ class Camera:
         :param mode: Mode of image capture."""
 
         [bead_pos, box_d, centre_mass, cross_corr, tol, decimal, mode] = \
-            check_defaults([bead_pos, box_d, centre_mass, cross_corr, tol,
+            h.check_defaults([bead_pos, box_d, centre_mass, cross_corr, tol,
                             decimal, mode], self.config_dict,
                            ['bead_pos', 'box_d', 'centre_mass', 'cross_corr',
                             'tol', 'decimal', 'mode'])
@@ -621,7 +623,7 @@ class Stage:
         :param override: Set to True to ignore the limits set by _XYZ_BOUND,
         otherwise an error is raised when the bounds are exceeded."""
 
-        [backlash, override] = check_defaults(
+        [backlash, override] = h.check_defaults(
             [backlash, override], self.config_dict, ['backlash', 'override'])
 
         # Check backlash  and the vector to move by have the correct format.
@@ -653,7 +655,7 @@ class Stage:
 
     def move_to_pos(self, final, override=None):
 
-        [override] = check_defaults([override], self.config_dict, ["override"])
+        [override] = h.check_defaults([override], self.config_dict, ["override"])
 
         new_position = h.verify_vector(final)
         rel_mov = np.subtract(new_position, self.position)
@@ -671,6 +673,23 @@ class Stage:
     def _reset_pos(self):
         # Hard resets the stored position, just in case things go wrong.
         self.position = np.array([0, 0, 0])
+
+
+class BrightnessSensor:
+    """Class to read brightness value from sensor by providing a Serial
+    command to the Arduino."""
+
+    def __init__(self, tty="/dev/ttyACM0"):
+        # Initialise connection as appropriate.
+        self.ser = serial.Serial(tty)
+
+    def read(self):
+        """Read the voltage value from the Arduino."""
+        self.ser.write('h')
+        self.ser.read()  # change to get all the data
+
+    def __del__(self):
+        self.ser.close()
 
 
 def _move_motors(bus, x, y, z):
@@ -691,19 +710,3 @@ def _move_motors(bus, x, y, z):
     # Empirical formula for how micro step values relate to rotational speed.
     # This is only valid for the specific set of motors tested.
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
-
-
-def check_defaults(list_of_vars, config_dict, list_of_keys):
-    """Check if each variable in list_of_vars is None, and change it to the
-    corresponding value in config_dict if so.
-    :param list_of_vars: List of variables to check.
-    :param config_dict: Configuuration dictionary.
-    :param list_of_keys: List of respective key names.
-    :return: The modified list_of_vars."""
-    for i in range(len(list_of_vars)):
-        if list_of_vars[i] is None:
-            list_of_vars[i] = config_dict[list_of_keys[i]]
-
-    return list_of_vars
-
-

@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
 """gui.py
-Script containing class to control and take measurements using the
-microscope via a GUI."""
+Script containing class to control and take measurements using the microscope
+via a GUI."""
 
 import datetime
 import cv2
 
-import caller
-import data_io
+import data_io as d
 import microscope as micro
 
 
@@ -28,19 +27,23 @@ class ScopeGUI:
     _GUI_KEY_SPACE = 32
     _GUI_KEY_ENTER = 13
 
-    _ARROW_STEP_SIZE = data_io.scope_defs["key_stepsize"]
-
-    def __init__(self, width=data_io.scope_defs["resolution"][0],
-                 height=data_io.scope_defs["resolution"][1], cv2camera=False,
-                 channel=data_io.scope_defs["channel"]):
+    def __init__(self, config_file, **kwargs):
         """Optionally specify a width and height for Camera object, the channel
         for the Stage object and a filename for the attached datafile.
-        cv2camera allows non-RPi systems to be tested also."""
+        cv2camera allows non-RPi systems to be tested also.
+        Valid kwargs are:
+            resolution, cv2camera, channel, manual and um_per_pixel and
+            camera_stage_transform, mode, tolerance, max_iterations,
+            max_resolution, key_stepsize. Keypress controls can only be
+            changed from the config file itself."""
 
-        # Create a new Microscope object.
-        self.microscope = micro.Microscope(width, height, cv2camera, channel)
+        self.config_dict = d.make_dict(config_file, **kwargs)
+
+        # Create a new CamScope object.
+        self.microscope = micro.CamScope(self.config_dict)
 
         # Set up the GUI variables:
+        self._ARROW_STEP_SIZE = self.config_dict["key_stepsize"]
         self._gui_quit = False
         self._gui_greyscale = True
         self._gui_img = None
@@ -68,8 +71,8 @@ class ScopeGUI:
         """Initialises the things needed for the GUI."""
         # Create the necessary GUI elements
         # cv2.namedWindow('Preview', cv2.WINDOW_AUTOSIZE)
-        cv2.namedWindow('Controls', cv2.WINDOW_AUTOSIZE)
         self.microscope.camera.preview()
+        cv2.namedWindow('Controls', cv2.WINDOW_AUTOSIZE)
         cv2.createTrackbar('Greyscale', 'Controls', 0, 1, self._gui_nothing)
         cv2.createTrackbar('Tracking', 'Controls', 0, 1, self._gui_nothing)
         # Set default values
@@ -122,9 +125,9 @@ class ScopeGUI:
                 keypress &= 0xFF
 
             # Now process the keypress:
-            if keypress == ord(data_io.scope_defs["exit"]):
+            if keypress == ord(self.config_dict["exit"]):
                 self._gui_quit = True
-            elif keypress == ord(data_io.scope_defs["save"]):
+            elif keypress == ord(self.config_dict["save"]):
                 # The g key will 'grab' (save) the box region or the whole
                 # frame if nothing selected.
                 fname = datetime.datetime.now().strftime("%Y%mmts%d_%H%M%S")
@@ -137,31 +140,31 @@ class ScopeGUI:
                            self._gui_sel[0]: self._gui_sel[0]+w]
                     cv2.imwrite("microscope_img_%s.jpg" % fname, crop)
 
-            elif keypress == ord(data_io.scope_defs["save_stored_image"]):
+            elif keypress == ord(self.config_dict["save_stored_image"]):
                 # The t key will save the stored template image.
                 fname = datetime.datetime.now().strftime("%Y%mmts%d_%H%M%S")
                 cv2.imwrite("template_%s.jpg" % fname, self.template_selection)
-            elif keypress == ord(data_io.scope_defs["stop_tracking"]):
+            elif keypress == ord(self.config_dict["stop_tracking"]):
                 # Reset the template selection box and stop tracking.
                 self._stop_gui_tracking()
             # QWEASD for 3D motion: WASD are motion in +y, -x, -y,
             # +x directions, QE are motion in +z, -z directions. Note these
             # need to be CHANGED DEPENDING ON THE CAMERA ORIENTATION. NOT
             # SURE ABOUT Q AND E YET.
-            elif keypress == ord(data_io.scope_defs["+x"]):
+            elif keypress == ord(self.config_dict["+x"]):
                 # The arrow keys will move the stage
                 self.microscope.stage.move_rel([self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == ord(data_io.scope_defs["-x"]):
+            elif keypress == ord(self.config_dict["-x"]):
                 self.microscope.stage.move_rel([-self._ARROW_STEP_SIZE, 0, 0])
-            elif keypress == ord(data_io.scope_defs["+y"]):
+            elif keypress == ord(self.config_dict["+y"]):
                 self.microscope.stage.move_rel([0, self._ARROW_STEP_SIZE, 0])
-            elif keypress == ord(data_io.scope_defs["-y"]):
+            elif keypress == ord(self.config_dict["-y"]):
                 self.microscope.stage.move_rel([0, -self._ARROW_STEP_SIZE, 0])
-            elif keypress == ord(data_io.scope_defs["-z"]):
+            elif keypress == ord(self.config_dict["-z"]):
                 self.microscope.stage.move_rel([0, 0, -self._ARROW_STEP_SIZE])
-            elif keypress == ord(data_io.scope_defs["+z"]):
+            elif keypress == ord(self.config_dict["+z"]):
                 self.microscope.stage.move_rel([0, 0, self._ARROW_STEP_SIZE])
-            elif keypress == ord(data_io.scope_defs["invert_colour"]):
+            elif keypress == ord(self.config_dict["invert_colour"]):
                 # Inverts the selection box colour.
                 if self._gui_color == (0, 0, 0):
                     self._gui_color = (255, 255, 255)  # White
@@ -264,5 +267,5 @@ class ScopeGUI:
         # to original position upon closing.
         #cv2.destroyWindow('Preview')
         cv2.destroyWindow('Controls')
-        self.microscope.camera.preview()
+        self.microscope.camera.preview(show=False)
         self._gui_quit = False  # This allows restarting of the GUI

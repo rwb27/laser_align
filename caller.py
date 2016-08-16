@@ -34,7 +34,7 @@ if __name__ == '__main__':
     sys_args = docopt(__doc__)
 
     # Control pre-processing manually.
-    scope = micro.Microscope(CONFIG_PATH, manual=True)
+    scope = micro.CamScope(CONFIG_PATH, manual=True)
 
     # Calculate brightness of central spot by taking a tiled section of
     # images, cropping the central 55 x 55 pixels, moving to the region of 
@@ -45,20 +45,20 @@ if __name__ == '__main__':
                 h.bake(mmts.brightness, args=['IMAGE_ARR'])]
 
     if sys_args['autofocus']:
-        focus = exp.AutoFocus(scope, scope_defs, focus_defs)
+        focus = exp.AutoFocus(scope, CONFIG_PATH)
         focus.run()
     elif sys_args['centre']:
         exp.centre_spot(scope)
     elif sys_args['calibrate']:
         scope.calibrate()
     elif sys_args['tiled']:
-        tiled = exp.Tiled(scope, scope_defs, tiled_defs)
+        tiled = exp.Tiled(scope, CONFIG_PATH)
         tiled.run(func_list=fun_list)
     elif sys_args['align']:
-        align = exp.Align(scope, scope_defs, tiled_defs, align_defs)
+        align = exp.Align(scope, CONFIG_PATH)
         align.run(func_list=fun_list)
     elif sys_args['gui']:
-        gui = g.ScopeGUI()
+        gui = g.ScopeGUI(CONFIG_PATH)
         gui.run_gui()
 
     nplab.close_current_datafile()

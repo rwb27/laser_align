@@ -41,7 +41,7 @@ backlash:             [128, 128, 128]
 
 override:             false
 
-# --------------------------------------------- Microscope GUI parameters ---------------------------------------------
+# --------------------------------------------- CamScope GUI parameters ---------------------------------------------
 
 # No. of microsteps per key press on GUI.
 key_stepsize:         1000
@@ -75,7 +75,7 @@ invert_colour:        i
 # ---------------------------------------------- Experimental parameters ----------------------------------------------
 
 # Spatial conversions from pixels to microns. This needs to be updated by manual measurement of the graticule.
-microns_per_pixel:          0.4846
+um_per_pixel:          0.4846
 
 # Store a conversion matrix can be manually updated with result of calibrate() if necessary. Multiply [x, y] pixels by
 # this matrix to get [x, y] in microsteps.
