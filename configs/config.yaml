@@ -41,7 +41,7 @@ backlash:             [128, 128, 128]
 
 override:             false
 
-# --------------------------------------------- CamScope GUI parameters ---------------------------------------------
+# --------------------------------------------- SensorScope GUI parameters ---------------------------------------------
 
 # No. of microsteps per key press on GUI.
 key_stepsize:         1000

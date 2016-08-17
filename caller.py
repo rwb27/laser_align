@@ -44,7 +44,7 @@ if __name__ == '__main__':
     if sys_args['autofocus'] or sys_args['centre'] or sys_args['calibrate'] \
             or sys_args['align'] or sys_args['tiled']:
         # Control pre-processing manually.
-        scope = micro.CamScope(CONFIG_PATH, manual=True)
+        scope = micro.SensorScope(CONFIG_PATH, manual=True)
         if sys_args['autofocus']:
             focus = exp.AutoFocus(scope, CONFIG_PATH)
             focus.run()

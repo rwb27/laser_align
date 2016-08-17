@@ -3,7 +3,7 @@
 """microscope.py
 This script contains all the classes required to make the microscope work. This
 includes the abstract Camera and Stage classes and their combination into a
-single CamScope class that allows both to be controlled together. It is based
+single SensorScope class that allows both to be controlled together. It is based
 on the script by James Sharkey, which was used for the paper in Review of
 Scientific Instruments titled: A one-piece 3D printed flexure translation stage
 for open-source microscopy."""
@@ -29,7 +29,7 @@ except ImportError:
     pass  # Don't fail on error; simply force cv2 camera later
 
 
-class CamScope(Instrument):
+class SensorScope(Instrument):
     """Class to combine camera and stage into a single usable class. The
     microscope may be slow to be created; it must wait for the camera,and stage
     to be ready for use."""
@@ -50,7 +50,7 @@ class CamScope(Instrument):
         - mode
         - tolerance
         - max_iterations:"""
-        super(CamScope, self).__init__()
+        super(SensorScope, self).__init__()
 
         # If config is entered as a path string, the file from the path
         # will be read. If it is a dictionary, it is not changed. This
@@ -264,7 +264,7 @@ class CamScope(Instrument):
 class Camera:
 
     def __init__(self, config_file, **kwargs):
-        """An abstracted camera class. Always use through the CamScope class.
+        """An abstracted camera class. Always use through the SensorScope class.
         :param kwargs:
         Valid ones include resolution, cv2camera, manual, and max_resolution
         :param width, height: Specify an image width and height.
@@ -712,5 +712,5 @@ def _move_motors(bus, x, y, z):
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
 
 if __name__ == '__main__':
-    scope = CamScope('./configs/config.yaml')
+    scope = SensorScope('./configs/config.yaml')
     scope.calibrate()
