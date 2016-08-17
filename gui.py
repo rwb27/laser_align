@@ -26,7 +26,7 @@ class KeyboardControls:
     _GUI_KEY_SPACE = 32
     _GUI_KEY_ENTER = 13
 
-    def __init__(self, config_file, **kwargs):
+    def __init__(self, microscope, config_file, **kwargs):
         """Optionally specify a width and height for Camera object, the channel
         for the Stage object and a filename for the attached datafile.
         cv2camera allows non-RPi systems to be tested also.
@@ -39,7 +39,7 @@ class KeyboardControls:
         self.config_dict = d.make_dict(config_file, **kwargs)
 
         # Create a new SensorScope object.
-        self.microscope = micro.SensorScope(self.config_dict, **kwargs)
+        self.microscope = microscope
 
         # Set up the GUI variables:
         self._ARROW_STEP_SIZE = self.config_dict["key_stepsize"]

@@ -31,16 +31,13 @@ class AutoFocus(Experiment):
         self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
 
-    def run(self, backlash=None, mode=None, z_range=None, crop_frac=None):
+    def run(self, backlash=None, z_range=None):
         # Read the default parameters.
         [backlash, z_range] = h.check_defaults(
             [backlash, z_range], self.config_dict,
             ['backlash', 'mmt_range'])
-        print mode
         # Set up the data recording.
-        attributes = {'resolution':     self.scope.camera.resolution,
-                      'backlash':       backlash,
-                      'capture_func':   mode}
+        attributes = {'backlash':       backlash}
 
         funcs = [h.bake(proc.crop_array,
                         args=['IMAGE_ARR'],
@@ -194,36 +191,6 @@ class KeepCentred(Experiment):
 
     def run(self, func_list=None, save_mode='save_final'):
         pass
-
-
-def centre_spot(scope_obj):
-    """Find the spot on the screen, if it exists, and bring it to the
-    centre. If no spot is found, an error is raised.
-    :param scope_obj: A microscope object."""
-
-    # TODO Need some way to identify if spot is not on screen.
-
-    transform = scope_obj.calibrate()
-    scope_obj.camera.preview()
-    # TODO 'compressed' mode for speed, 'bayer' for accuracy.
-    frame = scope_obj.camera.get_frame(mode='compressed', greyscale=True)
-
-    # This is strongly affected by any other bright patches in the image -
-    # need a better way to distinguish the bright spot.
-    thresholded = cv2.threshold(frame, 180, 0, cv2.THRESH_TOZERO)[1]
-    # gr = scope_obj.datafile.new_group('crop')
-    cropped = proc.crop_array(thresholded, mmts='pixel', dims=np.array([
-        300, 300]), centre=np.array([0, 0]))
-    peak = sn.measurements.center_of_mass(thresholded)
-    half_dimensions = np.array(np.array(h.get_size(frame)[:2]) / 2., dtype=int)
-
-    # Note that the stage moves in x and y, so to calculate how much to move
-    # by to centre the spot, we need half_dimensions - peak.
-    thing = np.dot(half_dimensions - peak[::-1], transform)
-    move_by = np.concatenate((thing, np.array([0])))
-    scope_obj.stage.move_rel(move_by)
-    # scope_obj.datafile.add_data(cropped, gr, 'cropped')
-    return
 
 
 def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
