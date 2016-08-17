@@ -30,8 +30,6 @@ class AutoFocus(Experiment):
         super(AutoFocus, self).__init__()
         self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
-        # Preview the microscope so we can see auto-focusing.
-        self.scope.camera.preview()
 
     def run(self, backlash=None, mode=None, z_range=None, crop_frac=None):
         # Read the default parameters.

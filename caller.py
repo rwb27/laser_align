@@ -7,7 +7,6 @@ config files.
 Usage:
     caller.py align
     caller.py autofocus
-    caller.py calibrate
     caller.py centre
     caller.py tiled
     caller.py gui
@@ -41,7 +40,7 @@ if __name__ == '__main__':
                        kwargs={'mmts': 'pixel', 'dims': 55}),
                 h.bake(mmts.brightness, args=['IMAGE_ARR'])]
 
-    if sys_args['autofocus'] or sys_args['centre'] or sys_args['calibrate'] \
+    if sys_args['autofocus'] or sys_args['centre'] \
             or sys_args['align'] or sys_args['tiled']:
         # Control pre-processing manually.
         scope = micro.SensorScope(CONFIG_PATH, manual=True)
@@ -50,8 +49,6 @@ if __name__ == '__main__':
             focus.run()
         elif sys_args['centre']:
             exp.centre_spot(scope)
-        elif sys_args['calibrate']:
-            scope.calibrate()
         elif sys_args['tiled']:
             tiled = exp.Tiled(scope, CONFIG_PATH)
             tiled.run(func_list=fun_list)
@@ -59,7 +56,7 @@ if __name__ == '__main__':
             align = exp.Align(scope, CONFIG_PATH)
             align.run(func_list=fun_list)
     elif sys_args['gui']:
-        gui = g.ScopeGUI(CONFIG_PATH)
+        gui = g.KeyboardControls(CONFIG_PATH)
         gui.run_gui()
 
     nplab.close_current_datafile()
