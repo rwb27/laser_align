@@ -679,14 +679,42 @@ class BrightnessSensor:
     """Class to read brightness value from sensor by providing a Serial
     command to the Arduino."""
 
-    def __init__(self, tty="/dev/ttyACM0"):
+    def __init__(self, config_file, **kwargs):
+        """An abstracted camera class. Always use through the SensorScope class.
+        :param kwargs:
+        Valid ones include resolution, cv2camera, manual, and max_resolution
+        :param width, height: Specify an image width and height.
+        :param cv2camera: Choosing cv2camera=True allows testing on non RPi
+        systems, though code will detect if picamera is not present and
+        assume that cv2 must be used instead.
+        :param manual: Specifies whether pre-processing (ISO, white balance,
+        exposure) are to be manually controlled or not."""
+
+        # If config_file is entered as a path string, the file from the path
+        # will be read. If it is a dictionary, it is not changed. This
+        # prevents the config file being read repeatedly by different
+        # objects, rather than once and its value passed around.
+        self.config_dict = d.make_dict(config_file, **kwargs)
+        tty = "/dev/ttyACM0"
+
         # Initialise connection as appropriate.
         self.ser = serial.Serial(tty)
 
     def read(self):
-        """Read the voltage value from the Arduino."""
-        self.ser.write('h')
-        self.ser.read()  # change to get all the data
+        """Read the voltage value once from the Arduino. The ' ' character
+        is needed to trigger a reading."""
+        self.ser.write(' ')
+        self.ser.read()
+
+    def read_n(self, n, t):
+        """Take n measurements in total in the same position with a time delay
+        of t seconds between each measurement. Returns them as a list."""
+        voltages = []
+        for i in range(n):
+            voltages.append(self.read())
+            if i != n:
+                time.sleep(t)
+        return voltages
 
     def __del__(self):
         self.ser.close()

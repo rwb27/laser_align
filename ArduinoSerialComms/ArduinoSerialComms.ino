@@ -14,8 +14,6 @@
  - How should the comms request a certain number of measurements?
  */
 
-void voltage_reader(int N, float t, readings[]);
-
 // the setup routine runs once when you press reset:
 void setup() {
   // initialize serial communication at 9600 bits per second:
@@ -28,28 +26,16 @@ void setup() {
 // interrupt if needed. Reducing the effects of noise? (With filter?)
 void loop() {
   if (Serial.available() > 0){
+    // For safety, entering multiple input characters into the Serial from the RPi has no effect - readings are only taken when the 
+    // space character is used.
+    Serial.readStringUntil(' ');
+
     // read the input on analog pin 0:
-    //int sensorValue = analogRead(A0);
-    // print out the value you read:
-    //String reading = Serial.readStringUntil(' ');
-    //Serial.println(reading);
-    //Serial.println(sensorValue);
-    //delay(1); // delay in between reads for stability
-    int N = 100;
-    int readings[N];
-    voltage_reader(N, 1000, &readings);
-    //Serial.println(readings);
-  }
-}
-
-// Function to read N measurements with a time delay of t between each measurement and return the array of measurements.
-void voltage_reader(int N, float t, readings[]){
-
-  for (int x = 0; x < N; x++){
     int sensorValue = analogRead(A0);
-    readings[x] = sensorValue;
-    //printf(readings[x]);
-    delay(t); // Note t is is milliseconds!
+    
+    // print out the value you read:
+    Serial.println(sensorValue);
+    // delay in between reads for stability
+    delay(1); 
   }
 }
-
