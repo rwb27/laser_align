@@ -44,10 +44,8 @@ class KeyboardControls:
         # Set up the GUI variables:
         self._ARROW_STEP_SIZE = self.config_dict["key_stepsize"]
         self._gui_quit = False
-        self._gui_greyscale = True
         self._gui_drag_start = None
         self._gui_sel = None
-        self._gui_tracking = False
 
     def __del__(self):
         """Closes the attached objects properly by deleting them."""
@@ -59,22 +57,12 @@ class KeyboardControls:
         """GUI needs callbacks for some functions: this is a blank one."""
         pass
 
-    def _create_gui(self):
+    @staticmethod
+    def _create_gui():
         """Initialises the things needed for the GUI."""
         # Create the necessary GUI elements
+        print "Creating GUI - use QWEASD to move and X to quit."
         cv2.namedWindow('Controls', cv2.WINDOW_AUTOSIZE)
-        cv2.createTrackbar('Greyscale', 'Controls', 0, 1, self._gui_nothing)
-        cv2.createTrackbar('Tracking', 'Controls', 0, 1, self._gui_nothing)
-        # Set default values
-        cv2.setTrackbarPos('Greyscale', 'Controls', 1)
-        cv2.setTrackbarPos('Tracking', 'Controls', 0)
-
-    def _read_gui_track_bars(self):
-        """Read in and process the track bar values."""
-        self._gui_greyscale = bool(cv2.getTrackbarPos('Greyscale', 'Controls'))
-        self._gui_tracking = \
-            (bool(cv2.getTrackbarPos('Tracking', 'Controls')) and
-             (self._gui_sel is not None) and (self._gui_drag_start is None))
 
     def _update_gui(self):
         """Run the code needed to update the GUI to latest frame."""
@@ -121,7 +109,6 @@ class KeyboardControls:
         """Run the GUI."""
         self._create_gui()
         while not self._gui_quit:
-            self._read_gui_track_bars()
             self._update_gui()
 
         # Triggered when the GUI quit key is pressed.

@@ -1,29 +1,5 @@
 --- # Contains default parameters for the microscope and all associated experiments.
 
-# ------------------------------------------------- Camera parameters -------------------------------------------------
-
-# Tuples are not supported; use lists instead. Format is [x y].
-max_resolution:        [2592, 1944]
-
-# Actual resolution of the image. Irrelevant for bayer images, which are always full resolution.
-resolution:            [640, 480]
-
-# Whether to convert images to greyscale after capture. Note difference in Boolean notation compared to Python's False.
-greyscale:             false
-
-# Whether to capture frames using the videoport setting.
-videoport:             true
-
-# Valid image capture modes are bayer, compressed and bgr.
-mode:                  compressed
-
-# check AND ADD ROI????
-iterator:              false
-
-cv2camera:             false
-
-manual:                true
-
 # ------------------------------------------------- Stage parameters  -------------------------------------------------
 
 # I2C channel used to connect to motors. Varies depending on RPi model.
@@ -52,10 +28,6 @@ exit:                 x
 
 save:                 g
 
-save_stored_image:    t
-
-stop_tracking:        z
-
 +x:                   s
 
 -x:                   w
@@ -69,36 +41,8 @@ stop_tracking:        z
 
 -z:                   q
 
-# Inverts the selection box colour.
-invert_colour:        i
-
 # ---------------------------------------------- Experimental parameters ----------------------------------------------
 
-# Spatial conversions from pixels to microns. This needs to be updated by manual measurement of the graticule.
-um_per_pixel:          0.4846
-
-# Store a conversion matrix can be manually updated with result of calibrate() if necessary. Multiply [x, y] pixels by
-# this matrix to get [x, y] in microsteps.
-camera_stage_transform:     [[5.2,  7.0],
-                             [6.3, -5.6]]
-
-# Tolerance for camera's centre_on_template method, measured in microns.
-tolerance:                  1
-
-# Max number of iterations to attempt for centre_on_template method.
-max_iterations:             10
-
-# For calibrate.
-d:                          1000
-crop_frac:                  0.8
-
-# Find template method in Camera().
-bead_pos:                   [-1, -1]
-box_d:                      -1
-centre_mass:                true
-cross_corr:                 true
-tol      :                  0.05
-decimal:                    false
 
 # ---------------------------------------------------- Tiled images ---------------------------------------------------
 Tiled:
@@ -107,14 +51,6 @@ n:                20
 
 # The number of steps to take between each image.
 steps:            100
-
-# Whether to autofocus between each tile. For the first image a full auto-focus is performed and a quick one on
-# subsequent tiles.
-focus:            false
-
-crop_fraction:    50
-
-pixel_block:      4
 
 save_mode:        save_subset
 # -------------------------------------------------- Laser alignment --------------------------------------------------
@@ -131,8 +67,6 @@ parabola_iterations:  3
 
 # ----------------------------------------------------- Autofocus -----------------------------------------------------
 
-group_name:       tests
-
 # Algorithm used to calculate sharpness. Currently valid inputs include 'laplacian'. Change as more sharpness functions
 # are added.
 sharpness_func:   laplacian
@@ -145,13 +79,5 @@ mmt_range:        [[5, 100]]
                #   [10, 200]
                #   [10  200]
                #   [12  100]]
-
-# Fraction of each image to crop per dimension. The centre of the image will be cropped by default. For a value of 0.5
-# the central 50% of x and y will be cropped so the central 25% of the image's area will be retained.
-crop_fraction:     0.3
-
-# The number of pixels per dimension to group. For a value of 4 the image will be down-sampled by a factor of 16 by
-# grouping pixels into 4x4 squares.
-pixel_block:       4
 
 ...

@@ -33,9 +33,9 @@ class AutoFocus(Experiment):
 
     def run(self, backlash=None, mode=None, z_range=None, crop_frac=None):
         # Read the default parameters.
-        [backlash, mode, z_range, crop_frac] = h.check_defaults(
-            [backlash, mode, z_range, crop_frac], self.config_dict,
-            ['backlash', 'mode', 'mmt_range', 'crop_fraction'])
+        [backlash, z_range] = h.check_defaults(
+            [backlash, z_range], self.config_dict,
+            ['backlash', 'mmt_range'])
         print mode
         # Set up the data recording.
         attributes = {'resolution':     self.scope.camera.resolution,

@@ -22,20 +22,6 @@ def verify_vector(vector):
     return r
 
 
-def ccf(list_int, n):
-    """Returns the common factor of the integers in the list list_int that
-    is closest to n. If two are equally close, the smallest is returned."""
-    all_factors = [set(_factors(num)) for num in list_int]
-    common_factors = list(set(all_factors[0]).intersection(*all_factors[1:]))
-    return _one_disallowed(common_factors, n)
-
-
-def closest_factor(f, n):
-    """Returns the factor of f that is closest to n. If n is equidistant
-    from two factors of f, the smallest of the two factors is returned."""
-    return _one_disallowed(_factors(f), n)
-
-
 def unchanged(arg):
     """Returns the single input argument; the default function for image
     post-processing to return the input array unchanged."""
@@ -110,57 +96,3 @@ def check_defaults(list_of_vars, config_dict, list_of_keys):
                 list_of_vars[i] = config_dict[list_of_keys[i]]
 
     return list_of_vars
-
-
-def get_size(bgr_arr):
-    """Get the x, y and total resolutions of the image in pixels. This is
-    subtly different to getting a camera's resolution because it acts on an
-    array, independently of any camera object.
-    :param bgr_arr: The 3D array to split, with shape in the format (no. of
-    row pixels in image, no. of column pixels in image, 3 BGR values). This
-    is the format the images captured are in.
-    :return: The list [x_pixels, y_pixels, total_square_pixels]."""
-    # NOTE: The x and y pixel co-ordinates are swapped around in the bgr
-    # array, so need to swap them around when calling the shape.
-    return [float(bgr_arr.shape[1]), float(bgr_arr.shape[0]),
-            float(np.product(bgr_arr.shape[:2]))]
-
-
-def get_pixel_step(res, num_sub_imgs):
-    """Calculates the number of pixels per sub-image along x and y.
-    :param res: A tuple of the resolution of the main image along (x, y).
-    :param num_sub_imgs: A tuple of no. of subimages along x, y e.g. (4, 3).
-    :return: A tuple of (number of x pixels per sub-image, number of y
-    pixels per sub-image)."""
-    return res[0] / num_sub_imgs[0], res[1] / num_sub_imgs[1]
-
-
-def get_num_subimages(res, tot_subimages):
-    """Returns a tuple of the number of subimages along x and y such that
-    aspect ratio is maintained. Used in crop_img_into_n.
-    :param res: (x_resolution, y_resolution).
-    :param tot_subimages: Total number of subimages to split the main image
-    into."""
-    x_split = np.sqrt(res[0] / res[1] * tot_subimages)
-    y_split = tot_subimages / x_split
-    return x_split, y_split
-
-
-def _one_disallowed(factors, n):
-    """For a list of integers 'factors' in ascending order, return the
-    number closest to n (choose the smallest if 2 are equidistant) as long as
-    it is not 1. If it is 1, return the second closest factor."""
-    closest = min(factors, key=lambda x: abs(x - n))
-    try:
-        return closest if closest != 1 else factors[1]
-    except:
-        raise Exception('Only common factor is 1. Crop or zero-pad the image '
-                        'before down-sampling.')
-
-
-def _factors(num):
-    """Returns the factors of a number, in ascending order as a list."""
-    factor_list = list(reduce(list.__add__, ([j, num // j] for j in range(
-        1, int(num ** 0.5) + 1) if num % j == 0)))
-    factor_list.sort()
-    return factor_list
