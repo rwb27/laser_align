@@ -7,7 +7,6 @@ via a GUI."""
 import cv2
 
 import data_io as d
-import microscope as micro
 
 
 class KeyboardControls:

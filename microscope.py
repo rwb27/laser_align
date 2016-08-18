@@ -29,16 +29,11 @@ class SensorScope(Instrument):
         ending in .yaml, or the dictionary of default configuration parameters.
         :param kwargs: Specify optional keyword arguments, which will
         override the defaults specified in the config file. Valid kwargs are:
-        - resolution: A tuple of the image's resolution along (x, y).
-        - max_resolution: A tuple of the camera's max resolution along (x, y).
-        - cv2camera: Set to True if cv2-type camera will be used.
         - channel: Channel of I2C bus to connect to motors for the stage.
-        - manual: Boolean for whether to control pre-processing manually.
-        - um_per_pixel:
-        - camera_stage_transform
-        - mode
-        - tolerance
         - max_iterations:"""
+
+        # TODO NEED MICROMETRES PER MICROSTEP!
+
         super(SensorScope, self).__init__()
 
         # If config is entered as a path string, the file from the path
@@ -47,23 +42,17 @@ class SensorScope(Instrument):
         # objects, rather than once and its value passed around.
         self.config_dict = d.make_dict(config, **kwargs)
 
-        self._UM_PER_PIXEL = self.config_dict["um_per_pixel"]
-        self.CAMERA_TO_STAGE_MATRIX = np.array(self.config_dict[
-                                                   "camera_stage_transform"])
-        self.sensor = LightDetector(self.config_dict)
-        self.stage = Stage(self.config_dict)
+        self.sensor = LightDetector(self.config_dict, **kwargs)
+        self.stage = Stage(self.config_dict, **kwargs)
         # self.light = twoLED.Lightboard()
 
         # Set up data recording. Default values will be saved with the
         # group. TODO MOVE TO EACH METHOD.
-        attrs = {}
-        for key in ["max_resolution", "resolution", "greyscale", "videoport",
-                    "mode", "iterator", "cv2camera", "manual", "channel",
-                    "xyz_bound", "microsteps", "backlash", "override",
-                    "um_per_pixel", "camera_stage_transform"]:
-            attrs[key] = self.config_dict[key]
-
-        self.gr = self.create_data_group('Run', attrs=attrs)
+        self.attrs = {}
+        for key in ["channel", "xyz_bound", "microsteps", "backlash", "override"]:
+            self.attrs[key] = self.config_dict[key]
+        self.info = self.create_dataset('ScopeSettings', data='',
+                                        attrs=self.attrs)
 
     def __del__(self):
         del self.sensor
@@ -71,12 +60,20 @@ class SensorScope(Instrument):
         # del self.light
 
 
-class Stage:
+class Stage(Instrument):
 
     def __init__(self, config_file, **kwargs):
         """Class representing a 3-axis microscope stage.
         :param config_file: Either file path or dictionary.
-        :param kwargs: Valid ones are the xyz_bound, microsteps and channel."""
+        :param kwargs: Valid ones are the xyz_bound, microsteps and channel,
+        backlash and override.
+        Preferably, change them through the microscope class but in case of
+        this class being used elsewhere, kwargs exists but is not logged.
+        :param backlash: An array of the backlash along [x, y, z].
+        :param override: Set to True to ignore the limits set by _XYZ_BOUND,
+        otherwise an error is raised when the bounds are exceeded."""
+
+        super(Stage, self).__init__()
 
         # If config_file is entered as a path string, the file from the path
         # will be read. If it is a dictionary, it is not changed. This
@@ -88,20 +85,15 @@ class Stage:
         self._XYZ_BOUND = np.array(self.config_dict["xyz_bound"])
         # How many micro-steps per step?
         self._MICROSTEPS = self.config_dict["microsteps"]
-
         self.bus = smbus.SMBus(self.config_dict["channel"])
-        time.sleep(2)
         self.position = np.array([0, 0, 0])
 
-    def move_rel(self, vector, backlash=None, override=None):
+    def move_rel(self, vector):
         """Move the stage by (x,y,z) micro steps.
-        :param vector: The increment to move by along [x, y, z].
-        :param backlash: An array of the backlash along [x, y, z].
-        :param override: Set to True to ignore the limits set by _XYZ_BOUND,
-        otherwise an error is raised when the bounds are exceeded."""
+        :param vector: The increment to move by along [x, y, z]."""
 
-        [backlash, override] = h.check_defaults(
-            [backlash, override], self.config_dict, ['backlash', 'override'])
+        [backlash, override] = [self.config_dict['backlash'],
+                                self.config_dict['override']]
 
         # Check backlash  and the vector to move by have the correct format.
         assert np.all(backlash >= 0), "Backlash must >= 0 for all [x, y, z]."
@@ -130,13 +122,10 @@ class Stage:
             else:
                 raise ValueError('New position is outside allowed range.')
 
-    def move_to_pos(self, final, override=None):
-
-        [override] = h.check_defaults([override], self.config_dict, ["override"])
-
+    def move_to_pos(self, final):
         new_position = h.verify_vector(final)
         rel_mov = np.subtract(new_position, self.position)
-        return self.move_rel(rel_mov, override=override)
+        return self.move_rel(rel_mov)
 
     def focus_rel(self, z):
         """Move the stage in the Z direction by z micro steps."""
@@ -152,7 +141,7 @@ class Stage:
         self.position = np.array([0, 0, 0])
 
 
-class LightDetector:
+class LightDetector(Instrument):
     """Class to read brightness value from sensor by providing a Serial
     command to the Arduino."""
 
@@ -166,6 +155,8 @@ class LightDetector:
         assume that cv2 must be used instead.
         :param manual: Specifies whether pre-processing (ISO, white balance,
         exposure) are to be manually controlled or not."""
+
+        super(LightDetector, self).__init__()
 
         # If config_file is entered as a path string, the file from the path
         # will be read. If it is a dictionary, it is not changed. This

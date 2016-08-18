@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 df = h5py.File(r"C:\Users\a-amb\OneDrive - University Of "
                r"Cambridge\2016-08-09-4.h5", mode="r")
-data = df['Tiled/brightness_results_0']
+data = df['RasterXY/brightness_results_0']
 print data[:, :]
 thing = np.delete(data, 2, 1)
 thing[:, 0:2] += 300

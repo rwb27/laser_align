@@ -6,167 +6,144 @@ datafile or graph. These functions are built on top of measurements.py,
 microscope.py, image_proc.py and data_io.py."""
 
 import time as t
-import cv2
 import numpy as np
 from nplab.experiment.experiment import Experiment
-from scipy import ndimage as sn
 
 import data_io as d
 import end_functions as e
 import helpers as h
 import image_proc as proc
-import measurements as mmts
 
 
-class AutoFocus(Experiment):
-    """Autofocus the image on the camera by varying z only, using the Laplacian
-    method of calculating the sharpness and compressed JPEG image."""
+class ScopeExp(Experiment):
+    """Parent class of any experiments done using the SensorScope object."""
 
     def __init__(self, microscope, config_file, **kwargs):
-        """
-        :param microscope: A microscope object.
-        :param config_file: A string with a path to the YAML config file.
-        :param kwargs: Valid kwargs are: backlash, z_range, crop_frac, mode."""
-        super(AutoFocus, self).__init__()
+        super(ScopeExp, self).__init__()
         self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
 
-    def run(self, backlash=None, z_range=None):
-        # Read the default parameters.
-        [backlash, z_range] = h.check_defaults(
-            [backlash, z_range], self.config_dict,
-            ['backlash', 'mmt_range'])
-        # Set up the data recording.
-        attributes = {'backlash':       backlash}
+    def __del__(self):
+        del self.scope
 
-        funcs = [h.bake(proc.crop_array,
-                        args=['IMAGE_ARR'],
-                        kwargs={'mmts': 'frac',
-                                'dims': crop_frac}),
-                 h.bake(mmts.sharpness_lap, args=['IMAGE_ARR'])]
+
+class AlongZ(ScopeExp):
+    """Measure brightness by varying z only, and move to the position of max
+    brightness. Valid kwargs are: mmt_range"""
+
+    def __init__(self, microscope, config_file, group=None,
+                 group_name='AlongZ', **kwargs):
+        super(AlongZ, self).__init__(microscope, config_file, **kwargs)
+        self.attrs = h.sub_dict(self.config_dict, ['mmt_range'],
+                                {'scope_object': self.scope.info.name})
+        self.gr = _make_group(self, group=group, group_name=group_name)
+        print self.gr
+
+    def run(self, save_mode='save_final'):
         # At the end, move to the position of maximum brightness.
         end = h.bake(e.max_fourth_col, args=['IMAGE_ARR', self.scope])
 
-        for n_step in z_range:
+        for n_step in self.config_dict['mmt_range']:
             # Allow the iteration to take place as many times as specified
             # in the scope_dict file.
-            _move_capture(self, {'z': [n_step]}, 'bayer', func_list=funcs,
-                          save_mode=None, end_func=end)
+            _move_capture(self, {'z': [n_step]}, save_mode=save_mode,
+                          end_func=end)
             print self.scope.stage.position
 
 
-class Tiled(Experiment):
-    """Class to conduct experiments where a tiled sequence of images is 
-    taken and post-processed.
-    Valid kwargs are: step_pair, backlash, focus."""
+class RasterXY(ScopeExp):
+    """Class to conduct experiments where a square raster scan is taken with
+    the photo-diode and post-processed.
+    Valid kwargs are: raster_n_step."""
 
-    def __init__(self, microscope, config_file, **kwargs):
-        super(Tiled, self).__init__()
-        self.config_file = d.make_dict(config_file, **kwargs)
-        self.scope = microscope
-        self.scope.log('INFO: Initiating Tiled experiment.')
-        self.scope.camera.preview()
+    def __init__(self, microscope, config_file, group=None,
+                 group_name='RasterXY', **kwargs):
+        super(RasterXY, self).__init__(microscope, config_file, **kwargs)
+        self.attrs = h.sub_dict(self.config_dict, ['raster_n_step'],
+                                {'scope_object': self.scope.info.name})
+        self.gr = _make_group(self, group=group, group_name=group_name)
 
-    def run(self, func_list=None, save_mode=None, step_pair=[None, None]):
-        # Get default values.
-        [step_pair[0], step_pair[1]] = h.check_defaults([
-            step_pair[0], step_pair[1]], self.config_file, ["n", "steps"])
-
-        # Set up the data recording.
-        attributes = {'n': step_pair[0], 'step_increment': step_pair[1],
-                      'backlash': self.config_file["backlash"],
-                      'focus': self.config_file["focus"]}
-
-        # Set mutable default values.
-        if func_list is None:
-            func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
+    def run(self, func_list=None, save_mode='save_final'):
 
         end = h.bake(e.max_fourth_col, args=['IMAGE_ARR', self.scope])
 
         # Take measurements and move to position of maximum brightness.
-        _move_capture(self, {'x': [step_pair], 'y': [step_pair]},
-                      image_mode='compressed', func_list=func_list,
-                      save_mode=save_mode, end_func=end)
+        _move_capture(self, {'x': self.config_dict['raster_n_step'],
+                             'y': self.config_dict['raster_n_step']},
+                      func_list=func_list, save_mode=save_mode, end_func=end)
         print self.scope.stage.position
 
 
-class Align(Experiment):
+class Align(ScopeExp):
     """Class to align the spot to position of maximum brightness."""
 
-    def __init__(self, microscope, config_file, **kwargs):
-        super(Align, self).__init__()
-        self.config_file = d.make_dict(config_file, **kwargs)
-        # Valid kwargs are step_pair, backlash, focus.
-        self.scope = microscope
+    def __init__(self, microscope, config_file, group=None,
+                 group_name='Align', **kwargs):
+        """Valid kwargs are n_steps, parabola_N, parabola_step,
+        parabola_iterations."""
+        super(Align, self).__init__(microscope, config_file, **kwargs)
+        # Valid kwargs are n_steps, parabola_N, parabola_step,
+        # parabola_iterations
+        self.attrs = h.sub_dict(self.config_dict, [
+            'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'], {
+            'scope_object': self.scope.info.name})
+        self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
-        """Algorithm for alignment is to iterate the Tiled procedure several
+        """Algorithm for alignment is to iterate the RasterXY procedure several
         times with decreasing width and increasing precision, and then using
         the parabola of brightness to try and find the maximum point by
         shifting slightly."""
-        # Set mutable default values.
-        if func_list is None:
-            func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
 
-        tiled_set = Tiled(self.scope, self.config_file)
-        for step_pairs in self.config_file["n_steps"]:
-            # Take measurements and move to position of maximum brightness.
-            tiled_set.run(func_list=func_list, save_mode=save_mode,
-                          step_pair=step_pairs)
+        raster_set = RasterXY(self.scope, self.config_dict, group=self.gr)
+        # Take measurements and move to position of maximum brightness. All
+        # arrays measurements will be taken before moving on.
+        raster_set.run(func_list=func_list, save_mode=save_mode)
 
-        par = ParabolicMax(self.scope, self.config_file)
-
-        for i in range(self.config_file["parabola_iterations"]):
+        par = ParabolicMax(self.scope, self.config_dict, group=self.gr)
+        for i in range(self.config_dict["parabola_iterations"]):
             for ax in ['x', 'y']:
                 par.run(func_list=func_list, save_mode=save_mode, axis=ax)
-        image = self.scope.camera.get_frame(greyscale=False)
-        mod = proc.crop_array(image, mmts='pixel', dims=55)
-        self.create_dataset('FINAL', data=mod)
 
 
-class ParabolicMax(Experiment):
+class ParabolicMax(ScopeExp):
     """Takes a sequence of N measurements, fits a parabola to them and moves to
     the maximum brightness value. Make sure the microstep size is not too
-    small, otherwise noise will affect the parabola shape."""
+    small, otherwise noise will affect the parabola shape. kwargs: step_pair"""
 
-    def __init__(self, microscope, config_file, **kwargs):
-        super(ParabolicMax, self).__init__()
-        self.config_file = d.make_dict(config_file, **kwargs)
-        self.scope = microscope
+    def __init__(self, microscope, config_file, group=None,
+                 group_name='ParabolicMax', **kwargs):
+        super(ParabolicMax, self).__init__(microscope, config_file, **kwargs)
+        self.attrs = h.sub_dict(self.config_dict, [
+            'parabola_N', 'parabola_step', 'parabola_iterations'])
+        self.gr = _make_group(self, group=group, group_name=group_name)
 
-    def run(self, func_list=None, save_mode='save_final', axis='x',
-            step_pair=None):
+    def run(self, func_list=None, save_mode='save_final', axis='x'):
         """Operates on one axis at a time."""
         # Get default values.
-        if step_pair is None:
-            step_pair = (self.config_file["parabola_N"],
-                         self.config_file["parabola_step"])
-
-        # Set mutable default values.
-        if func_list is None:
-            func_list = [h.bake(h.unchanged, args=['IMAGE_ARR'])]
-
+        step_pair = (self.config_dict["parabola_N"],
+                     self.config_dict["parabola_step"])
         end = h.bake(e.move_to_parmax, args=['IMAGE_ARR', self.scope, axis])
-        _move_capture(self, {axis: [step_pair]},
-                      image_mode='compressed', func_list=func_list,
+        _move_capture(self, {axis: [step_pair]}, func_list=func_list,
                       save_mode=save_mode, end_func=end)
 
 
-class DriftReCentre(Experiment):
+class DriftReCentre(ScopeExp):
     """Experiment to allow time for the spot to drift from its initial
     position for some time, then bring it back to the centre and measure
     the drift."""
 
-    def __init__(self, microscope, config_file, **kwargs):
-        super(DriftReCentre, self).__init__()
-        self.config_file = d.make_dict(config_file, **kwargs)
-        self.scope = microscope
+    def __init__(self, microscope, config_file, group=None,
+                 group_name='DriftReCentre', **kwargs):
+        super(DriftReCentre, self).__init__(microscope, config_file, **kwargs)
+        self.attrs = h.sub_dict(self.config_dict)   # Add entries here!
+        self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final', sleep_for=600):
         """Default is to sleep for 10 minutes."""
         # Do an initial alignment and then take that position as the initial
         # position.
-        align = Align(self.scope, self.config_file)
+        align = Align(self.scope, self.config_dict)
         align.run(func_list=func_list, save_mode=save_mode)
         initial_pos = self.scope.stage.position
 
@@ -181,19 +158,20 @@ class DriftReCentre(Experiment):
         # TODO Add logs to store the time and drift.
 
 
-class KeepCentred(Experiment):
-    """Iterate the parabolic method repeatedly after the initial alignment """
+class KeepCentred(ScopeExp):
+    """Iterate the parabolic method repeatedly after the initial alignment."""
 
-    def __init__(self, microscope, config_file, **kwargs):
-        super(KeepCentred, self).__init__()
-        self.config_file = d.make_dict(config_file, **kwargs)
-        self.scope = microscope
+    def __init__(self, microscope, config_file, group=None,
+                 group_name='KeepCentred', **kwargs):
+        super(KeepCentred, self).__init__(microscope, config_file, **kwargs)
+        self.attrs = h.sub_dict(self.config_dict)   # Add stuff here!
+        self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
         pass
 
 
-def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
+def _move_capture(exp_obj, iter_dict, func_list=None,
                   save_mode='save_subset', end_func=None):
     """Function to carry out a sequence of measurements as per iter_list,
     take an image at each position, post-process it and return a final result.
@@ -227,9 +205,6 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
     If you prefer to take images once for all the 'x' and, separately, once
     for all the 'y', run this function twice, once for 'x', once for 'y'.
 
-    :param image_mode: The camera's capture mode: 'bayer', 'bgr' or
-    'compressed'. Greyscale is off by default.
-
     :param func_list: The post-processing curried function list, created using
     the bake function in the helpers.py module.
 
@@ -257,8 +232,6 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
     len_lists = []
     assert len(iter_dict) <= len(valid_keys)
     for key in iter_dict.keys():
-        print iter_dict
-        print key
         for tup in iter_dict[key]:
             print tup
             assert len(tup) == 2, 'Invalid tuple format.'
@@ -273,7 +246,6 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
     # Get initial position, which may not be [0, 0, 0] if scope object
     # has been used for something else prior to this experiment.
     initial_position = exp_obj.scope.stage.position
-
     # A set of results to be collected if save_mode == 'save_final'.
     results = []
 
@@ -293,7 +265,6 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
         # Generate array of positions to move to.
         pos = h.positions_maker(x=move_by['x'], y=move_by['y'],
                                 z=move_by['z'], initial_pos=initial_position)
-
         try:
             # For each position in the range specified, take an image, apply
             # all the functions in func_list on it, then either save the
@@ -304,34 +275,34 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
                 print next_pos
                 exp_obj.scope.stage.move_to_pos(next_pos)
 
-                image = exp_obj.scope.camera.get_frame(greyscale=False,
-                                                       mode=image_mode)
-                modified = image
+                mmt = exp_obj.scope.sensor.read()
+                processed = mmt
 
                 # Post-process.
-                for function in func_list:
-                    modified = function(modified)
-                    exp_obj.scope.gr.create_dataset('modd', data=modified)
+                if func_list is not None:
+                    for function in func_list:
+                        processed = function(processed)
 
                 # Save this array in HDF5 file.
                 if save_mode == 'save_each':
-                    exp_obj.scope.gr.create_dataset('modified_image', attrs={
-                        'Position': exp_obj.scope.stage.position,
-                        'Cropped size': 300}, data=modified)
+                    exp_obj.gr.create_dataset('post_processed', attrs={
+                        'Position': exp_obj.scope.stage.position},
+                        data=processed)
                 else:
                     # The curried function and 'save_final' both use the
                     # array of final results.
                     results.append([exp_obj.scope.stage.position[0],
                                     exp_obj.scope.stage.position[1],
-                                    exp_obj.scope.stage.position[2], modified])
+                                    exp_obj.scope.stage.position[2],
+                                    processed])
 
         except StopIteration:
             # Iterations finished - save the subset of results and take the
             # next set.
             if save_mode == 'save_subset':
+                # Save after every array of motions.
                 results = np.array(results, dtype=np.float)
-                exp_obj.create_dataset('brightness_results', data=results)
-                exp_obj.log("Test - brightness results added.")
+                exp_obj.gr.create_dataset('brightness_subset', data=results)
 
         except KeyboardInterrupt:
             print "Aborted, moving back to initial position."
@@ -340,8 +311,7 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
 
     results = np.array(results, dtype=np.float)
     if save_mode == 'save_final':
-        exp_obj.create_dataset('brightness_results', data=results)
-        exp_obj.log("Test - brightness results added.")
+        exp_obj.gr.create_dataset('brightness_final', data=results)
     elif save_mode is None:
         return results
     elif save_mode != 'save_each' and save_mode != 'save_subset':
@@ -358,3 +328,18 @@ def _move_capture(exp_obj, iter_dict, image_mode, func_list=None,
             raise ValueError('end_func must be None if save_mode = '
                              '\'save_each\', because the results array is '
                              'empty.')
+
+
+def _make_group(sc_exp_obj, group=None, group_name='Group'):
+    """If 'group' is None, create a new group in the main datafile with name
+    'group_name', else if 'group' is HDF5 group object, refer to that group.
+    :param sc_exp_obj: ScopeExp object
+    :param group: Either None or refers to a group object.
+    :param group_name: The name of the group to be created, if group is None.
+    :return: The created group object."""
+    if group is None:
+        sc_exp_obj.gr = sc_exp_obj.scope.create_data_group(
+            group_name, attrs=sc_exp_obj.attrs)
+    else:
+        sc_exp_obj.gr = group
+    return sc_exp_obj.gr

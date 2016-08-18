@@ -44,13 +44,10 @@ save:                 g
 # ---------------------------------------------- Experimental parameters ----------------------------------------------
 
 
-# ---------------------------------------------------- Tiled images ---------------------------------------------------
-Tiled:
-# The number of steps per axis to take i.e. generates an n+1 x n+1 images in total.
-n:                20
-
-# The number of steps to take between each image.
-steps:            100
+# ---------------------------------------------------- RasterXY images ---------------------------------------------------
+# The number of steps per axis to take i.e. generates an n+1 x n+1 images in total, and number of microsteps between
+# each measurement.
+raster_n_step:    [[20, 100]]
 
 save_mode:        save_subset
 # -------------------------------------------------- Laser alignment --------------------------------------------------
@@ -65,11 +62,7 @@ parabola_step:        50
 # Align parabolically along each of x and y this many times.
 parabola_iterations:  3
 
-# ----------------------------------------------------- Autofocus -----------------------------------------------------
-
-# Algorithm used to calculate sharpness. Currently valid inputs include 'laplacian'. Change as more sharpness functions
-# are added.
-sharpness_func:   laplacian
+# ------------------------------------------------------ Along Z ------------------------------------------------------
 
 # List of positions to make sharpness measurements for. The format is [[n_z, microsteps], ...]. For example [[20, 1000],
 # ...] will take sharpness measurements in intervals of 1000 microsteps from -1000 * 20 / 2 to +1000 * 20 / 2 resulting

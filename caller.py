@@ -19,9 +19,6 @@ import nplab
 
 import experiments as exp
 import gui as g
-import helpers as h
-import image_proc as proc
-import measurements as mmts
 import microscope as micro
 
 # Edit the paths of the config files.
@@ -35,16 +32,14 @@ if __name__ == '__main__':
     # images, cropping the central 55 x 55 pixels, moving to the region of 
     # maximum brightness and repeating. Return an array of the positions and 
     # the brightness.
-    fun_list = [h.bake(proc.crop_array, args=['IMAGE_ARR'],
-                       kwargs={'mmts': 'pixel', 'dims': 55}),
-                h.bake(mmts.brightness, args=['IMAGE_ARR'])]
+    fun_list = None
 
     scope = micro.SensorScope(CONFIG_PATH)
     if sys_args['autofocus']:
-        focus = exp.AutoFocus(scope, CONFIG_PATH)
+        focus = exp.AlongZ(scope, CONFIG_PATH)
         focus.run()
     elif sys_args['tiled']:
-        tiled = exp.Tiled(scope, CONFIG_PATH)
+        tiled = exp.RasterXY(scope, CONFIG_PATH)
         tiled.run(func_list=fun_list)
     elif sys_args['align']:
         align = exp.Align(scope, CONFIG_PATH)
