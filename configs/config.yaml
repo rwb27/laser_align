@@ -1,5 +1,11 @@
 --- # Contains default parameters for the microscope and all associated experiments.
 
+# ----------------------------------------------- Photodiode parameters -----------------------------------------------
+
+# Serial connection
+tty: /dev/ttyACM0
+baudrate:   9600    # Bit rate, ensure it matches that of the Arduino connection.
+
 # ------------------------------------------------- Stage parameters  -------------------------------------------------
 
 # I2C channel used to connect to motors. Varies depending on RPi model.
@@ -60,7 +66,7 @@ parabola_N:           10
 parabola_step:        50
 
 # Align parabolically along each of x and y this many times.
-parabola_iterations:  3
+parabola_iterations:  1
 
 # ------------------------------------------------------ Along Z ------------------------------------------------------
 

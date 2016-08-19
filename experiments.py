@@ -158,7 +158,7 @@ class DriftReCentre(ScopeExp):
         drifts = []
         for i in range(len(sleep_times)):
             # TODO CHANGE TO A QUICK ALIGNMENT FUNCTION
-            align.run(func_list=func_list, save_mode='save_final')
+            align.run(func_list=func_list, save_mode=save_mode)
             pos = self.scope.stage.position
             t.sleep(sleep_times[i])
             if i == 0:
@@ -178,14 +178,31 @@ class KeepCentred(ScopeExp):
     def __init__(self, microscope, config_file, group=None,
                  group_name='KeepCentred', **kwargs):
         super(KeepCentred, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = d.sub_dict(self.config_dict, extra_entries={
-            'scope_object': str(self.scope.info.name)})   # Add stuff here!
+        self.attrs = d.sub_dict(
+            self.config_dict, ['n_steps', 'parabola_N', 'parabola_step',
+                               'parabola_iterations'], extra_entries={
+                'scope_object': str(self.scope.info.name)})
         self.gr = d.make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
-        pass
+        align = Align(self.scope, self.config_dict, group=self.gr,
+                      group_name='KeepCentred')
+        align.run(func_list=func_list, save_mode=save_mode)
+
+        # TODO Insert a better algorithm here for fine alignment!
+        align_fine = Align(self.scope, self.config_dict, group=self.gr,
+                           group_name='KeepCentred', n_steps=[[2, 50]])
+        while True:
+            try:
+                align_fine.run(func_list=func_list, save_mode=save_mode)
+            except KeyboardInterrupt:
+                break
 
 
+# TODO add hill_climbing and simplex algorithm classes.
+
+
+# TODO MAKE THE _MOVE_CAPTURE METHOD RECOGNISE ARBITRARY POSITIONS FUNCTIONS.
 def _move_capture(exp_obj, iter_dict, func_list=None,
                   save_mode='save_subset', end_func=None):
     """Function to carry out a sequence of measurements as per iter_list,

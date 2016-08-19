@@ -3,6 +3,7 @@
 """Contains base-level functions that are required for the others to run."""
 import time as t
 import numpy as np
+import re
 
 
 def verify_vector(vector):
@@ -63,3 +64,21 @@ def positions_maker(x=np.array([0]), y=np.array([0]), z=np.array([0]),
 
 def elapsed(start_time):
     return t.time() - start_time
+
+
+def formatter(reading):
+    """Checks a reading has a desired format and returns True if so,
+    else returns False."""
+    sub_readings = re.findall('(?<![0-9])([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|10['
+                              '0-1][0-9]|102[0-3])\s+', reading)
+    if len(sub_readings) != 1:
+        return False
+    else:
+        return True
+
+
+def gen(n):
+    i = 0
+    while i < n:
+        yield i
+        i += 1
