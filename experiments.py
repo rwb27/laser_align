@@ -12,7 +12,6 @@ from nplab.experiment.experiment import Experiment
 import data_io as d
 import end_functions as e
 import helpers as h
-import image_proc as proc
 
 
 class ScopeExp(Experiment):
@@ -35,7 +34,7 @@ class AlongZ(ScopeExp):
                  group_name='AlongZ', **kwargs):
         super(AlongZ, self).__init__(microscope, config_file, **kwargs)
         self.attrs = h.sub_dict(self.config_dict, ['mmt_range'],
-                                {'scope_object': self.scope.info.name})
+                                {'scope_object': str(self.scope.info.name)})
         self.gr = _make_group(self, group=group, group_name=group_name)
         print self.gr
 
@@ -60,7 +59,7 @@ class RasterXY(ScopeExp):
                  group_name='RasterXY', **kwargs):
         super(RasterXY, self).__init__(microscope, config_file, **kwargs)
         self.attrs = h.sub_dict(self.config_dict, ['raster_n_step'],
-                                {'scope_object': self.scope.info.name})
+                                {'scope_object': str(self.scope.info.name)})
         self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
@@ -86,7 +85,7 @@ class Align(ScopeExp):
         # parabola_iterations
         self.attrs = h.sub_dict(self.config_dict, [
             'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'], {
-            'scope_object': self.scope.info.name})
+            'scope_object': str(self.scope.info.name)})
         self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
@@ -95,7 +94,8 @@ class Align(ScopeExp):
         the parabola of brightness to try and find the maximum point by
         shifting slightly."""
 
-        raster_set = RasterXY(self.scope, self.config_dict, group=self.gr)
+        raster_set = RasterXY(self.scope, self.config_dict, group=self.gr,
+                              raster_n_step=self.config_dict['n_steps'])
         # Take measurements and move to position of maximum brightness. All
         # arrays measurements will be taken before moving on.
         raster_set.run(func_list=func_list, save_mode=save_mode)
@@ -115,7 +115,8 @@ class ParabolicMax(ScopeExp):
                  group_name='ParabolicMax', **kwargs):
         super(ParabolicMax, self).__init__(microscope, config_file, **kwargs)
         self.attrs = h.sub_dict(self.config_dict, [
-            'parabola_N', 'parabola_step', 'parabola_iterations'])
+            'parabola_N', 'parabola_step', 'parabola_iterations'], {
+            'scope_object': str(self.scope.info.name)})
         self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final', axis='x'):
@@ -136,7 +137,8 @@ class DriftReCentre(ScopeExp):
     def __init__(self, microscope, config_file, group=None,
                  group_name='DriftReCentre', **kwargs):
         super(DriftReCentre, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = h.sub_dict(self.config_dict)   # Add entries here!
+        self.attrs = h.sub_dict(self.config_dict, extra_entries={
+            'scope_object': str(self.scope.info.name)})   # Add entries here!
         self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final', sleep_for=600):
@@ -164,7 +166,8 @@ class KeepCentred(ScopeExp):
     def __init__(self, microscope, config_file, group=None,
                  group_name='KeepCentred', **kwargs):
         super(KeepCentred, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = h.sub_dict(self.config_dict)   # Add stuff here!
+        self.attrs = h.sub_dict(self.config_dict, extra_entries={
+            'scope_object': str(self.scope.info.name)})   # Add stuff here!
         self.gr = _make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
@@ -338,7 +341,7 @@ def _make_group(sc_exp_obj, group=None, group_name='Group'):
     :param group_name: The name of the group to be created, if group is None.
     :return: The created group object."""
     if group is None:
-        sc_exp_obj.gr = sc_exp_obj.scope.create_data_group(
+        sc_exp_obj.gr = sc_exp_obj.create_data_group(
             group_name, attrs=sc_exp_obj.attrs)
     else:
         sc_exp_obj.gr = group

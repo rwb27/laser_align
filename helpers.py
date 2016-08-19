@@ -5,16 +5,6 @@
 import numpy as np
 
 
-def frac_round(number, frac, centre_frac):
-    """Converts fraction 'frac' to crop a dimension of an image by, say x,
-    centred at centre_frac, to an integer index for the array with 'number'
-    indices along that axis. Refer to crop_array for more info."""
-    lower_bound = (number/2.*(1-frac)) + (number * float(centre_frac))
-    upper_bound = (number/2.*(1+frac)) + (number * float(centre_frac))
-
-    return int(np.round(lower_bound)), int(np.round(upper_bound))
-
-
 def verify_vector(vector):
     """Checks the input vector has 3 components."""
     r = np.array(vector)
@@ -69,33 +59,6 @@ def positions_maker(x=np.array([0]), y=np.array([0]), z=np.array([0]),
                 k += 1
             j += 1
         i += 1
-
-
-def check_defaults(list_of_vars, config_dict, list_of_keys):
-    """Check if each variable in list_of_vars is None, and change it to the
-    corresponding value in config_dict if so.
-    :param list_of_vars: List of variables to check.
-    :param config_dict: Configuration dictionary.
-    :param list_of_keys: List of respective key names. If nested
-    dictionaries, specify each entry as a list, e.g. ['hello', ['one',
-    'two'], ...] for the entries dict['hello'], dict['one']['two'], ...
-    respectively.
-    :return: The modified list_of_vars."""
-
-    assert len(list_of_vars) == len(list_of_keys)
-
-    for i in range(len(list_of_vars)):
-        if list_of_vars[i] is None:
-            if type(list_of_keys[i]) is list or type(list_of_keys[i]) is tuple:
-                # Attempt to treat like a list - if so it must have 2 entries.
-                assert len(list_of_keys[i]) == 2
-                list_of_vars[i] = config_dict[list_of_keys[i][0]][
-                    list_of_keys[i][1]]
-            else:
-                # The key is not nested.
-                list_of_vars[i] = config_dict[list_of_keys[i]]
-
-    return list_of_vars
 
 
 def sub_dict(main_dict, subset_keys=None, extra_entries=None):

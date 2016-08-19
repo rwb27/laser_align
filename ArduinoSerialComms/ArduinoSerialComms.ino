@@ -25,11 +25,6 @@ void setup() {
 // take N measurements with a sample rate of R, return bit rate, current model number, firmware info, connected pins, return done when a command is done
 // interrupt if needed. Reducing the effects of noise? (With filter?)
 void loop() {
-  if (Serial.available() > 0){
-    // For safety, entering multiple input characters into the Serial from the RPi has no effect - readings are only taken when the 
-    // space character is used.
-    Serial.readStringUntil(' ');
-
     // read the input on analog pin 0:
     int sensorValue = analogRead(A0);
     
@@ -37,5 +32,4 @@ void loop() {
     Serial.println(sensorValue);
     // delay in between reads for stability
     delay(1); 
-  }
 }

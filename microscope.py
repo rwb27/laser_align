@@ -157,7 +157,7 @@ class LightDetector(Instrument):
         exposure) are to be manually controlled or not."""
 
         super(LightDetector, self).__init__()
-
+        print "hello"
         # If config_file is entered as a path string, the file from the path
         # will be read. If it is a dictionary, it is not changed. This
         # prevents the config file being read repeatedly by different
@@ -167,6 +167,7 @@ class LightDetector(Instrument):
 
         # Initialise connection as appropriate.
         self.ser = serial.Serial(tty)
+        print "success"
 
     def __del__(self):
         self.ser.close()
@@ -174,8 +175,7 @@ class LightDetector(Instrument):
     def read(self):
         """Read the voltage value once from the Arduino. The ' ' character
         is needed to trigger a reading."""
-        self.ser.write(' ')
-        self.ser.read()
+        return self.ser.readline()
 
     def read_n(self, n, t=0):
         """Take n measurements in total in the same position with a time delay
@@ -208,3 +208,8 @@ def _move_motors(bus, x, y, z):
     # Empirical formula for how micro step values relate to rotational speed.
     # This is only valid for the specific set of motors tested.
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
+
+
+if __name__ == '__main__':
+    det = LightDetector('./configs/config.yaml')
+    det.read()
