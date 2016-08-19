@@ -7,12 +7,12 @@ from a class in experiments.py."""
 import numpy as np
 
 
-def max_fourth_col(results_arr, scope_obj):
-    """Given a results array made of [[x_pos], [y_pos], [z_pos], [quantity]]
-    format, moves scope stage to the position with the maximum value of
-    'quantity'."""
+def max_fifth_col(results_arr, scope_obj):
+    """Given a results array made of [[times], [x_pos], [y_pos], [z_pos],
+    [quantity]] format, moves scope stage to the position with the
+    maximum value of 'quantity'."""
     print results_arr
-    new_position = results_arr[np.argmax(results_arr[:, 3]), :][:3]
+    new_position = results_arr[np.argmax(results_arr[:, 4]), :][1:4]
     print new_position
     scope_obj.stage.move_to_pos(new_position)
     print "Moved to " + str(new_position)

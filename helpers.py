@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """Contains base-level functions that are required for the others to run."""
-
+import time as t
 import numpy as np
 
 
@@ -61,25 +61,5 @@ def positions_maker(x=np.array([0]), y=np.array([0]), z=np.array([0]),
         i += 1
 
 
-def sub_dict(main_dict, subset_keys=None, extra_entries=None):
-    """Slice specific keys of a dictionary, add extra entries if specified,
-    and return the new dictionary.
-    :param main_dict: The main dictionary to slice.
-    :param subset_keys: The list of keys in main_dict to use. If None,
-    all keys are used.
-    :param extra_entries: A dictionary of extra entries to add to slice
-    dictionary."""
-    subset_dict = {}
-    if subset_keys is not None:
-        for key in subset_keys:
-            subset_dict[key] = main_dict[key]
-    elif subset_keys is None:
-        subset_dict = main_dict
-    else:
-        raise ValueError('subset_keys is invalid.')
-
-    if extra_entries is not None:
-        for key in extra_entries:
-            subset_dict[key] = extra_entries[key]
-
-    return subset_dict
+def elapsed(start_time):
+    return t.time() - start_time

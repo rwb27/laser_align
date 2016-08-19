@@ -14,7 +14,7 @@ import serial
 import numpy as np
 from nplab.instrument import Instrument
 
-import data_io as d
+import data as d
 import helpers as h
 
 

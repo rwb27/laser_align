@@ -3,15 +3,17 @@
 """experiments.py
 Contains functions to perform a set of measurements and output the results to a
 datafile or graph. These functions are built on top of measurements.py,
-microscope.py, image_proc.py and data_io.py."""
+microscope.py, image_proc.py and data.py."""
 
 import time as t
 import numpy as np
 from nplab.experiment.experiment import Experiment
 
-import data_io as d
+import data as d
 import end_functions as e
 import helpers as h
+
+start = t.time()
 
 
 class ScopeExp(Experiment):
@@ -33,14 +35,14 @@ class AlongZ(ScopeExp):
     def __init__(self, microscope, config_file, group=None,
                  group_name='AlongZ', **kwargs):
         super(AlongZ, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = h.sub_dict(self.config_dict, ['mmt_range'],
-                                {'scope_object': str(self.scope.info.name)})
-        self.gr = _make_group(self, group=group, group_name=group_name)
+        self.attrs = d.sub_dict(self.config_dict, ['mmt_range'],
+                                   {'scope_object': str(self.scope.info.name)})
+        self.gr = d.make_group(self, group=group, group_name=group_name)
         print self.gr
 
     def run(self, save_mode='save_final'):
         # At the end, move to the position of maximum brightness.
-        end = h.bake(e.max_fourth_col, args=['IMAGE_ARR', self.scope])
+        end = h.bake(e.max_fifth_col, args=['IMAGE_ARR', self.scope])
 
         for n_step in self.config_dict['mmt_range']:
             # Allow the iteration to take place as many times as specified
@@ -58,13 +60,13 @@ class RasterXY(ScopeExp):
     def __init__(self, microscope, config_file, group=None,
                  group_name='RasterXY', **kwargs):
         super(RasterXY, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = h.sub_dict(self.config_dict, ['raster_n_step'],
-                                {'scope_object': str(self.scope.info.name)})
-        self.gr = _make_group(self, group=group, group_name=group_name)
+        self.attrs = d.sub_dict(self.config_dict, ['raster_n_step'],
+                                   {'scope_object': str(self.scope.info.name)})
+        self.gr = d.make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
 
-        end = h.bake(e.max_fourth_col, args=['IMAGE_ARR', self.scope])
+        end = h.bake(e.max_fifth_col, args=['IMAGE_ARR', self.scope])
 
         # Take measurements and move to position of maximum brightness.
         _move_capture(self, {'x': self.config_dict['raster_n_step'],
@@ -83,10 +85,10 @@ class Align(ScopeExp):
         super(Align, self).__init__(microscope, config_file, **kwargs)
         # Valid kwargs are n_steps, parabola_N, parabola_step,
         # parabola_iterations
-        self.attrs = h.sub_dict(self.config_dict, [
+        self.attrs = d.sub_dict(self.config_dict, [
             'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'], {
             'scope_object': str(self.scope.info.name)})
-        self.gr = _make_group(self, group=group, group_name=group_name)
+        self.gr = d.make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
         """Algorithm for alignment is to iterate the RasterXY procedure several
@@ -114,10 +116,10 @@ class ParabolicMax(ScopeExp):
     def __init__(self, microscope, config_file, group=None,
                  group_name='ParabolicMax', **kwargs):
         super(ParabolicMax, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = h.sub_dict(self.config_dict, [
+        self.attrs = d.sub_dict(self.config_dict, [
             'parabola_N', 'parabola_step', 'parabola_iterations'], {
             'scope_object': str(self.scope.info.name)})
-        self.gr = _make_group(self, group=group, group_name=group_name)
+        self.gr = d.make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final', axis='x'):
         """Operates on one axis at a time."""
@@ -136,28 +138,38 @@ class DriftReCentre(ScopeExp):
 
     def __init__(self, microscope, config_file, group=None,
                  group_name='DriftReCentre', **kwargs):
+        # kwargs means sleep_for.
         super(DriftReCentre, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = h.sub_dict(self.config_dict, extra_entries={
-            'scope_object': str(self.scope.info.name)})   # Add entries here!
-        self.gr = _make_group(self, group=group, group_name=group_name)
+        self.attrs = d.sub_dict(self.config_dict, [
+            'sleep_times', 'n_steps', 'parabola_N', 'parabola_step',
+            'parabola_iterations'], extra_entries={'scope_object': str(
+            self.scope.info.name)})
+        self.gr = d.make_group(self, group=group, group_name=group_name)
 
-    def run(self, func_list=None, save_mode='save_final', sleep_for=600):
+    def run(self, func_list=None, save_mode='save_final'):
         """Default is to sleep for 10 minutes."""
         # Do an initial alignment and then take that position as the initial
         # position.
-        align = Align(self.scope, self.config_dict)
-        align.run(func_list=func_list, save_mode=save_mode)
-        initial_pos = self.scope.stage.position
 
-        t.sleep(sleep_for)
+        align = Align(self.scope, self.config_dict, group=self.gr,
+                      group_name='DriftReCentre')
+        sleep_times = self.config_dict['sleep_times']
 
-        # Measure the position after it has drifted, then bring back to centre.
-        final_pos = self.scope.stage.position
-        align.run(func_list=func_list, save_mode=save_mode)
+        drifts = []
+        for i in range(len(sleep_times)):
+            # TODO CHANGE TO A QUICK ALIGNMENT FUNCTION
+            align.run(func_list=func_list, save_mode='save_final')
+            pos = self.scope.stage.position
+            t.sleep(sleep_times[i])
+            if i == 0:
+                last_pos = pos
+            drift = pos - last_pos
+            last_pos = pos
+            drifts.append([sleep_times[i], drift])
 
-        drift = final_pos - initial_pos
-
-        # TODO Add logs to store the time and drift.
+        # Measure the position after it has drifted by working out how much
+        # it needs to move by to re-centre it.
+        self.gr.create_dataset('Drift', data=np.array(drifts))
 
 
 class KeepCentred(ScopeExp):
@@ -166,9 +178,9 @@ class KeepCentred(ScopeExp):
     def __init__(self, microscope, config_file, group=None,
                  group_name='KeepCentred', **kwargs):
         super(KeepCentred, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = h.sub_dict(self.config_dict, extra_entries={
+        self.attrs = d.sub_dict(self.config_dict, extra_entries={
             'scope_object': str(self.scope.info.name)})   # Add stuff here!
-        self.gr = _make_group(self, group=group, group_name=group_name)
+        self.gr = d.make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
         pass
@@ -294,7 +306,8 @@ def _move_capture(exp_obj, iter_dict, func_list=None,
                 else:
                     # The curried function and 'save_final' both use the
                     # array of final results.
-                    results.append([exp_obj.scope.stage.position[0],
+                    results.append([h.elapsed(start),
+                                    exp_obj.scope.stage.position[0],
                                     exp_obj.scope.stage.position[1],
                                     exp_obj.scope.stage.position[2],
                                     processed])
@@ -331,18 +344,3 @@ def _move_capture(exp_obj, iter_dict, func_list=None,
             raise ValueError('end_func must be None if save_mode = '
                              '\'save_each\', because the results array is '
                              'empty.')
-
-
-def _make_group(sc_exp_obj, group=None, group_name='Group'):
-    """If 'group' is None, create a new group in the main datafile with name
-    'group_name', else if 'group' is HDF5 group object, refer to that group.
-    :param sc_exp_obj: ScopeExp object
-    :param group: Either None or refers to a group object.
-    :param group_name: The name of the group to be created, if group is None.
-    :return: The created group object."""
-    if group is None:
-        sc_exp_obj.gr = sc_exp_obj.create_data_group(
-            group_name, attrs=sc_exp_obj.attrs)
-    else:
-        sc_exp_obj.gr = group
-    return sc_exp_obj.gr
