@@ -32,7 +32,7 @@ key_stepsize:         1000
 
 exit:                 x
 
-save:                 g
+save:                 c
 
 +x:                   s
 

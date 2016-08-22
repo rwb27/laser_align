@@ -8,7 +8,7 @@ Usage:
     caller.py align [<configs>...]
     caller.py autofocus [<configs>...]
     caller.py tiled [<configs>...]
-    caller.py gui [<configs>...]
+    caller.py controller [<configs>...]
     caller.py (-h | --help)
 
 Options:
@@ -18,7 +18,7 @@ from docopt import docopt
 import nplab
 
 import experiments as exp
-import gui as g
+import controller as c
 import microscope as micro
 
 # Edit the paths of the config files.
@@ -34,29 +34,23 @@ if __name__ == '__main__':
         configs = [DEFAULT_PATH]
     else:
         configs = sys_args['<configs>']
-    print configs
-    # Calculate brightness of central spot by taking a tiled section of
-    # images, cropping the central 55 x 55 pixels, moving to the region of
-    # maximum brightness and repeating. Return an array of the positions
-    # and the brightness.
+
+    # List of baked functions to do post-processing, if any.
     fun_list = None
 
     for config in configs:
-        try:
-            scope = micro.SensorScope(config)
-            if sys_args['autofocus']:
-                focus = exp.AlongZ(scope, config)
-                focus.run()
-            elif sys_args['tiled']:
-                tiled = exp.RasterXY(scope, config)
-                tiled.run(func_list=fun_list)
-            elif sys_args['align']:
-                align = exp.Align(scope, config)
-                align.run(func_list=fun_list)
-            elif sys_args['gui']:
-                gui = g.KeyboardControls(scope, config)
-                gui.run_gui()
-        except:
-            raise ValueError('Invalid config file path {}'.format(config))
+        scope = micro.SensorScope(config)
+        if sys_args['autofocus']:
+            focus = exp.AlongZ(scope, config)
+            focus.run()
+        elif sys_args['tiled']:
+            tiled = exp.RasterXY(scope, config)
+            tiled.run(func_list=fun_list)
+        elif sys_args['align']:
+            align = exp.Align(scope, config)
+            align.run(func_list=fun_list)
+        elif sys_args['controller']:
+            gui = c.KeyboardControls(scope, config)
+            gui.run_gui()
 
     nplab.close_current_datafile()

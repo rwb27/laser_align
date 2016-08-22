@@ -7,15 +7,14 @@ single SensorScope class that allows both to be controlled together. It is
 based on the script by James Sharkey, which was used for the paper in Review of
 Scientific Instruments titled: A one-piece 3D printed flexure translation stage
 for open-source microscopy."""
-
+import re
 import time
 import smbus
 import serial
 import numpy as np
 from nplab.instrument import Instrument
 
-import data as d
-import helpers as h
+import data_io as d
 
 
 class SensorScope(Instrument):
@@ -46,10 +45,12 @@ class SensorScope(Instrument):
         self.stage = Stage(self.config_dict, **kwargs)
         # self.light = twoLED.Lightboard()
 
-        # Set up data recording. Default values will be saved with the
-        # group. TODO MOVE TO EACH METHOD.
-        self.attrs = {}
-        for key in ["channel", "xyz_bound", "microsteps", "backlash", "override"]:
+        # Set up data recording. Default values will be saved in the group
+        # 'SensorScope'.
+        self.start = time.time()
+        self.attrs = {'startup_time': self.start}
+        for key in ["channel", "xyz_bound", "microsteps", "backlash",
+                    "override"]:
             self.attrs[key] = self.config_dict[key]
         self.info = self.create_dataset('ScopeSettings', data='',
                                         attrs=self.attrs)
@@ -62,18 +63,16 @@ class SensorScope(Instrument):
 
 class LightDetector(Instrument):
     """Class to read brightness value from sensor by providing a Serial
-    command to the Arduino."""
+    command to the Arduino. The logging feature of Instrument is not used,
+    but can be invoked in future if this class is used directly."""
 
     def __init__(self, config_file, **kwargs):
-        """An abstracted camera class. Always use through the SensorScope class.
+        """An abstracted photo-diode class.
+        :param config_file: A string with the path to the config file,
+        or the config_dict.
         :param kwargs:
-        Valid ones include resolution, cv2camera, manual, and max_resolution
-        :param width, height: Specify an image width and height.
-        :param cv2camera: Choosing cv2camera=True allows testing on non RPi
-        systems, though code will detect if picamera is not present and
-        assume that cv2 must be used instead.
-        :param manual: Specifies whether pre-processing (ISO, white balance,
-        exposure) are to be manually controlled or not."""
+            tty: The serial connection address as a string.
+            baudrate: The baudrate through the port."""
 
         super(LightDetector, self).__init__()
         # If config_file is entered as a path string, the file from the path
@@ -89,22 +88,17 @@ class LightDetector(Instrument):
     def __del__(self):
         self.ser.close()
 
-    def read(self):
-        """Read the voltage value once from the Arduino. The ' ' character
-        is needed to trigger a reading."""
-        return self.ser.readline()
-
-    def read_n(self, n, t=0):
+    def read(self, n=1, t=0):
         """Take n measurements in total in the same position with a time delay
         of t seconds between each measurement. Returns them as a list. Note
         that the Arduino is also programmed to have a small delay between
         each measurement being taken."""
         readings = []
-        times = h.gen(n)
+        times = _gen(n)
         while True:
             try:
-                reading = self.read()
-                if h.formatter(reading):
+                reading = self.ser.readline()
+                if _formatter(reading):
                     # If the reading is a valid one, wait before taking
                     # another as specified, else take one again immediately.
                     next(times)
@@ -118,10 +112,9 @@ class LightDetector(Instrument):
         """Take n measurements and return their average value.
         :param n: Number of measurements to take in total.
         :param t: Time delay in seconds between each measurement. Ensure
-        this is not too large otherwise time drift effects may affect the
-        results.
+        this is not too large otherwise time drift may affect the results.
         :return: The average value of the measurements."""
-        return np.mean(self.read_n(n, t))
+        return np.mean(self.read(n, t))
 
     # TODO LOOK UP WHAT OTHER ADCS CAN ALSO DO
 
@@ -130,7 +123,7 @@ class Stage(Instrument):
 
     def __init__(self, config_file, **kwargs):
         """Class representing a 3-axis microscope stage.
-        :param config_file: Either file path or dictionary.
+        :param config_file: Either file path or dictionary to config file.
         :param kwargs: Valid ones are the xyz_bound, microsteps and channel,
         backlash and override.
         Preferably, change them through the microscope class but in case of
@@ -163,8 +156,8 @@ class Stage(Instrument):
 
         # Check backlash  and the vector to move by have the correct format.
         assert np.all(backlash >= 0), "Backlash must >= 0 for all [x, y, z]."
-        backlash = h.verify_vector(backlash)
-        r = h.verify_vector(vector)
+        backlash = _verify_vector(backlash)
+        r = _verify_vector(vector)
 
         # Generate the list of movements to make. If backlash is [0, 0, 0],
         # there is only one motion to make.
@@ -189,7 +182,7 @@ class Stage(Instrument):
                 raise ValueError('New position is outside allowed range.')
 
     def move_to_pos(self, final):
-        new_position = h.verify_vector(final)
+        new_position = _verify_vector(final)
         rel_mov = np.subtract(new_position, self.position)
         return self.move_rel(rel_mov)
 
@@ -227,6 +220,26 @@ def _move_motors(bus, x, y, z):
     time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
 
 
-if __name__ == '__main__':
-    det = LightDetector('./configs/config.yaml')
-    det.read()
+def _verify_vector(vector):
+    """Checks the input vector has 3 components."""
+    r = np.array(vector)
+    assert r.shape == (3,), "The variable 'vector' must have 3 components."
+    return r
+
+
+def _formatter(reading):
+    """Checks a reading has a desired format and returns True if so,
+    else returns False."""
+    sub_readings = re.findall('(?<![0-9])([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|10['
+                              '0-1][0-9]|102[0-3])\s+', reading)
+    if len(sub_readings) != 1:
+        return False
+    else:
+        return True
+
+
+def _gen(n):
+    i = 0
+    while i < n:
+        yield i
+        i += 1

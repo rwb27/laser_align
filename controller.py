@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-"""gui.py
+"""controller.py
 Script containing class to control and take measurements using the microscope
-via a GUI."""
+via the keyboard."""
 
 import cv2
 
-import data as d
+import _experiments as _exp
+import data_io as d
+import numpy as np
 
 
 class KeyboardControls:
@@ -52,11 +54,6 @@ class KeyboardControls:
         del self.microscope
 
     @staticmethod
-    def _gui_nothing(x):
-        """GUI needs callbacks for some functions: this is a blank one."""
-        pass
-
-    @staticmethod
     def _create_gui():
         """Initialises the things needed for the GUI."""
         # Create the necessary GUI elements
@@ -81,17 +78,20 @@ class KeyboardControls:
             if keypress == ord(self.config_dict["exit"]):
                 self._gui_quit = True
             elif keypress == ord(self.config_dict["save"]):
-                # The g key will 'grab' (save) the box region or the whole
-                # frame if nothing selected.
-                # TODO SAVE POSITION AND BRIGHTNESS VALUE.
-                pass
+                # The c key will 'grab' (save) the time, position and a
+                # singly-sampled brightness value.
+                time = _exp.elapsed(self.microscope.start)
+                brightness = self.microscope.sensor.read()
+                position = self.microscope.stage.position
+                reading = np.hstack((np.array(time), position,
+                                          brightness))
+                self.microscope.create_dataset('GUI_save', data=reading)
 
             # QWEASD for 3D motion: WASD are motion in +y, -x, -y,
             # +x directions, QE are motion in +z, -z directions. Note these
-            # need to be CHANGED DEPENDING ON THE CAMERA ORIENTATION. NOT
+            # need to be CHANGED DEPENDING ON THE AXIS ORIENTATION. NOT
             # SURE ABOUT Q AND E YET.
             elif keypress == ord(self.config_dict["+x"]):
-                # The arrow keys will move the stage
                 self.microscope.stage.move_rel([self._ARROW_STEP_SIZE, 0, 0])
             elif keypress == ord(self.config_dict["-x"]):
                 self.microscope.stage.move_rel([-self._ARROW_STEP_SIZE, 0, 0])
