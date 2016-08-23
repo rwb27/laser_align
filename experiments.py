@@ -2,11 +2,10 @@
 
 """experiments.py
 Contains functions to perform a set of measurements and output the results to a
-datafile or graph. These functions are built on top of measurements.py,
-microscope.py, image_proc.py and data_io.py."""
+datafile or graph. These functions are built on top of _experiments.py and
+data_io.py."""
 
 import time as t
-
 import numpy as np
 from nplab.experiment.experiment import Experiment
 
@@ -46,7 +45,7 @@ class AlongZ(ScopeExp):
             # Allow the iteration to take place as many times as specified
             # in the scope_dict file.
             _exp.move_capture(self, {'z': [n_step]}, save_mode=save_mode,
-                         end_func=end)
+                              end_func=end)
             print self.scope.stage.position
 
 
@@ -102,7 +101,7 @@ class Align(ScopeExp):
         raster_set.run(func_list=func_list, save_mode=save_mode)
 
         par = ParabolicMax(self.scope, self.config_dict, group=self.gr)
-        for i in range(self.config_dict["parabola_iterations"]):
+        for i in xrange(self.config_dict["parabola_iterations"]):
             for ax in ['x', 'y']:
                 par.run(func_list=func_list, save_mode=save_mode, axis=ax)
 
@@ -128,7 +127,7 @@ class ParabolicMax(ScopeExp):
         end = _exp.bake(_exp.move_to_parmax, args=['IMAGE_ARR', self.scope,
                                                    axis])
         _exp.move_capture(self, {axis: [step_pair]}, func_list=func_list,
-                     save_mode=save_mode, end_func=end)
+                          save_mode=save_mode, end_func=end)
 
 
 class DriftReCentre(ScopeExp):
@@ -156,7 +155,7 @@ class DriftReCentre(ScopeExp):
         sleep_times = self.config_dict['sleep_times']
 
         drifts = []
-        for i in range(len(sleep_times)):
+        for i in xrange(len(sleep_times)):
             # TODO CHANGE TO A QUICK ALIGNMENT FUNCTION
             align.run(func_list=func_list, save_mode=save_mode)
             pos = self.scope.stage.position

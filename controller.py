@@ -85,6 +85,7 @@ class KeyboardControls:
                 position = self.microscope.stage.position
                 reading = np.hstack((np.array(time), position,
                                           brightness))
+                print reading
                 self.microscope.create_dataset('GUI_save', data=reading)
 
             # QWEASD for 3D motion: WASD are motion in +y, -x, -y,

@@ -59,13 +59,13 @@ save_mode:        save_subset
 # -------------------------------------------------- Laser alignment --------------------------------------------------
 
 # The number of steps per axis to take i.e. generates an n+1 x n+1 images in total.
-n_steps:            [[2, 200]]
+n_steps:            [[10, 50], [10, 25]]
 
 parabola_N:           10
 
 parabola_step:        50
 
-# Align parabolically along each of x and y this many times.
+# Align parabolically along each of x and y many times.
 parabola_iterations:  1
 
 # ------------------------------------------------------ Along Z ------------------------------------------------------

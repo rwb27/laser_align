@@ -6,7 +6,7 @@ import time as t
 import numpy as np
 
 
-# TODO MAKE THE _MOVE_CAPTURE METHOD RECOGNISE ARBITRARY POSITIONS FUNCTIONS.
+# TODO MAKE THE MOVE_CAPTURE METHOD RECOGNISE ARBITRARY POSITIONS FUNCTIONS.
 def move_capture(exp_obj, iter_dict, func_list=None,
                  save_mode='save_subset', end_func=None):
     """Function to carry out a sequence of measurements as per iter_list,
@@ -85,7 +85,7 @@ def move_capture(exp_obj, iter_dict, func_list=None,
     # A set of results to be collected if save_mode == 'save_final'.
     results = []
 
-    for i in range(len_lists[0]):
+    for i in xrange(len_lists[0]):
         # For the length of each list, combine every group of tuples in the
         # same position to get array of positions to move to.
         move_by = {}
@@ -243,7 +243,7 @@ def move_to_parmax(results_arr, scope_obj, axis):
     assert np.where(y == np.max(y)) != 0 and \
         np.where(y == np.max(y)) != len(y), 'Extrapolation occurred - ' \
                                             'measure over a wider range.'
-
+    print "x", x, "y", y
     coeffs = np.polyfit(x, y, 2)    # Find some way to get errors from this.
     print "coeffs", coeffs
     coeffs_deriv = np.array([2, 1]) * coeffs[:2]    # Simulate differentiation.

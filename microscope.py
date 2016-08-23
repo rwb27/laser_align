@@ -2,11 +2,10 @@
 
 """microscope.py
 This script contains all the classes required to make the microscope work. This
-includes the abstract Camera and Stage classes and their combination into a
-single SensorScope class that allows both to be controlled together. It is
-based on the script by James Sharkey, which was used for the paper in Review of
-Scientific Instruments titled: A one-piece 3D printed flexure translation stage
-for open-source microscopy."""
+includes the abstract LightSensor and Stage classes and their combination
+into a single SensorScope class that allows both to be controlled together. It
+is based on the script by James Sharkey."""
+
 import re
 import time
 import smbus
@@ -97,12 +96,17 @@ class LightDetector(Instrument):
         times = _gen(n)
         while True:
             try:
+                # TODO CHANGE THIS TO WRITE N CHARACTERS AT ONCE.
+                self.ser.write('abcde')
+                self.ser.flush()
                 reading = self.ser.readline()
                 if _formatter(reading):
                     # If the reading is a valid one, wait before taking
                     # another as specified, else take one again immediately.
-                    next(times)
-                    readings.append(int(reading.strip()))
+                    times.next()
+                    print 'reading', reading
+                    reading = re.sub('[^\w]', '', reading.strip())
+                    readings.append(int(reading))
                     time.sleep(t)
             except StopIteration:
                 break
@@ -243,3 +247,8 @@ def _gen(n):
     while i < n:
         yield i
         i += 1
+
+
+if __name__ == '__main__':
+    scope = SensorScope('./configs/config.yaml')
+    print scope.sensor.read(100)

@@ -5,14 +5,14 @@
 */
 
 /*
- Consider these factors when using the Arduino as an ADC:
- - What is the sampling rate of the analog signal, and does it satisfy the Nyquist rate (is this even relevant)?
- - Is the scale linear? Does the output require calibration to a given voltage analogue input?
- - Degree of quantisation error?
- - Level of noise?
- - Repeated averaging of ADC values to reduce error.
- - How should the comms request a certain number of measurements?
- */
+  Consider these factors when using the Arduino as an ADC:
+  - What is the sampling rate of the analog signal, and does it satisfy the Nyquist rate (is this even relevant)?
+  - Is the scale linear? Does the output require calibration to a given voltage analogue input?
+  - Degree of quantisation error?
+  - Level of noise?
+  - Repeated averaging of ADC values to reduce error.
+  - How should the comms request a certain number of measurements?
+*/
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -21,15 +21,19 @@ void setup() {
 }
 
 // the loop routine runs over and over again forever:
-// Possible commands that might need to be executed here are: read the serial input, parse it appropriately, 
+// Possible commands that might need to be executed here are: read the serial input, parse it appropriately,
 // take N measurements with a sample rate of R, return bit rate, current model number, firmware info, connected pins, return done when a command is done
 // interrupt if needed. Reducing the effects of noise? (With filter?)
 void loop() {
+  int i = 0;
+  while (Serial.available() > 0) {
     // read the input on analog pin 0:
-    int sensorValue = analogRead(A0);
-    
-    // print out the value you read:
-    Serial.println(sensorValue);
+    //int sensorValue = analogRead(A0);
+    Serial.read();
     // delay in between reads for stability
-    delay(1); 
+    delay(1);
+    // print out the value you read:
+    Serial.println(i);
+    i++;
+  }
 }
