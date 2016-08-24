@@ -1,1 +1,3 @@
 *.pyc
+steps_vs_time_data_collection.py
+steps_vs_time_graph_maker.py

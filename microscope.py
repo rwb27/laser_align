@@ -68,7 +68,7 @@ class LightDetector(Instrument):
     def __init__(self, config_file, **kwargs):
         """An abstracted photo-diode class.
         :param config_file: A string with the path to the config file,
-        or the config_dict.
+        or the times_data.
         :param kwargs:
             tty: The serial connection address as a string.
             baudrate: The baudrate through the port."""
@@ -239,7 +239,7 @@ def move_motors(bus, x, y, z):
 
     # Empirical formula for how micro step values relate to rotational speed.
     # This is only valid for the specific set of motors tested.
-    time.sleep(np.ceil(max([abs(x), abs(y), abs(z)])) * (1.4 / 1000) + 0.1)
+    time.sleep(np.ceil(max([abs(x), abs(y), abs(z)])) * (1.5 / 1000) + 0.1)
 
 
 def _verify_vector(vector):

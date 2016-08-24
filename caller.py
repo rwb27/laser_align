@@ -9,7 +9,7 @@ Usage:
     caller.py autofocus [<configs>...]
     caller.py tiled [<configs>...]
     caller.py controller [<configs>...]
-    caller.py move <x> <y> <z>
+    caller.py move --x=<x> --y=<y> --z=<z>
     caller.py (-h | --help)
 
 Options:
@@ -55,8 +55,8 @@ if __name__ == '__main__':
                 gui.run_gui()
         elif sys_args['move']:
             positions = []
-            [positions.append(int(sys_args[axis])) for axis in ['<x>', '<y>',
-                                                                '<z>']]
+            [positions.append(int(sys_args[axis])) for axis in ['--x', '--y',
+                                                                '--z']]
             print "Moved by {}".format(positions)
             stage = micro.Stage(config)
             stage.move_rel(positions)
