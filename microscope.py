@@ -82,7 +82,8 @@ class LightDetector(Instrument):
 
         # Initialise connection as appropriate.
         self.ser = serial.Serial(self.config_dict['tty'],
-                                 baudrate=self.config_dict['baudrate'])
+                                 baudrate=self.config_dict['baudrate'],
+                                 timeout=1)
 
     def __del__(self):
         self.ser.close()
@@ -94,12 +95,26 @@ class LightDetector(Instrument):
         each measurement being taken."""
         readings = []
         times = _gen(n)
+        output_string = 'a'
+
         while True:
             try:
-                # TODO CHANGE THIS TO WRITE N CHARACTERS AT ONCE.
-                self.ser.write('abcde')
-                self.ser.flush()
+                # Clear the input and output buffers before taking a reading.
+                while self.ser.in_waiting > 0 or self.ser.out_waiting > 0:
+                    self.ser.reset_output_buffer()
+                    self.ser.reset_input_buffer()
+                    print "input buffer size " + str(self.ser.in_waiting)
+                    print "output buffer size" + str(self.ser.out_waiting)
+
+                print "output to arduino " + str(self.ser.out_waiting)
+                self.ser.write(output_string)
+                print "output now " + str(self.ser.out_waiting)
+
+                # Wait for 1s for data, else move on. Set timeout under
+                # Serial port opening.
                 reading = self.ser.readline()
+                print "input now " + str(self.ser.in_waiting)
+
                 if _formatter(reading):
                     # If the reading is a valid one, wait before taking
                     # another as specified, else take one again immediately.
@@ -108,6 +123,7 @@ class LightDetector(Instrument):
                     reading = re.sub('[^\w]', '', reading.strip())
                     readings.append(int(reading))
                     time.sleep(t)
+
             except StopIteration:
                 break
         return np.array(readings)
@@ -154,6 +170,8 @@ class Stage(Instrument):
     def move_rel(self, vector):
         """Move the stage by (x,y,z) micro steps.
         :param vector: The increment to move by along [x, y, z]."""
+        if type(vector) is not np.ndarray:
+            vector = np.array(vector)
 
         [backlash, override] = [self.config_dict['backlash'],
                                 self.config_dict['override']]
@@ -180,7 +198,7 @@ class Stage(Instrument):
             # overridden):
             if np.all(np.less_equal(
                     np.absolute(new_pos), self._XYZ_BOUND)) or override:
-                _move_motors(self.bus, *movement)
+                move_motors(self.bus, *movement)
                 self.position = new_pos
             else:
                 raise ValueError('New position is outside allowed range.')
@@ -204,7 +222,7 @@ class Stage(Instrument):
         self.position = np.array([0, 0, 0])
 
 
-def _move_motors(bus, x, y, z):
+def move_motors(bus, x, y, z):
     """Move the motors for the connected module (addresses hardcoded) by a
     certain number of steps.
     :param bus: The smbus.SMBus object connected to appropriate i2c channel.
@@ -221,7 +239,7 @@ def _move_motors(bus, x, y, z):
 
     # Empirical formula for how micro step values relate to rotational speed.
     # This is only valid for the specific set of motors tested.
-    time.sleep(np.ceil(max([abs(x), abs(y), abs(z)]))/1000 + 2)
+    time.sleep(np.ceil(max([abs(x), abs(y), abs(z)])) * (1.4 / 1000) + 0.1)
 
 
 def _verify_vector(vector):
@@ -251,4 +269,4 @@ def _gen(n):
 
 if __name__ == '__main__':
     scope = SensorScope('./configs/config.yaml')
-    print scope.sensor.read(100)
+    print scope.sensor.read(5, t=10)

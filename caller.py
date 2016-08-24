@@ -9,6 +9,7 @@ Usage:
     caller.py autofocus [<configs>...]
     caller.py tiled [<configs>...]
     caller.py controller [<configs>...]
+    caller.py move <x> <y> <z>
     caller.py (-h | --help)
 
 Options:
@@ -38,18 +39,26 @@ if __name__ == '__main__':
     fun_list = None
 
     for config in configs:
-        scope = micro.SensorScope(config)
-        if sys_args['autofocus']:
-            focus = exp.AlongZ(scope, config)
-            focus.run()
-        elif sys_args['tiled']:
-            tiled = exp.RasterXY(scope, config)
-            tiled.run(func_list=fun_list)
-        elif sys_args['align']:
-            align = exp.Align(scope, config)
-            align.run(func_list=fun_list)
-        elif sys_args['controller']:
-            gui = c.KeyboardControls(scope, config)
-            gui.run_gui()
+        if not sys_args['move']:
+            scope = micro.SensorScope(config)
+            if sys_args['autofocus']:
+                focus = exp.AlongZ(scope, config)
+                focus.run()
+            elif sys_args['tiled']:
+                tiled = exp.RasterXY(scope, config)
+                tiled.run(func_list=fun_list)
+            elif sys_args['align']:
+                align = exp.Align(scope, config)
+                align.run(func_list=fun_list)
+            elif sys_args['controller']:
+                gui = c.KeyboardControls(scope, config)
+                gui.run_gui()
+        elif sys_args['move']:
+            positions = []
+            [positions.append(int(sys_args[axis])) for axis in ['<x>', '<y>',
+                                                                '<z>']]
+            print "Moved by {}".format(positions)
+            stage = micro.Stage(config)
+            stage.move_rel(positions)
 
-    nplab.close_current_datafile()
+    # nplab.close_current_datafile()

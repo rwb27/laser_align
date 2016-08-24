@@ -25,15 +25,14 @@ void setup() {
 // take N measurements with a sample rate of R, return bit rate, current model number, firmware info, connected pins, return done when a command is done
 // interrupt if needed. Reducing the effects of noise? (With filter?)
 void loop() {
-  int i = 0;
   while (Serial.available() > 0) {
     // read the input on analog pin 0:
-    //int sensorValue = analogRead(A0);
     Serial.read();
+
+    int sensorValue = analogRead(A0);
     // delay in between reads for stability
     delay(1);
     // print out the value you read:
-    Serial.println(i);
-    i++;
+    Serial.println(sensorValue);
   }
 }
