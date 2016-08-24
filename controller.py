@@ -78,7 +78,7 @@ class KeyboardControls:
             if keypress == ord(self.config_dict["exit"]):
                 self._gui_quit = True
             elif keypress == ord(self.config_dict["save"]):
-                # The c key will 'grab' (save) the time, position and a
+                # The g key will 'grab' (save) the time, position and a
                 # singly-sampled brightness value.
                 time = _exp.elapsed(self.microscope.start)
                 brightness = self.microscope.sensor.read()

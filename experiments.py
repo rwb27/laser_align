@@ -73,6 +73,31 @@ class RasterXY(ScopeExp):
         print self.scope.stage.position
 
 
+class RasterXYZ(ScopeExp):
+    """Class to conduct experiments where a cubic raster scan is taken with
+    the photo-diode and post-processed.
+    Valid kwargs are: raster3d_n_step."""
+
+    def __init__(self, microscope, config_file, group=None,
+                 group_name='RasterXYZ', **kwargs):
+        super(RasterXYZ, self).__init__(microscope, config_file, **kwargs)
+        self.attrs = d.sub_dict(self.config_dict, ['raster3d_n_step'],
+                                   {'scope_object': str(self.scope.info.name)})
+        self.gr = d.make_group(self, group=group, group_name=group_name)
+
+    def run(self, func_list=None, save_mode='save_final'):
+
+        end = _exp.bake(_exp.max_fifth_col, args=['IMAGE_ARR', self.scope])
+
+        # Take measurements and move to position of maximum brightness.
+        _exp.move_capture(self, {'x': self.config_dict['raster3d_n_step'],
+                                 'y': self.config_dict['raster3d_n_step'],
+                                 'z': self.config_dict['raster3d_n_step']},
+                          func_list=func_list, save_mode=save_mode,
+                          end_func=end)
+        print self.scope.stage.position
+
+
 class Align(ScopeExp):
     """Class to align the spot to position of maximum brightness."""
 

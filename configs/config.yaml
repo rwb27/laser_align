@@ -32,7 +32,7 @@ key_stepsize:         1000
 
 exit:                 x
 
-save:                 c
+save:                 g
 
 +x:                   s
 
@@ -83,4 +83,7 @@ mmt_range:        [[5, 100]]
 
 # How long in seconds to sleep for between initial alignment and drift measurement, as a list of times to measure in s.
 sleep_times:      [600, 1200]
+
+raster3d_n_step:    [[60, 100]]
+
 ...

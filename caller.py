@@ -8,6 +8,7 @@ Usage:
     caller.py align [<configs>...]
     caller.py autofocus [<configs>...]
     caller.py tiled [<configs>...]
+    caller.py raster_3d [<configs>...]
     caller.py controller [<configs>...]
     caller.py move --x=<x> --y=<y> --z=<z>
     caller.py (-h | --help)
@@ -53,6 +54,9 @@ if __name__ == '__main__':
             elif sys_args['controller']:
                 gui = c.KeyboardControls(scope, config)
                 gui.run_gui()
+            elif sys_args['raster_3d']:
+                raster3d = exp.RasterXYZ(scope, config)
+                raster3d.run(func_list=fun_list)
         elif sys_args['move']:
             positions = []
             [positions.append(int(sys_args[axis])) for axis in ['--x', '--y',
