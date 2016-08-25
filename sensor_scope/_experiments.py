@@ -254,3 +254,7 @@ def move_to_parmax(results_arr, scope_obj, axis):
     print "new pos parmax", new_pos
     scope_obj.stage.move_to_pos(new_pos)
     return
+
+
+def move_to_original(results_arr, scope_obj, initial_pos):
+    scope_obj.stage.move_to_pos(initial_pos)

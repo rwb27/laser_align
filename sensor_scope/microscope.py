@@ -106,14 +106,11 @@ class LightDetector(Instrument):
                     print "input buffer size " + str(self.ser.in_waiting)
                     print "output buffer size" + str(self.ser.out_waiting)
 
-                print "output to arduino " + str(self.ser.out_waiting)
                 self.ser.write(output_string)
-                print "output now " + str(self.ser.out_waiting)
 
                 # Wait for 1s for data, else move on. Set timeout under
                 # Serial port opening.
                 reading = self.ser.readline()
-                print "input now " + str(self.ser.in_waiting)
 
                 if _formatter(reading):
                     # If the reading is a valid one, wait before taking
@@ -265,8 +262,3 @@ def _gen(n):
     while i < n:
         yield i
         i += 1
-
-
-if __name__ == '__main__':
-    scope = SensorScope('./configs/config.yaml')
-    print scope.sensor.read(5, t=10)

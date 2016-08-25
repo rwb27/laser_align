@@ -75,7 +75,7 @@ class RasterXY(ScopeExp):
 
 class RasterXYZ(ScopeExp):
     """Class to conduct experiments where a cubic raster scan is taken with
-    the photo-diode and post-processed.
+    the photo-diode and post-processed. MOVES TO ORIGINAL POSITION AFTER DONE
     Valid kwargs are: raster3d_n_step."""
 
     def __init__(self, microscope, config_file, group=None,
@@ -86,8 +86,9 @@ class RasterXYZ(ScopeExp):
         self.gr = d.make_group(self, group=group, group_name=group_name)
 
     def run(self, func_list=None, save_mode='save_final'):
-
-        end = _exp.bake(_exp.max_fifth_col, args=['IMAGE_ARR', self.scope])
+        print self.scope.stage.position
+        end = _exp.bake(_exp.move_to_original, args=[
+            'IMAGE_ARR', self.scope, self.scope.stage.position])
 
         # Take measurements and move to position of maximum brightness.
         _exp.move_capture(self, {'x': self.config_dict['raster3d_n_step'],

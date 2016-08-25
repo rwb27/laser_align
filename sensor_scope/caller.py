@@ -24,7 +24,7 @@ import controller as c
 import microscope as micro
 
 # Edit the paths of the config files.
-DEFAULT_PATH = './configs/config.yaml'
+DEFAULT_PATH = '../configs/config.yaml'
 
 if __name__ == '__main__':
     sys_args = docopt(__doc__)
