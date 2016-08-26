@@ -9,17 +9,24 @@ import time as t
 import numpy as np
 from nplab.experiment.experiment import Experiment
 
-import data_io as d
 import _experiments as _exp
+import data_io as d
+import baking as b
 
 
 class ScopeExp(Experiment):
-    """Parent class of any experiments done using the SensorScope object."""
+    """Parent class of any experiments done using the
+    SensorScope object."""
 
-    def __init__(self, microscope, config_file, **kwargs):
+    def __init__(self, microscope, config_file, group, included_data,
+                 **kwargs):
         super(ScopeExp, self).__init__()
         self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
+        self.attrs = d.sub_dict(self.config_dict, included_data,
+                                {'scope_object': str(self.scope.info.name)})
+        self.gr = d.make_group(self, group=group,
+                               group_name=self.__class__.__name__)
 
     def __del__(self):
         del self.scope
@@ -30,16 +37,13 @@ class AlongZ(ScopeExp):
     brightness. Valid kwargs are: mmt_range"""
 
     def __init__(self, microscope, config_file, group=None,
-                 group_name='AlongZ', **kwargs):
-        super(AlongZ, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = d.sub_dict(self.config_dict, ['mmt_range'],
-                                   {'scope_object': str(self.scope.info.name)})
-        self.gr = d.make_group(self, group=group, group_name=group_name)
-        print self.gr
+                 included_data=('mmt_range',), **kwargs):
+        super(AlongZ, self).__init__(microscope, config_file, group,
+                                     included_data, **kwargs)
 
     def run(self, save_mode='save_final'):
         # At the end, move to the position of maximum brightness.
-        end = _exp.bake(_exp.max_fifth_col, args=['IMAGE_ARR', self.scope])
+        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope])
 
         for n_step in self.config_dict['mmt_range']:
             # Allow the iteration to take place as many times as specified
@@ -55,15 +59,13 @@ class RasterXY(ScopeExp):
     Valid kwargs are: raster_n_step."""
 
     def __init__(self, microscope, config_file, group=None,
-                 group_name='RasterXY', **kwargs):
-        super(RasterXY, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = d.sub_dict(self.config_dict, ['raster_n_step'],
-                                   {'scope_object': str(self.scope.info.name)})
-        self.gr = d.make_group(self, group=group, group_name=group_name)
+                 included_data=('raster_n_step',), **kwargs):
+        super(RasterXY, self).__init__(microscope, config_file, group,
+                                       included_data, **kwargs)
 
-    def run(self, func_list=None, save_mode='save_final'):
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
 
-        end = _exp.bake(_exp.max_fifth_col, args=['IMAGE_ARR', self.scope])
+        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope])
 
         # Take measurements and move to position of maximum brightness.
         _exp.move_capture(self, {'x': self.config_dict['raster_n_step'],
@@ -79,16 +81,13 @@ class RasterXYZ(ScopeExp):
     Valid kwargs are: raster3d_n_step."""
 
     def __init__(self, microscope, config_file, group=None,
-                 group_name='RasterXYZ', **kwargs):
-        super(RasterXYZ, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = d.sub_dict(self.config_dict, ['raster3d_n_step'],
-                                   {'scope_object': str(self.scope.info.name)})
-        self.gr = d.make_group(self, group=group, group_name=group_name)
+                 included_data=('raster3d_n_step',), **kwargs):
+        super(RasterXYZ, self).__init__(microscope, config_file, group,
+                                        included_data, **kwargs)
 
-    def run(self, func_list=None, save_mode='save_final'):
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
         print self.scope.stage.position
-        end = _exp.bake(_exp.move_to_original, args=[
-            'IMAGE_ARR', self.scope, self.scope.stage.position])
+        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope])
 
         # Take measurements and move to position of maximum brightness.
         _exp.move_capture(self, {'x': self.config_dict['raster3d_n_step'],
@@ -102,19 +101,15 @@ class RasterXYZ(ScopeExp):
 class Align(ScopeExp):
     """Class to align the spot to position of maximum brightness."""
 
-    def __init__(self, microscope, config_file, group=None,
-                 group_name='Align', **kwargs):
+    def __init__(self, microscope, config_file, group=None, included_data=(
+            'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'),
+                 **kwargs):
         """Valid kwargs are n_steps, parabola_N, parabola_step,
         parabola_iterations."""
-        super(Align, self).__init__(microscope, config_file, **kwargs)
-        # Valid kwargs are n_steps, parabola_N, parabola_step,
-        # parabola_iterations
-        self.attrs = d.sub_dict(self.config_dict, [
-            'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'], {
-            'scope_object': str(self.scope.info.name)})
-        self.gr = d.make_group(self, group=group, group_name=group_name)
+        super(Align, self).__init__(microscope, config_file, group,
+                                    included_data, **kwargs)
 
-    def run(self, func_list=None, save_mode='save_final'):
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
         """Algorithm for alignment is to iterate the RasterXY procedure several
         times with decreasing width and increasing precision, and then using
         the parabola of brightness to try and find the maximum point by
@@ -135,23 +130,20 @@ class Align(ScopeExp):
 class ParabolicMax(ScopeExp):
     """Takes a sequence of N measurements, fits a parabola to them and moves to
     the maximum brightness value. Make sure the microstep size is not too
-    small, otherwise noise will affect the parabola shape. kwargs: step_pair"""
+    small, otherwise noise will affect the parabola shape."""
 
-    def __init__(self, microscope, config_file, group=None,
-                 group_name='ParabolicMax', **kwargs):
-        super(ParabolicMax, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = d.sub_dict(self.config_dict, [
-            'parabola_N', 'parabola_step', 'parabola_iterations'], {
-            'scope_object': str(self.scope.info.name)})
-        self.gr = d.make_group(self, group=group, group_name=group_name)
+    def __init__(self, microscope, config_file, group=None, included_data=(
+            'parabola_N', 'parabola_step', 'parabola_iterations'), **kwargs):
+        super(ParabolicMax, self).__init__(microscope, config_file, group,
+                                           included_data, **kwargs)
 
-    def run(self, func_list=None, save_mode='save_final', axis='x'):
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final',
+            axis='x'):
         """Operates on one axis at a time."""
         # Get default values.
         step_pair = (self.config_dict["parabola_N"],
                      self.config_dict["parabola_step"])
-        end = _exp.bake(_exp.move_to_parmax, args=['IMAGE_ARR', self.scope,
-                                                   axis])
+        end = b.baker(b.move_to_parmax, args=['IMAGE_ARR', self.scope, axis])
         _exp.move_capture(self, {axis: [step_pair]}, func_list=func_list,
                           save_mode=save_mode, end_func=end)
 
@@ -161,17 +153,13 @@ class DriftReCentre(ScopeExp):
     position for some time, then bring it back to the centre and measure
     the drift."""
 
-    def __init__(self, microscope, config_file, group=None,
-                 group_name='DriftReCentre', **kwargs):
-        # kwargs means sleep_for.
-        super(DriftReCentre, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = d.sub_dict(self.config_dict, [
+    def __init__(self, microscope, config_file, group=None, included_data=(
             'sleep_times', 'n_steps', 'parabola_N', 'parabola_step',
-            'parabola_iterations'], extra_entries={'scope_object': str(
-            self.scope.info.name)})
-        self.gr = d.make_group(self, group=group, group_name=group_name)
+            'parabola_iterations'), **kwargs):
+        super(DriftReCentre, self).__init__(microscope, config_file, group,
+                                            included_data, **kwargs)
 
-    def run(self, func_list=None, save_mode='save_final'):
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
         """Default is to sleep for 10 minutes."""
         # Do an initial alignment and then take that position as the initial
         # position.
@@ -200,16 +188,13 @@ class DriftReCentre(ScopeExp):
 class KeepCentred(ScopeExp):
     """Iterate the parabolic method repeatedly after the initial alignment."""
 
-    def __init__(self, microscope, config_file, group=None,
-                 group_name='KeepCentred', **kwargs):
-        super(KeepCentred, self).__init__(microscope, config_file, **kwargs)
-        self.attrs = d.sub_dict(
-            self.config_dict, ['n_steps', 'parabola_N', 'parabola_step',
-                               'parabola_iterations'], extra_entries={
-                'scope_object': str(self.scope.info.name)})
-        self.gr = d.make_group(self, group=group, group_name=group_name)
+    def __init__(self, microscope, config_file, group=None, included_data=(
+            'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'),
+                 **kwargs):
+        super(KeepCentred, self).__init__(microscope, config_file, group,
+                                          included_data, **kwargs)
 
-    def run(self, func_list=None, save_mode='save_final'):
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
         align = Align(self.scope, self.config_dict, group=self.gr,
                       group_name='KeepCentred')
         align.run(func_list=func_list, save_mode=save_mode)
@@ -224,7 +209,23 @@ class KeepCentred(ScopeExp):
                 break
 
 
+class TimedMeasurements(ScopeExp):
+    """Experiment to repeatedly measure the average of 10 measurements at
+    the same position, 'count' times with 'time' seconds between each set of 10
+    measurements."""
+    def __init__(self, microscope, config_file, group=None,
+                 included_data=('N', 't'), **kwargs):
+        # Valid kwargs are position, how many times and how long to wait
+        # between each measurement.
+        super(TimedMeasurements, self).__init__(microscope, config_file,
+                                                group, included_data, **kwargs)
+
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
+        order_gen = b.baker(b.fixed_timer, kwargs={
+            'count': self.config_dict["N"], 't': self.config_dict["t"]},
+                            position_to_pass_through=(0, 3))
+        _exp.move_capture(self, {}, order_gen=order_gen,
+                          func_list=func_list, save_mode=save_mode)
+
+
 # TODO add hill_climbing and simplex algorithm classes.
-
-
-

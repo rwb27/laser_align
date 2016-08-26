@@ -88,7 +88,7 @@ class LightDetector(Instrument):
     def __del__(self):
         self.ser.close()
 
-    def read(self, n=1, t=0):
+    def _read(self, n=1, t=0):
         """Take n measurements in total in the same position with a time delay
         of t seconds between each measurement. Returns them as a list. Note
         that the Arduino is also programmed to have a small delay between
@@ -116,7 +116,6 @@ class LightDetector(Instrument):
                     # If the reading is a valid one, wait before taking
                     # another as specified, else take one again immediately.
                     times.next()
-                    print 'reading', reading
                     reading = re.sub('[^\w]', '', reading.strip())
                     readings.append(int(reading))
                     time.sleep(t)
@@ -131,7 +130,8 @@ class LightDetector(Instrument):
         :param t: Time delay in seconds between each measurement. Ensure
         this is not too large otherwise time drift may affect the results.
         :return: The average value of the measurements."""
-        return np.mean(self.read(n, t))
+        results = self._read(n, t)
+        return np.mean(results), np.std(results, ddof=1)/np.sqrt(n)
 
     # TODO LOOK UP WHAT OTHER ADCS CAN ALSO DO
 

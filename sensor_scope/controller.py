@@ -81,10 +81,10 @@ class KeyboardControls:
                 # The g key will 'grab' (save) the time, position and a
                 # singly-sampled brightness value.
                 time = _exp.elapsed(self.microscope.start)
-                brightness = self.microscope.sensor.read()
+                brightness = self.microscope.sensor.average_n(10)
                 position = self.microscope.stage.position
                 reading = np.hstack((np.array(time), position,
-                                          brightness))
+                                    brightness))
                 print reading
                 self.microscope.create_dataset('GUI_save', data=reading)
 

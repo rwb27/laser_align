@@ -44,18 +44,18 @@ def sub_dict(main_dict, subset_keys=None, extra_entries=None):
     """Slice specific keys of a dictionary, add extra entries if specified,
     and return the new dictionary.
     :param main_dict: The main dictionary to slice.
-    :param subset_keys: The list of keys in main_dict to use. If None,
+    :param subset_keys: The tuple of keys in main_dict to use. If None,
     all keys are used.
     :param extra_entries: A dictionary of extra entries to add to slice
     dictionary."""
     subset_dict = {}
     if subset_keys is not None:
         for key in subset_keys:
+            # Own KeyError will be raised if key does not exist in main_dict
             subset_dict[key] = main_dict[key]
-    elif subset_keys is None:
-        subset_dict = main_dict
     else:
-        raise ValueError('subset_keys is invalid.')
+        # subset_keys is None
+        subset_dict = main_dict
 
     if extra_entries is not None:
         for key in extra_entries:
