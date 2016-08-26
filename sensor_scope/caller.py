@@ -12,6 +12,7 @@ Usage:
     caller.py controller [<configs>...]
     caller.py move [--x=<x>] [--y=<y>] [--z=<z>]
     caller.py timed
+    caller.py beam_walk
     caller.py (-h | --help)
 
 Options:
@@ -60,6 +61,9 @@ if __name__ == '__main__':
             elif sys_args['timed']:
                 timed = exp.TimedMeasurements(scope, config)
                 timed.run()
+            elif sys_args['beam_walk']:
+                beam_walk = exp.BeamWalk(scope, config, raster_n_step=[[64, 1000]])
+                beam_walk.run()
         elif sys_args['move']:
             positions = []
             for axis in ['--x', '--y', '--z']:

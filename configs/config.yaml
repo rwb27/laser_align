@@ -53,7 +53,7 @@ save:                 g
 # ---------------------------------------------------- RasterXY images ---------------------------------------------------
 # The number of steps per axis to take i.e. generates an n+1 x n+1 images in total, and number of microsteps between
 # each measurement.
-raster_n_step:    [[600, 100]]
+raster_n_step:    [[9, 50]]
 
 save_mode:        save_subset
 # -------------------------------------------------- Laser alignment --------------------------------------------------
@@ -74,7 +74,7 @@ parabola_iterations:  1
 # ...] will take sharpness measurements in intervals of 1000 microsteps from -1000 * 20 / 2 to +1000 * 20 / 2 resulting
 # in 21 total measurements. It will then move to the region of highest sharpness and continue with the next set in the
 # main list.
-mmt_range:        [[5, 100]]
+mmt_range:        [[10, 50]]
                #   [10, 200]
                #   [10  200]
                #   [12  100]]

@@ -1,5 +1,5 @@
 *.pyc
-tests/*.png
-tests/*.txt
+*.png
+*.txt
 tests/*.yaml
-scad/*.stl
+*.stl

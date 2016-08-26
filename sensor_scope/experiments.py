@@ -15,8 +15,7 @@ import baking as b
 
 
 class ScopeExp(Experiment):
-    """Parent class of any experiments done using the
-    SensorScope object."""
+    """Parent class of any experiments done using the SensorScope object."""
 
     def __init__(self, microscope, config_file, group, included_data,
                  **kwargs):
@@ -227,5 +226,30 @@ class TimedMeasurements(ScopeExp):
         _exp.move_capture(self, {}, order_gen=order_gen,
                           func_list=func_list, save_mode=save_mode)
 
+
+class BeamWalk(ScopeExp):
+    """Experiment to 'walk' the beam, consisting of a raster scan in XY,
+    followed by homing in on the max brightness, adjusting Z slightly in the
+    direction of increasing brightness, and repeating."""
+
+    def __init__(self, microscope, config_file, group=None, included_data=(
+            'raster_n_step', 'mmt_range'), **kwargs):
+        super(BeamWalk, self).__init__(microscope, config_file, group,
+                                       included_data, **kwargs)
+
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
+        for i in range(2):
+            # TODO GENERALISE THE NUMBER
+            if i == 0:
+                raster_2d = RasterXY(self.scope, self.config_dict,
+                                     group=self.gr, raster_n_step=[[64, 1000]])
+            else:
+                raster_2d = RasterXY(self.scope, self.config_dict,
+                                     group=self.gr)
+            raster_2d.run(func_list=func_list, save_mode=save_mode)
+
+            along_z = AlongZ(self.scope, self.config_dict, group=self.gr,
+                             mmt_range=self.config_dict["mmt_range"])
+            along_z.run(save_mode=save_mode)
 
 # TODO add hill_climbing and simplex algorithm classes.

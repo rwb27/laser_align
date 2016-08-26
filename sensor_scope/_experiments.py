@@ -152,6 +152,7 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             print "Aborted, moving back to initial position."
             exp_obj.scope.stage.move_to_pos(initial_position)
             exp_obj.wait_or_stop(5, raise_exception=True)
+            return
 
         except b.NonZeroReading:
             # After reading a non-zero value stay at that current position,
