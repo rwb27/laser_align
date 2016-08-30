@@ -3,6 +3,7 @@ import sensor_scope.data_io as d
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 df = h5py.File(r'C:\Users\a-amb\OneDrive - University Of '
                r'Cambridge\2016-08-26-timedmmts.h5', 'r')
 data = df["TimedMeasurements/TimedMeasurements_4/brightness_final"][:, ...]
@@ -22,3 +23,4 @@ yMA = moving_average(data[:, 4], 500)
 plt.plot(data[:, 0][len(data[:, 0])-len(yMA):], yMA)
 
 plt.show()
+

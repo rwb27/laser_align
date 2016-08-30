@@ -7,6 +7,12 @@ so."""
 import numpy as np
 import time
 
+ignore_saturation = False
+
+class Saturation(Exception):
+    """Raise when the gain causes the reading to saturate at 1023."""
+    pass
+
 
 class NonZeroReading(Exception):
     """Raise when the photodiode returns a non-zero reading."""
@@ -67,6 +73,42 @@ def stop_on_nonzero(measurement):
     if measurement[0] != 0:
         # The 0th element is the average value, and the 1st element the error.
         raise NonZeroReading
+    return measurement
+
+
+def saturation_reached(measurement):
+    """Function to raise Exception if measurements saturate, so that the
+    user is recommended to turn down the gain setting, with an input requested.
+    """
+    if measurement[0] == 1023:
+        # This is the max value that the 10-bit serial port can provide.
+        # Change if this is not the max value.
+        if not ignore_saturation:
+            while True:
+                answer = raw_input('Measurement saturation reached. The user is '
+                                   'recommended to turn down the gain by one '
+                                   'setting. Enter \'retry\' after you have '
+                                   'turned down the gain, \'ignore\' if you have '
+                                   'decided not to do so this time and \'ignore '
+                                   'all\' if this is either not possible or you '
+                                   'have decided not to do so for the entire '
+                                   'remaining set of measurements: ')
+                if answer == 'retry' or answer == 'ignore' or answer == 'ignore ' \
+                                                                        'all':
+                    if answer == 'retry':
+                        # All measurements have to be taken again.
+                        raise Saturation
+                    elif answer == 'ignore':
+                        # Continue as if nothing is wrong.
+                        break
+                    elif answer == 'ignore all':
+                        # Change this to ensure that all subsequent
+                        # saturations for the duration of this move_capture
+                        # function are ignored. That function changes
+                        # ignore_saturation to False at the beginning and
+                        # end of its run.
+                        global ignore_saturation
+                        ignore_saturation = True
     return measurement
 
 

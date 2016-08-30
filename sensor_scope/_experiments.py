@@ -75,6 +75,8 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
     ways to move. if rotational degrees of freedom are introduced, this can
     include theta, etc."""
 
+    b.ignore_saturation = False
+
     # Verify positions_dict format. The num_arrays is the number of arrays
     # of positions that will be measured in sequence.
     num_arrays = _verify_positions(positions_dict, valid_keys=valid_keys)
@@ -159,7 +161,15 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # save all results up to that point.
             print "Non-zero value read."
 
+        except b.Saturation:
+            # If the max value has been read, then the user must turn down
+            # the gain. Once turned down, this entire move_sequence must be
+            # re-measured.
+            return move_capture(exp_obj, positions_dict, func_list, order_gen,
+                                save_mode, end_func, valid_keys)
+
     results = np.array(results, dtype=np.float)
+    b.ignore_saturation = False
     if save_mode != 'save_each':
         if save_mode == 'save_final':
             exp_obj.gr.create_dataset('brightness_final', data=results)
@@ -234,3 +244,9 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
 #
 #plt.scatter(*zip(*thing))
 #plt.show()
+
+
+def valid_input(inputs):
+    """Asks for a raw input that matches the list of valid responses from
+    the 'inputs' list, and repeats until a valid response is entered."""
+    answer = raw_input('Please enter your response: ')
