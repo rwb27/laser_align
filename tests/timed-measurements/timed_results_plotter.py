@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 
 df = h5py.File(r'C:\Users\a-amb\OneDrive - University Of '
-               r'Cambridge\2016-08-26-timedmmts.h5', 'r')
-data = df["TimedMeasurements/TimedMeasurements_4/brightness_final"][:, ...]
+               r'Cambridge\2016-08-26-timed-weekend-run.h5', 'r')
+data = df["TimedMeasurements/TimedMeasurements_0/brightness_final"][:, ...]
 
 thing = d.series_maker('time', x=data[:, 0], y=data[:, 4], xerr=None,
                        yerr=data[:, 5], line_format='none')

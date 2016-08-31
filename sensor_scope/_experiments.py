@@ -12,7 +12,7 @@ import baking as b
 def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                  order_gen=b.baker(b.raster, position_to_pass_through=(0, 3)),
                  save_mode='save_subset', end_func=b.baker(b.unchanged),
-                 valid_keys=('x', 'y', 'z')):
+                 valid_keys=('x', 'y', 'z'), number=10, delay=0):
     """Function to carry out a sequence of measurements as per iter_list,
     take an image at each position, post-process it and return a final result.
 
@@ -73,7 +73,12 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
 
     :param valid_keys: A tuple of strings containing all keys that are valid
     ways to move. if rotational degrees of freedom are introduced, this can
-    include theta, etc."""
+    include theta, etc.
+
+    :param number: The number of measurements to average over at each position.
+
+    :param delay: The time delay between each individual measurement taken
+    at a specific position."""
 
     b.ignore_saturation = False
 
@@ -110,12 +115,12 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # calculation to a results file and save it all at the end.
             while True:
                 next_pos = next(pos)  # This returns StopIteration at end.
-                print next_pos
+
                 exp_obj.scope.stage.move_to_pos(next_pos)
 
                 # Mmt is returned as a tuple of (mean brightness,
                 # error_in_mean).
-                mmt = exp_obj.scope.sensor.average_n(10)
+                mmt = exp_obj.scope.sensor.average_n(number, t=delay)
                 processed = mmt
 
                 # Post-process. Converting to list first allows even single
@@ -136,11 +141,13 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                 else:
                     # The curried function and 'save_final' both use the
                     # array of final results.
-                    results.append([elapsed(exp_obj.scope.start),
-                                    exp_obj.scope.stage.position[0],
-                                    exp_obj.scope.stage.position[1],
-                                    exp_obj.scope.stage.position[2],
-                                    processed[0], processed[1]])
+                    reading = [elapsed(exp_obj.scope.start),
+                               exp_obj.scope.stage.position[0],
+                               exp_obj.scope.stage.position[1],
+                               exp_obj.scope.stage.position[2],
+                               processed[0], processed[1]]
+                    print reading
+                    results.append(reading)
 
         except StopIteration:
             # Iterations finished - save the subset of results and take the

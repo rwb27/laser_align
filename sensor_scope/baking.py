@@ -149,11 +149,19 @@ def fixed_timer(x, y, z, initial_pos, count=5, t=1):
 
 
 # Functions to act on the final entire set of results.
-def max_fifth_col(results_arr, scope_obj):
+def max_fifth_col(results_arr, scope_obj, initial_position):
     """Given a results array made of [[times], [x_pos], [y_pos], [z_pos],
     [quantity]] format, moves scope stage to the position with the
-    maximum value of 'quantity'."""
-    new_position = results_arr[np.argmax(results_arr[:, 4]), :][1:4]
+    maximum value of 'quantity' Recognises when there are multiple maxima
+    and: if they are zero, moves to original position, if they are not zero,
+    moves to the position of the first maximum."""
+    if results_arr[np.argmax(results_arr[:, 4]), 4] == 0:
+        print "No maximum detected, moving to original position."
+        new_position = initial_position
+    else:
+        # There my be multiple non-zero maxima - move to the first one in
+        # this case.
+        new_position = results_arr[np.argmax(results_arr[:, 4]), :][1:4]
     print new_position
     scope_obj.stage.move_to_pos(new_position)
     print "Moved to " + str(new_position)

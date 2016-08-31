@@ -22,8 +22,10 @@ class ScopeExp(Experiment):
         super(ScopeExp, self).__init__()
         self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
+        self.initial_position = self.scope.stage.position
         self.attrs = d.sub_dict(self.config_dict, included_data,
-                                {'scope_object': str(self.scope.info.name)})
+                                {'scope_object': str(self.scope.info.name),
+                                 'initial_position': self.initial_position})
         self.gr = d.make_group(self, group=group,
                                group_name=self.__class__.__name__)
 
@@ -42,7 +44,8 @@ class AlongZ(ScopeExp):
 
     def run(self, save_mode='save_final'):
         # At the end, move to the position of maximum brightness.
-        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope])
+        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope,
+                                             self.initial_position])
 
         for n_step in self.config_dict['mmt_range']:
             # Allow the iteration to take place as many times as specified
@@ -64,7 +67,8 @@ class RasterXY(ScopeExp):
 
     def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
 
-        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope])
+        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope,
+                                             self.initial_position])
 
         # Take measurements and move to position of maximum brightness.
         _exp.move_capture(self, {'x': self.config_dict['raster_n_step'],
@@ -86,7 +90,8 @@ class RasterXYZ(ScopeExp):
 
     def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
         print self.scope.stage.position
-        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope])
+        end = b.baker(b.max_fifth_col, args=['IMAGE_ARR', self.scope,
+                                             self.initial_position])
 
         # Take measurements and move to position of maximum brightness.
         _exp.move_capture(self, {'x': self.config_dict['raster3d_n_step'],
