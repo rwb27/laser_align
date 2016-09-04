@@ -19,14 +19,14 @@ xyz_bound:            [320000, 320000, 320000]
 microsteps:           16
 
 # Backlash in microsteps for the [x, y, z] motors respectively.
-backlash:             [128, 128, 128]
+backlash:             [200, 200, 200]
 
 override:             false
 
 # --------------------------------------------- SensorScope GUI parameters ---------------------------------------------
 
 # No. of microsteps per key press on GUI.
-key_stepsize:         100
+key_stepsize:         1000
 
 # Control keys for the GUI.
 
@@ -53,7 +53,7 @@ save:                 g
 # ---------------------------------------------------- RasterXY images ---------------------------------------------------
 # The number of steps per axis to take i.e. generates an n+1 x n+1 images in total, and number of microsteps between
 # each measurement.
-raster_n_step:    [[9, 50]]
+raster_n_step:    [[9, 100]]
 
 save_mode:        save_subset
 # -------------------------------------------------- Laser alignment --------------------------------------------------

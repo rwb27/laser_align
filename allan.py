@@ -3,47 +3,79 @@ measurements."""
 
 from scipy.integrate import simps
 import numpy as np
+import h5py
+import matplotlib.pyplot as plt
 
 
-def allan(x, y, tau):
+def allan(t, x, tau):
     """Calculate Allan variance using Simpson's rule for numerical integration.
-    :param x: The x-series as an array.
-    :param y: The y-array.
+    :param t: The t-series as an array.
+    :param x: The x-array.
     :param tau: The time chunks to divide the series into.
     :return: The data for the allan variance."""
 
-    # Change tau to a value that is an close to an exact factor of the size of
-    # the data series.
-    print np.round(np.max(x) - np.min(x)), tau
-    tau = closest_factor(np.round(np.max(x) - np.min(x)), tau)
-    mean_indices = np.arange(0, np.round(np.max(x) - np.min(x))/tau, 1)
-    for index in mean_indices:
-        mean_positions = simps(y[])
+    assert x.size == t.size, "Arrays are of different lengths."
+
+    m = (np.max(t) - np.min(t)) / float(tau)
+    mmts_per_tau = x.size / float(m)
+
+    x_i = []
+    for i in xrange(int(round(m))):
+        x_s = x[np.floor(i * mmts_per_tau): np.floor((i+1) * mmts_per_tau + 1)]
+        t_s = t[np.floor(i * mmts_per_tau): np.floor((i+1) * mmts_per_tau + 1)]
+        integrand = simps(x_s, t_s)
+        x_i.append(integrand / (np.max(t_s) - np.min(t_s)))
+
+    variances = (np.ediff1d(np.array(x_i))/2) ** 2
+    allan_dev = np.sqrt(np.mean(variances))
+
+    return allan_dev
 
 
-def closest_factor(f, n):
-    """Returns the factor of f that is closest to n. If n is equidistant
-    from two factors of f, the smallest of the two factors is returned."""
-    return _one_disallowed(_factors(f), n)
+def get_dataset(file_path, path_strings):
+    """Opens the HDF5 datafile file_path, obtains the 0th and 4th column of
+    the datasets specified by path_strings (a list of strings) and returns
+    the datasets."""
+    df = h5py.File(file_path)
+    results = []
+    for path_string in path_strings:
+        t_set = df[path_string][:, 0]
+        x_set = df[path_string][:, 4]
+        results.append(np.vstack((t_set, x_set)).T)
+    df.close()
+
+    return results
 
 
-def _one_disallowed(factors, n):
-    """For a list of integers 'factors' in ascending order, return the
-    number closest to n (choose the smallest if 2 are equidistant) as long as
-    it is not 1. If it is 1, return the second closest factor."""
-    closest = min(factors, key=lambda x: abs(x - n))
-    try:
-        return closest if closest != 1 else factors[1]
-    except:
-        raise Exception('Only common factor is 1. Crop or zero-pad the image '
-                        'before down-sampling.')
+df = h5py.File(r'C:\Users\a-amb\OneDrive - University Of '
+               r'Cambridge\data\timed-measurements\2016-08-26-timed-weekend'
+               r'-run.h5')
+results = []
+for tau in np.arange(20, 50000, 50):
+    allan_dev = allan(df['TimedMeasurements/TimedMeasurements_0'
+                         '/brightness_final'][:, 0],
+                      df['TimedMeasurements/TimedMeasurements_0'
+                         '/brightness_final'][:, 4], tau)
+    results.append([tau, allan_dev])
 
+results = np.array(results)
+plt.plot(results[:, 0], results[:, 1])
 
-def _factors(num):
-    """Returns the factors of a number, in ascending order as a list."""
-    factor_list = list(reduce(list.__add__, ([j, num // j] for j in range(
-        1, int(num ** 0.5) + 1) if num % j == 0)))
-    factor_list.sort()
-    return factor_list
+df2 = h5py.File(r'C:\Users\a-amb\OneDrive - University Of '
+                r'Cambridge\timed_mmts_test_remote2.h5')
+for dataset in [0]:
+    results2 = []
+    for tau in np.arange(10, 1000, 10):
+        allan_dev = allan(df2['TimedMeasurements/TimedMeasurements_{}/'
+                              'brightness_final'.format(dataset)][:, 0],
+                          df2['TimedMeasurements/TimedMeasurements_{}'
+                              '/brightness_final'.format(dataset)][:, 4], tau)
+        results2.append([tau, allan_dev])
 
-allan(np.array([0, 1,2,3, 4, 5, 6]), np.array([3, 4,5,6,7,8,9]), 2)
+    results2 = np.array(results2)
+    plt.plot(results2[:, 0], results2[:, 1])
+
+plt.xscale('log')
+plt.yscale('log')
+plt.show()
+df.close()

@@ -5,14 +5,36 @@
 import time as t
 import numpy as np
 import warnings as w
+import sys
+from nplab.experiment import Experiment
 
 import baking as b
+import data_io as d
+
+
+class ScopeExp(Experiment):
+    """Parent class of any experiments done using the SensorScope object."""
+
+    def __init__(self, microscope, config_file, group, included_data,
+                 **kwargs):
+        super(ScopeExp, self).__init__()
+        self.config_dict = d.make_dict(config_file, **kwargs)
+        self.scope = microscope
+        self.initial_position = self.scope.stage.position
+        self.attrs = d.sub_dict(self.config_dict, included_data,
+                                {'scope_object': str(self.scope.info.name),
+                                 'initial_position': self.initial_position})
+        self.gr = d.make_group(self, group=group,
+                               group_name=self.__class__.__name__)
+
+    def __del__(self):
+        del self.scope
 
 
 def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                  order_gen=b.baker(b.raster, position_to_pass_through=(0, 3)),
                  save_mode='save_subset', end_func=b.baker(b.unchanged),
-                 valid_keys=('x', 'y', 'z'), number=10, delay=0):
+                 valid_keys=('x', 'y', 'z'), number=100, delay=0):
     """Function to carry out a sequence of measurements as per iter_list,
     take an image at each position, post-process it and return a final result.
 
@@ -108,6 +130,7 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
         # Generate array of positions to move to.
         pos = order_gen(move_by['x'], move_by['y'],
                         move_by['z'], initial_position)
+        attrs = {'mmts_per_reading': number, 'delay_between': delay}
         try:
             # For each position in the range specified, take an image, apply
             # all the functions in func_list on it, then either save the
@@ -115,7 +138,6 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # calculation to a results file and save it all at the end.
             while True:
                 next_pos = next(pos)  # This returns StopIteration at end.
-
                 exp_obj.scope.stage.move_to_pos(next_pos)
 
                 # Mmt is returned as a tuple of (mean brightness,
@@ -136,7 +158,8 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                 # Save this array in HDF5 file.
                 if save_mode == 'save_each':
                     exp_obj.gr.create_dataset('post_processed', attrs={
-                        'Position': exp_obj.scope.stage.position},
+                        'Position': exp_obj.scope.stage.position,
+                        'mmts_per_reading': number, 'delay_between': delay},
                         data=processed)
                 else:
                     # The curried function and 'save_final' both use the
@@ -155,13 +178,14 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             if save_mode == 'save_subset':
                 # Save after every array of motions.
                 results = np.array(results, dtype=np.float)
-                exp_obj.gr.create_dataset('brightness_subset', data=results)
+                exp_obj.gr.create_dataset('brightness_subset', data=results,
+                                          attrs=attrs)
 
         except KeyboardInterrupt:
             print "Aborted, moving back to initial position."
             exp_obj.scope.stage.move_to_pos(initial_position)
-            exp_obj.wait_or_stop(5, raise_exception=True)
-            return
+            print "Exiting program."
+            sys.exit()
 
         except b.NonZeroReading:
             # After reading a non-zero value stay at that current position,
@@ -173,13 +197,15 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # the gain. Once turned down, this entire move_sequence must be
             # re-measured.
             return move_capture(exp_obj, positions_dict, func_list, order_gen,
-                                save_mode, end_func, valid_keys)
+                                save_mode, end_func, valid_keys, number, delay)
 
     results = np.array(results, dtype=np.float)
     b.ignore_saturation = False
     if save_mode != 'save_each':
         if save_mode == 'save_final':
-            exp_obj.gr.create_dataset('brightness_final', data=results)
+            exp_obj.gr.create_dataset('brightness_final', data=results,
+                                      attrs={'mmts_per_reading': number,
+                                             'delay_between': delay})
         elif all(save_mode != valid_mode for valid_mode in
                  ['save_subset', None]):
             raise ValueError('Invalid save mode.')
@@ -251,9 +277,3 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
 #
 #plt.scatter(*zip(*thing))
 #plt.show()
-
-
-def valid_input(inputs):
-    """Asks for a raw input that matches the list of valid responses from
-    the 'inputs' list, and repeats until a valid response is entered."""
-    answer = raw_input('Please enter your response: ')

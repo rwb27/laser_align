@@ -5,18 +5,21 @@ Main front-end of script, to call experiments and GUI to run, and reads
 config files.[
 
 Usage:
-    caller.py align [<configs>...]
-    caller.py autofocus [<configs>...]
-    caller.py tiled [<configs>...]
-    caller.py raster_3d [<configs>...]
-    caller.py controller [<configs>...]
-    caller.py move [--x=<x>] [--y=<y>] [--z=<z>]
-    caller.py timed
-    caller.py beam_walk
+    caller.py align [<configs>...] [--output=<output>]
+    caller.py autofocus [<configs>...] [--output=<output>]
+    caller.py tiled [<configs>...] [--output=<output>]
+    caller.py raster_3d [<configs>...] [--output=<output>]
+    caller.py controller [<configs>...] [--output=<output>]
+    caller.py move [--x=<x>] [--y=<y>] [--z=<z>] [--output=<output>]
+    caller.py timed [--output=<output>]
+    caller.py beam_walk [--output=<output>]
+    caller.py hill_walk [--output=<output>]
+    caller.py measure
     caller.py (-h | --help)
 
 Options:
-    -h, --help   Display this usage statement."""
+    -h, --help   Display this usage statement.
+    --output=<output>   The HDF5 file to store data [default: tests.hdf5]."""
 
 from docopt import docopt
 import nplab
@@ -30,6 +33,7 @@ DEFAULT_PATH = '../configs/config.yaml'
 
 if __name__ == '__main__':
     sys_args = docopt(__doc__)
+    nplab.datafile.set_current(sys_args['--output'])
 
     if not sys_args['<configs>']:
         # configs is a list of paths of config files, each of which will be
@@ -62,8 +66,15 @@ if __name__ == '__main__':
                 timed = exp.TimedMeasurements(scope, config)
                 timed.run()
             elif sys_args['beam_walk']:
-                beam_walk = exp.BeamWalk(scope, config, raster_n_step=[[64, 1000]])
+                beam_walk = exp.BeamWalk(scope, config,
+                                         raster_n_step=[[39, 500]])
                 beam_walk.run()
+            elif sys_args['measure']:
+                print scope.sensor.average_n(1, 0)
+            elif sys_args['hill_walk']:
+                hilly = exp.HillWalk(scope, config)
+                hilly.run()
+
         elif sys_args['move']:
             positions = []
             for axis in ['--x', '--y', '--z']:

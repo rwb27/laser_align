@@ -9,6 +9,7 @@ import time
 
 ignore_saturation = False
 
+
 class Saturation(Exception):
     """Raise when the gain causes the reading to saturate at 1023."""
     pass
@@ -85,16 +86,17 @@ def saturation_reached(measurement):
         # Change if this is not the max value.
         if not ignore_saturation:
             while True:
-                answer = raw_input('Measurement saturation reached. The user is '
-                                   'recommended to turn down the gain by one '
-                                   'setting. Enter \'retry\' after you have '
-                                   'turned down the gain, \'ignore\' if you have '
-                                   'decided not to do so this time and \'ignore '
-                                   'all\' if this is either not possible or you '
-                                   'have decided not to do so for the entire '
-                                   'remaining set of measurements: ')
-                if answer == 'retry' or answer == 'ignore' or answer == 'ignore ' \
-                                                                        'all':
+                answer = raw_input('Measurement saturation reached. The user '
+                                   'is recommended to turn down the gain by '
+                                   'one setting. Enter \'retry\' after you '
+                                   'have turned down the gain, \'ignore\' if '
+                                   'you have decided not to do so this time '
+                                   'and \'ignore all\' if this is either not '
+                                   'possible or you have decided not to do so '
+                                   'for the entire remaining set of '
+                                   'measurements: ')
+                if answer == 'retry' or answer == 'ignore' \
+                        or answer == 'ignore all':
                     if answer == 'retry':
                         # All measurements have to be taken again.
                         raise Saturation
@@ -174,7 +176,7 @@ def move_to_parmax(results_arr, scope_obj, axis):
     fits that axis's positions with the measured quantities to a parabola,
     returns the error and moves the scope_obj stage to the maximum point of the
     parabola. Experiment can only be performed on a single axis."""
-    x = results_arr[:, ['x', 'y', 'z'].index(axis)]
+    x = results_arr[:, ['x', 'y', 'z'].index(axis) + 1]
     y = results_arr[:, 4]
     assert np.where(y == np.max(y)) != 0 and \
         np.where(y == np.max(y)) != len(y), 'Extrapolation occurred - ' \
@@ -190,7 +192,3 @@ def move_to_parmax(results_arr, scope_obj, axis):
     print "new pos parmax", new_pos
     scope_obj.stage.move_to_pos(new_pos)
     return
-
-
-def move_to_original(results_arr, scope_obj, initial_pos):
-    scope_obj.stage.move_to_pos(initial_pos)
