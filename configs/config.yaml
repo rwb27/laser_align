@@ -82,7 +82,7 @@ mmt_range:        [[10, 50]]
 # ------------------------------------------------ Drift and Recentre -------------------------------------------------
 
 # How long in seconds to sleep for between initial alignment and drift measurement, as a list of times to measure in s.
-sleep_times:      [600, 1200]
+sleep_times:      [100, 1000, 10000]
 
 raster3d_n_step:    [[0, 1000]]
 

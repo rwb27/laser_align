@@ -7,7 +7,6 @@ data_io.py."""
 
 import time as t
 import numpy as np
-from scipy.stats import linregress
 
 import _experiments as _exp
 import baking as b
@@ -105,10 +104,8 @@ class Align(_exp.ScopeExp):
         # arrays measurements will be taken before moving on.
         raster_set.run(func_list=func_list, save_mode=save_mode)
 
-        par = ParabolicMax(self.scope, self.config_dict, group=self.gr)
-        for i in xrange(self.config_dict["parabola_iterations"]):
-            for ax in ['x', 'y']:
-                par.run(func_list=func_list, save_mode=save_mode, axis=ax)
+        hilly = HillWalk(self.scope, self.config_dict, group=self.gr)
+        hilly.run()
 
 
 class ParabolicMax(_exp.ScopeExp):
@@ -145,13 +142,15 @@ class DriftReCentre(_exp.ScopeExp):
         super(DriftReCentre, self).__init__(microscope, config_file, group,
                                             included_data, **kwargs)
 
-    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
-        """Default is to sleep for 10 minutes."""
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final',
+            number=1000, delay=0.1):
+        """Default is to measure for 100s. See the config file for sleep
+        times."""
         # Do an initial alignment and then take that position as the initial
         # position.
 
         align = Align(self.scope, self.config_dict, group=self.gr)
-        hillwalk = HillWalk(self.scope, self.config_dict, group=self.gr)
+        hill_walk = HillWalk(self.scope, self.config_dict, group=self.gr)
         sleep_times = self.config_dict['sleep_times']
 
         drifts = []
@@ -159,7 +158,8 @@ class DriftReCentre(_exp.ScopeExp):
             if i == 0:
                 align.run(func_list=func_list, save_mode=save_mode)
             else:
-                hillwalk.run()
+                # THIS COULD TAKE TOO LONG!
+                hill_walk.run(number=number, delay=delay)
             pos = self.scope.stage.position
             t.sleep(sleep_times[i])
             if i == 0:
@@ -170,11 +170,13 @@ class DriftReCentre(_exp.ScopeExp):
 
         # Measure the position after it has drifted by working out how much
         # it needs to move by to re-centre it.
-        self.gr.create_dataset('Drift', data=np.array(drifts))
+        self.gr.create_dataset('Drift', data=np.array(drifts), attrs={
+            'number': number, 'delay': delay})
 
 
 class KeepCentred(_exp.ScopeExp):
-    """Iterate the parabolic method repeatedly after the initial alignment."""
+    """After the initial alignment, keep hillwalking with a very small step
+    size."""
 
     def __init__(self, microscope, config_file, group=None, included_data=(
             'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'),
@@ -182,16 +184,17 @@ class KeepCentred(_exp.ScopeExp):
         super(KeepCentred, self).__init__(microscope, config_file, group,
                                           included_data, **kwargs)
 
-    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
+    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final',
+            max_step=10, min_step=1, number=100, delay=0):
         raster = RasterXY(self.scope, self.config_dict, group=self.gr,
                           group_name='KeepCentred')
         raster.run(func_list=func_list, save_mode=save_mode)
 
-        # TODO Insert a better algorithm here for fine alignment!
-        align_fine = HillWalk(self.scope, self.config_dict, group=self.gr)
+        hilly = HillWalk(self.scope, self.config_dict, group=self.gr)
         while True:
             try:
-                align_fine.run()
+                hilly.run(max_step=max_step, min_step=min_step, number=number,
+                          delay=delay)
             except KeyboardInterrupt:
                 break
 
@@ -216,32 +219,6 @@ class TimedMeasurements(_exp.ScopeExp):
                           number=300, delay=0)
 
 
-class BeamWalk(_exp.ScopeExp):
-    """Experiment to 'walk' the beam, consisting of a raster scan in XY,
-    followed by homing in on the max brightness, adjusting Z slightly in the
-    direction of increasing brightness, and repeating."""
-
-    def __init__(self, microscope, config_file, group=None, included_data=(
-            'raster_n_step', 'mmt_range'), **kwargs):
-        super(BeamWalk, self).__init__(microscope, config_file, group,
-                                       included_data, **kwargs)
-
-    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final'):
-        for i in range(2):
-            # TODO GENERALISE THE NUMBER
-            if i == 0:
-                raster_2d = RasterXY(self.scope, self.config_dict,
-                                     group=self.gr, raster_n_step=[[39, 500]])
-            else:
-                raster_2d = RasterXY(self.scope, self.config_dict,
-                                     group=self.gr)
-            raster_2d.run(func_list=func_list, save_mode=save_mode)
-
-            along_z = AlongZ(self.scope, self.config_dict, group=self.gr,
-                             mmt_range=self.config_dict["mmt_range"])
-            along_z.run(save_mode=save_mode)
-
-
 class HillWalk(_exp.ScopeExp):
     """Experiment to walk until a 5-point peak is found, and then repeats
     this for each axis, after which the step size is reduced."""
@@ -253,8 +230,9 @@ class HillWalk(_exp.ScopeExp):
         super(HillWalk, self).__init__(microscope, config_file, group,
                                        included_data, **kwargs)
 
-    def run(self, max_step=100, number=100, delay=0):
-        """Process for this method:
+    def run(self, max_step=100, number=100, delay=0.0, min_step=5):
+        """ONLY use when you have a non-zero initial reading. Process for this
+        method:
         1) For the max max_step size, start with the x axis and continuously
         repeat.
         2) Get position, get brightness as specified by number and delay, add
@@ -273,14 +251,24 @@ class HillWalk(_exp.ScopeExp):
         when that is finished."""
         results = []
         step_size = max_step
-        while step_size > 5:
+        initial_pos = self.scope.stage.position
+        while step_size > min_step:
             for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
                 direction = 1
                 print "axis", axis
 
                 while True:
-                    pos = self.scope.stage.position
-                    brightness = self.scope.sensor.average_n(number, delay)
+                    try:
+                        pos = self.scope.stage.position
+                        brightness = self.scope.sensor.average_n(number, delay)
+                        # Check for saturation of each measurement. Remember
+                        # to set ignore_saturation to False at the end of
+                        # all measurements.
+                        brightness = b.saturation_reached(brightness)
+                    except b.Saturation:
+                        self.scope.stage.move_to_pos(initial_pos)
+                        self.run(max_step, number, delay)
+
                     print pos, brightness
                     results.append([_exp.elapsed(self.scope.start),
                                     pos[0], pos[1], pos[2], brightness[0],
@@ -341,7 +329,8 @@ class HillWalk(_exp.ScopeExp):
 
         self.gr.create_dataset('hill_walk_brightness', data=results, attrs={
             'mmts_per_reading': number, 'delay_between': delay,
-            'max_step': max_step })
+            'max_step': max_step})
+        b.ignore_saturation = False
 
     @staticmethod
     def _check_sliced_results(results, axis_index, slice_size):
@@ -393,5 +382,3 @@ class HillWalk(_exp.ScopeExp):
             return direction * -1
         else:
             return direction
-
-

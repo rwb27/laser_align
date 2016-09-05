@@ -172,20 +172,20 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                     print reading
                     results.append(reading)
 
-        except StopIteration:
-            # Iterations finished - save the subset of results and take the
-            # next set.
+        except (StopIteration, KeyboardInterrupt) as e:
+            # Iterations finished - save the subset of results.
             if save_mode == 'save_subset':
                 # Save after every array of motions.
+                print "Saving captured results."
                 results = np.array(results, dtype=np.float)
                 exp_obj.gr.create_dataset('brightness_subset', data=results,
                                           attrs=attrs)
-
-        except KeyboardInterrupt:
-            print "Aborted, moving back to initial position."
-            exp_obj.scope.stage.move_to_pos(initial_position)
-            print "Exiting program."
-            sys.exit()
+            if e is KeyboardInterrupt:
+                # Move to original position and exit program.
+                print "Aborted, moving back to initial position. Exiting " \
+                      "program."
+                exp_obj.scope.stage.move_to_pos(initial_position)
+                sys.exit()
 
         except b.NonZeroReading:
             # After reading a non-zero value stay at that current position,
@@ -250,30 +250,3 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
         # to the position (0, 0, 0) only. This is a single 1 x 1 x 1 array
         # of positions.
         return 1
-
-#def spiral(N, M):
-#    x,y = 0,0
-#    dx, dy = 0, -1
-#
-#    for dumb in xrange(N*M):
-#        if ((abs(x) == N or abs(y) == M) and [dx,dy] != [1,0]) or (x>0 and y
-#            == 1-x):
-#            dx, dy = -dy, dx            # corner, change direction
-#
-#        if abs(x)>N/2 or abs(y)>M/2:    # non-square
-#            dx, dy = -dy, dx            # change direction
-#            x, y = -y+dx, x+dy          # jump
-#
-#        yield x, y
-#        x, y = x+dx, y+dy
-
-#spi = spiral(5, 10)
-#thing = []
-#while True:
-#    try:
-#        thing.append(spi.next())
-#    except StopIteration:
-#        break
-#
-#plt.scatter(*zip(*thing))
-#plt.show()
