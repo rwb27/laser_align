@@ -108,27 +108,6 @@ class Align(_exp.ScopeExp):
         hilly.run()
 
 
-class ParabolicMax(_exp.ScopeExp):
-    """Takes a sequence of N measurements, fits a parabola to them and moves to
-    the maximum brightness value. Make sure the microstep size is not too
-    small, otherwise noise will affect the parabola shape."""
-
-    def __init__(self, microscope, config_file, group=None, included_data=(
-            'parabola_N', 'parabola_step', 'parabola_iterations'), **kwargs):
-        super(ParabolicMax, self).__init__(microscope, config_file, group,
-                                           included_data, **kwargs)
-
-    def run(self, func_list=b.baker(b.unchanged), save_mode='save_final',
-            axis='x'):
-        """Operates on one axis at a time."""
-        # Get default values.
-        step_pair = (self.config_dict["parabola_N"],
-                     self.config_dict["parabola_step"])
-        end = b.baker(b.move_to_parmax, args=['IMAGE_ARR', self.scope, axis])
-        _exp.move_capture(self, {axis: [step_pair]}, func_list=func_list,
-                          save_mode=save_mode, end_func=end)
-
-
 class DriftReCentre(_exp.ScopeExp):
     """Experiment to allow time for the spot to drift from its initial
     position for some time, then bring it back to the centre and measure
@@ -260,19 +239,19 @@ class HillWalk(_exp.ScopeExp):
                 while True:
                     try:
                         pos = self.scope.stage.position
-                        brightness = self.scope.sensor.average_n(number, delay)
+                        mmt = self.scope.sensor.average_n(number, delay)
                         # Check for saturation of each measurement. Remember
                         # to set ignore_saturation to False at the end of
                         # all measurements.
-                        brightness = b.saturation_reached(brightness)
+                        mmt = b.saturation_reached(mmt)
                     except b.Saturation:
                         self.scope.stage.move_to_pos(initial_pos)
                         self.run(max_step, number, delay)
 
-                    print pos, brightness
+                    print pos, mmt
                     results.append([_exp.elapsed(self.scope.start),
-                                    pos[0], pos[1], pos[2], brightness[0],
-                                    brightness[1]])
+                                    pos[0], pos[1], pos[2], mmt[0],
+                                    mmt[1]])
 
                     # To sort by position that has been modified, find the
                     # index of the axis that is changing.
@@ -287,8 +266,8 @@ class HillWalk(_exp.ScopeExp):
                         pass
 
                     try:
-                        direction = self._change_direction(
-                            results, axis_index, direction)
+                        direction = self._change_direction(results, axis_index,
+                                                           direction)
                         print "direction", direction
                     except (IndexError, AssertionError):
                         # Either not enough list elements for this to be a
@@ -306,7 +285,11 @@ class HillWalk(_exp.ScopeExp):
                         # TODO ARE STILL BEING MEASURED.
                         # For each row in the results, check if that
                         # position is present (i.e. it has already been
-                        # measured less than DRIFT_TIME seconds ago. If it
+                        # measured less than DRIFT_TIME seconds ago). To
+                        # measure the time, work out the elapsed time
+                        # since the start of the microscope object,
+                        # and from this subtract the elapsed time since
+                        # the start of the experiment. If it
                         # does exist, this position does not need to be
                         # re-measured so keep moving in the direction until
                         # this repetition no longer occurs. If pos_to_be is
@@ -314,10 +297,12 @@ class HillWalk(_exp.ScopeExp):
                         # problem. So reset i=0 and don't add 1 to it. The
                         # loop finally exists when that position has not
                         # been found in the entire set in a recent time.
-                        if results[i][1:4] == list(pos_to_be) and _exp.elapsed(
-                                results[i][0]) < self.DRIFT_TIME:
-                            pos_to_be += direction * step_size * np.array(
-                                axis)
+                        if (np.array(results[i][1:4]) ==
+                            np.array(pos_to_be)).all() and (_exp.elapsed(
+                                self.scope.start) - results[i][0] <
+                                self.DRIFT_TIME):
+                            pos_to_be += (direction * step_size * np.array(
+                                axis))
                             i = 0
                         else:
                             i += 1
@@ -333,7 +318,8 @@ class HillWalk(_exp.ScopeExp):
         b.ignore_saturation = False
 
     @staticmethod
-    def _check_sliced_results(results, axis_index, slice_size):
+    def _check_sliced_results(results, slice_size, axis_index=None,
+                              check_unique=True):
         """Ensure the other position axes haven't changed, and the axis in
         question has all different positions. Return the appropriately
         sliced results.
@@ -344,19 +330,20 @@ class HillWalk(_exp.ScopeExp):
         last_rows = np.array(results[-slice_size:])
         assert last_rows.shape[0] == slice_size
 
-        other_indices = []
-        for ind in [1, 2, 3]:
-            if ind != axis_index:
-                other_indices.append(ind)
-        assert [np.unique(last_rows[:, other_index]).size == 1 for other_index
-                in other_indices]
+        if check_unique:
+            other_indices = []
+            for ind in [1, 2, 3]:
+                if ind != axis_index:
+                    other_indices.append(ind)
+            assert [np.unique(last_rows[:, other_index]).size == 1 for
+                    other_index in other_indices]
 
-        assert np.unique(last_rows[:, axis_index]).size == slice_size
+            assert np.unique(last_rows[:, axis_index]).size == slice_size
 
         return last_rows
 
     def _try_fit_parabola(self, results, axis_index):
-        last_five_rows = self._check_sliced_results(results, axis_index, 5)
+        last_five_rows = self._check_sliced_results(results, 5, axis_index)
         sort = last_five_rows[np.argsort(last_five_rows[:, axis_index])]
 
         if np.all(np.sign(np.ediff1d(sort[:, 4])) == np.array(
@@ -368,7 +355,7 @@ class HillWalk(_exp.ScopeExp):
             return False
 
     def _change_direction(self, results, axis_index, direction):
-        last_three_rows = self._check_sliced_results(results, axis_index, 3)
+        last_three_rows = self._check_sliced_results(results, 3, axis_index)
 
         # We want to find if the last 3 position/brightness
         # measurements have a positive/negative gradient. If
@@ -382,3 +369,21 @@ class HillWalk(_exp.ScopeExp):
             return direction * -1
         else:
             return direction
+
+    def _ignore_noisy_signal(self, results, n_rows=10):
+        """If the last 10 readings along the same axis are within 2 sigma of
+        their previous reading, the signal is noise-affected and hill-walk
+        should not be used - instead a raster scan should be done."""
+        last_ten_rows = self._check_sliced_results(results, n_rows,
+                                                   check_unique=False)
+        noisy_size = 0
+        for i in xrange(last_ten_rows[:, 0].size):
+            if ((last_ten_rows[i-1: 4] - 2 * last_ten_rows[i-1: 5]) <=
+                    last_ten_rows[i, 4] <= (last_ten_rows[i-1: 4] + 2 *
+                    last_ten_rows[i-1: 5])) and i != 0:
+                noisy_size += 1
+
+        if noisy_size == n_rows:
+            raise b.NoisySignal(
+                'The signal is noisy, so any measures of peaks are likely to '
+                'be inaccurate.')

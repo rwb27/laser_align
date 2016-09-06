@@ -4,20 +4,11 @@
 move_capture function, along with the baker function to enable them to do
 so."""
 
-import numpy as np
 import time
 
+import numpy as np
+
 ignore_saturation = False
-
-
-class Saturation(Exception):
-    """Raise when the gain causes the reading to saturate at 1023."""
-    pass
-
-
-class NonZeroReading(Exception):
-    """Raise when the photodiode returns a non-zero reading."""
-    pass
 
 
 def baker(fun, args=None, kwargs=None, position_to_pass_through=(0, 0)):
@@ -192,3 +183,19 @@ def move_to_parmax(results_arr, scope_obj, axis):
     print "new pos parmax", new_pos
     scope_obj.stage.move_to_pos(new_pos)
     return
+
+
+class Saturation(Exception):
+    """Raise when the gain causes the reading to saturate at 1023."""
+    pass
+
+
+class NonZeroReading(Exception):
+    """Raise when the photodiode returns a non-zero reading."""
+    pass
+
+
+class NoisySignal(Exception):
+    """Raise when excessive noise has been detected, so operation is
+    terminated and raster scan is done instead."""
+    pass

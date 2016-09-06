@@ -2,14 +2,16 @@
 
 """Contains base-level functions that are required for the others to run."""
 
-import time as t
-import numpy as np
-import warnings as w
 import sys
+import time as t
+import warnings as w
+
+import numpy as np
 from nplab.experiment import Experiment
 
 import baking as b
 import data_io as d
+from baking import Saturation, NonZeroReading
 
 
 class ScopeExp(Experiment):
@@ -143,17 +145,9 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                 # Mmt is returned as a tuple of (mean brightness,
                 # error_in_mean).
                 mmt = exp_obj.scope.sensor.average_n(number, t=delay)
-                processed = mmt
 
-                # Post-process. Converting to list first allows even single
-                # functions to be understood.
-                try:
-                    len(func_list)
-                except TypeError:
-                    func_list = [func_list]
-
-                for function in func_list:
-                    processed = function(processed)
+                # Apply functions.
+                processed = apply_functions(mmt, func_list)
 
                 # Save this array in HDF5 file.
                 if save_mode == 'save_each':
@@ -174,7 +168,8 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
 
         except (StopIteration, KeyboardInterrupt) as e:
             # Iterations finished - save the subset of results.
-            if save_mode == 'save_subset':
+            if save_mode == 'save_subset' or (save_mode == 'save_final'
+                                              and e is KeyboardInterrupt):
                 # Save after every array of motions.
                 print "Saving captured results."
                 results = np.array(results, dtype=np.float)
@@ -187,12 +182,12 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                 exp_obj.scope.stage.move_to_pos(initial_position)
                 sys.exit()
 
-        except b.NonZeroReading:
+        except NonZeroReading:
             # After reading a non-zero value stay at that current position,
             # save all results up to that point.
             print "Non-zero value read."
 
-        except b.Saturation:
+        except Saturation:
             # If the max value has been read, then the user must turn down
             # the gain. Once turned down, this entire move_sequence must be
             # re-measured.
@@ -221,8 +216,9 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
         raise ValueError('Invalid save_mode.')
 
 
-def elapsed(start_time):
-    return t.time() - start_time
+def elapsed(starting):
+    end = t.time()
+    return end - starting
 
 
 def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
@@ -234,7 +230,6 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
     assert len(position_dict) <= len(valid_keys)
     for key in position_dict.keys():
         for tup in position_dict[key]:
-            print tup
             assert len(tup) == 2, 'Invalid tuple format.'
         assert np.any(key == np.array(valid_keys)), 'Invalid key.'
         # For robustness, the lengths of the lists for each key must be
@@ -250,3 +245,19 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
         # to the position (0, 0, 0) only. This is a single 1 x 1 x 1 array
         # of positions.
         return 1
+
+
+def apply_functions(mmt, func_list):
+    """Applies each function from func_list to the unprocessed mmt."""
+    processed = mmt
+
+    # Converting to list first allows single functions to be entered.
+    try:
+        len(func_list)
+    except TypeError:
+        func_list = [func_list]
+
+    for function in func_list:
+        processed = function(processed)
+
+    return processed

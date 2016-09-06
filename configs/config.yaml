@@ -53,7 +53,8 @@ save:                 g
 # ---------------------------------------------------- RasterXY images ---------------------------------------------------
 # The number of steps per axis to take i.e. generates an n+1 x n+1 images in total, and number of microsteps between
 # each measurement.
-raster_n_step:    [[9, 100]]
+raster_n_step:    [[64, 1000],
+                   [9, 100]]
 
 save_mode:        save_subset
 # -------------------------------------------------- Laser alignment --------------------------------------------------

@@ -2,7 +2,7 @@
 
 """caller.py
 Main front-end of script, to call experiments and GUI to run, and reads 
-config files.[
+config files.
 
 Usage:
     caller.py align [<configs>...] [--output=<output>]
