@@ -7,6 +7,7 @@ data_io.py."""
 
 import time as t
 import numpy as np
+import sys
 
 import _experiments as _exp
 import baking as b
@@ -50,10 +51,11 @@ class RasterXY(_exp.ScopeExp):
                                              self.initial_position])
 
         # Take measurements and move to position of maximum brightness.
-        _exp.move_capture(self, {'x': self.config_dict['raster_n_step'],
-                                 'y': self.config_dict['raster_n_step']},
-                          func_list=func_list, save_mode=save_mode,
-                          end_func=end)
+        # end_func is applied at the end of every set of (n, step).
+        for n_step in self.config_dict['raster_n_step']:
+            _exp.move_capture(self, {'x': [n_step], 'y': [n_step]},
+                              func_list=func_list, save_mode=save_mode,
+                              end_func=end)
         print self.scope.stage.position
 
 
@@ -212,7 +214,7 @@ class HillWalk(_exp.ScopeExp):
     def run(self, max_step=100, number=100, delay=0.0, min_step=5):
         """ONLY use when you have a non-zero initial reading. Process for this
         method:
-        1) For the max max_step size, start with the x axis and continuously
+        1) For the max_step size, start with the x axis and continuously
         repeat.
         2) Get position, get brightness as specified by number and delay, add
         this to results.
@@ -231,6 +233,7 @@ class HillWalk(_exp.ScopeExp):
         results = []
         step_size = max_step
         initial_pos = self.scope.stage.position
+
         while step_size > min_step:
             for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
                 direction = 1
@@ -247,6 +250,7 @@ class HillWalk(_exp.ScopeExp):
                     except b.Saturation:
                         self.scope.stage.move_to_pos(initial_pos)
                         self.run(max_step, number, delay)
+                        return
 
                     print pos, mmt
                     results.append([_exp.elapsed(self.scope.start),
@@ -281,8 +285,6 @@ class HillWalk(_exp.ScopeExp):
                     pos_to_be = pos + (direction * step_size * np.array(axis))
                     i = 0
                     while i < len(results):
-                        # TODO THIS DOESN'T WORK - ALREADY MEASURED POINTS
-                        # TODO ARE STILL BEING MEASURED.
                         # For each row in the results, check if that
                         # position is present (i.e. it has already been
                         # measured less than DRIFT_TIME seconds ago). To
@@ -387,3 +389,80 @@ class HillWalk(_exp.ScopeExp):
             raise b.NoisySignal(
                 'The signal is noisy, so any measures of peaks are likely to '
                 'be inaccurate.')
+
+
+class HillWalk2(_exp.ScopeExp):
+    """More sophisticated hill walk algorithm that measures in only one
+    direction, accounts for noise, saturation, descending measurements,
+    and adapts step size, averaging number and time to minimise noise and
+    runtime, and maximise precision and accuracy."""
+
+    DRIFT_TIME = 1000
+
+    def __init__(self, microscope, config_file, group=None, included_data=(),
+                 **kwargs):
+        super(HillWalk2, self).__init__(microscope, config_file, group,
+                                        included_data, **kwargs)
+
+    def run(self, max_step=100, init_number=100, init_delay=0.0, min_step=5,
+            num_per_parabola=7, sigma_multiples=2, sig_level=0.05,
+            save_mode='save_final'):
+
+        results = []
+        step_size = max_step
+        number = init_number
+        delay = init_delay
+        initial_pos = self.scope.stage.position
+        pos = initial_pos
+        b.ignore_saturation = False
+
+        for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
+            axis_index = axis.index(1) + 1
+            try:
+                move_positions = np.arange(0, step_size * num_per_parabola,
+                                           step_size)
+                positions = np.outer(move_positions, np.array(axis)) + pos
+                gen = b.do_not_revisit(results, positions)
+
+                func_list = b.baker(b.saturation_reached) #TODO CHANGE to
+                # include saturation
+                # check,
+                # descending check
+
+                while True:
+                    results = _exp.read_move_save(self, gen, func_list,
+                                                  save_mode, number, delay,
+                                                  results)
+
+            except b.Saturation:
+                # If the measurement saturates, then take that set of
+                # measurements again, with the new latest of parameters that
+                # change (step_size, number, delay). Don't ignore saturation
+                # exceptions here, as this is fine alignment! Note the
+                # ignore_saturations parameter is reset after every set of
+                # num_per_parabola measurements, as we advise against
+                # choosing the 'ignore all' parameter!
+                self.scope.stage.move_to_pos(initial_pos)
+                b.ignore_saturation = False
+                self.run(step_size, number, delay)
+                return
+
+            except (StopIteration, KeyboardInterrupt) as e:
+                # Iterations finished - save the subset of results.
+                if save_mode == 'save_subset' or (save_mode == 'save_final'
+                                                  and e is KeyboardInterrupt):
+                    # Save after every array of motions.
+                    print "Saving captured results."
+                    results = np.array(results, dtype=np.float)
+                    self.gr.create_dataset('brightness_subset', data=results,
+                                           attrs={'mmts_per_reading': number,
+                                                  'delay_between': delay})
+                if e is KeyboardInterrupt:
+                    # Move to original position and exit program.
+                    print "Aborted, moving back to initial position. Exiting" \
+                          " program."
+                    self.scope.stage.move_to_pos(initial_pos)
+                    sys.exit()
+
+
+

@@ -5,7 +5,6 @@
 import sys
 import time as t
 import warnings as w
-
 import numpy as np
 from nplab.experiment import Experiment
 
@@ -64,7 +63,9 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
     resulting array of [[-50, -50], [-50, 0], [-50, 50], [50, -50], [50, 0],
     [50, 50]], and the latter two to get [[0, -60], [0, -20], [0, 20],
     [0, 60]]. These are all the positions the stage will move to (the format
-    here is [x, y]), iterating through each array in the order given.
+    here is [x, y]), iterating through each array in the order given before
+    applying end_func ONCE RIGHT AT THE END. To run after each array,
+    run this function multiple times.
 
     If you prefer to take images once for all the 'x' and, separately, once
     for all the 'y', run this function twice, once for 'x', once for 'y'.
@@ -139,32 +140,8 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # measurement if save_mode = 'save_final', or append the
             # calculation to a results file and save it all at the end.
             while True:
-                next_pos = next(pos)  # This returns StopIteration at end.
-                exp_obj.scope.stage.move_to_pos(next_pos)
-
-                # Mmt is returned as a tuple of (mean brightness,
-                # error_in_mean).
-                mmt = exp_obj.scope.sensor.average_n(number, t=delay)
-
-                # Apply functions.
-                processed = apply_functions(mmt, func_list)
-
-                # Save this array in HDF5 file.
-                if save_mode == 'save_each':
-                    exp_obj.gr.create_dataset('post_processed', attrs={
-                        'Position': exp_obj.scope.stage.position,
-                        'mmts_per_reading': number, 'delay_between': delay},
-                        data=processed)
-                else:
-                    # The curried function and 'save_final' both use the
-                    # array of final results.
-                    reading = [elapsed(exp_obj.scope.start),
-                               exp_obj.scope.stage.position[0],
-                               exp_obj.scope.stage.position[1],
-                               exp_obj.scope.stage.position[2],
-                               processed[0], processed[1]]
-                    print reading
-                    results.append(reading)
+                results = read_move_save(exp_obj, pos, func_list, save_mode,
+                                         number, delay, results)
 
         except (StopIteration, KeyboardInterrupt) as e:
             # Iterations finished - save the subset of results.
@@ -216,6 +193,22 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
         raise ValueError('Invalid save_mode.')
 
 
+def apply_functions(mmt, func_list):
+    """Applies each function from func_list to the unprocessed mmt."""
+    processed = mmt
+
+    # Converting to list first allows single functions to be entered.
+    try:
+        len(func_list)
+    except TypeError:
+        func_list = [func_list]
+
+    for function in func_list:
+        processed = function(processed)
+
+    return processed
+
+
 def elapsed(starting):
     end = t.time()
     return end - starting
@@ -247,17 +240,46 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
         return 1
 
 
-def apply_functions(mmt, func_list):
-    """Applies each function from func_list to the unprocessed mmt."""
-    processed = mmt
+def read_move_save(exp_obj, gen_obj, func_list, save_mode, number, delay,
+                   results):
+    """Function to repeatedly move to specific positions, take an average
+    measurement, save it as appropriate, and move on.
+    :param exp_obj: The experiment object.
+    :param gen_obj: An instantiated generator function object.
+    :param func_list: A list of functions to act on each measurement taken.
+    :param save_mode: The string specifying how and when to save the data.
+    :param number: The number of measurements to take before averaging these
+    into a single result.
+    :param delay: The time delay between individual measurements that will
+    be averaged.
+    :param results: The results list.
+    :return: The modified results list."""
 
-    # Converting to list first allows single functions to be entered.
-    try:
-        len(func_list)
-    except TypeError:
-        func_list = [func_list]
+    next_pos = next(gen_obj)  # This returns StopIteration at end.
+    exp_obj.scope.stage.move_to_pos(next_pos, backlash=5000)
 
-    for function in func_list:
-        processed = function(processed)
+    # Mmt is returned as a tuple of (mean brightness,
+    # error_in_mean).
+    mmt = exp_obj.scope.sensor.average_n(number, t=delay)
 
-    return processed
+    # Apply functions.
+    processed = apply_functions(mmt, func_list)
+
+    # Save this array in HDF5 file.
+    if save_mode == 'save_each':
+        exp_obj.gr.create_dataset('post_processed', attrs={
+            'Position': exp_obj.scope.stage.position,
+            'mmts_per_reading': number, 'delay_between': delay},
+                                  data=processed)
+    else:
+        # The curried function and 'save_final' both use the
+        # array of final results.
+        reading = [elapsed(exp_obj.scope.start),
+                   exp_obj.scope.stage.position[0],
+                   exp_obj.scope.stage.position[1],
+                   exp_obj.scope.stage.position[2],
+                   processed[0], processed[1]]
+        print reading
+        results.append(reading)
+
+    return results

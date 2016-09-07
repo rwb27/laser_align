@@ -102,6 +102,7 @@ def saturation_reached(measurement):
                         # end of its run.
                         global ignore_saturation
                         ignore_saturation = True
+                        break
     return measurement
 
 
@@ -139,6 +140,29 @@ def fixed_timer(x, y, z, initial_pos, count=5, t=1):
                 time.sleep(t)
             except StopIteration:
                 break
+
+
+def do_not_revisit(results, proposed_pos):
+    """Check visit of the positions in proposed_array have
+    already been
+    visited recently, and do not visit them again.
+    :param results: The results list.
+    :param proposed_pos: The array of positions to visit next,
+    in the
+    format [x column, y column, z column]."""
+
+    proposed_pos = set(tuple(row) for row in proposed_pos)
+
+    if not results:
+        visited_pos = set()
+    else:
+        # Ensure results is not the empty list.
+        visited_pos = set(
+            tuple(row) for row in np.array(results)[:, 1:4])
+
+    new_pos = proposed_pos - visited_pos
+    for position in new_pos:
+        yield np.array(position)
 
 
 # Functions to act on the final entire set of results.

@@ -164,18 +164,22 @@ class Stage(Instrument):
         self.bus = smbus.SMBus(self.config_dict["channel"])
         self.position = np.array([0, 0, 0])
 
-    def move_rel(self, vector):
+    def move_rel(self, vector, backlash=None):
         """Move the stage by (x,y,z) micro steps.
-        :param vector: The increment to move by along [x, y, z]."""
+        :param vector: The increment to move by along [x, y, z].
+        :param backlash: The backlash along [x, y, z] in microsteps."""
         if type(vector) is not np.ndarray:
             vector = np.array(vector)
 
-        [backlash, override] = [self.config_dict['backlash'],
-                                self.config_dict['override']]
+        if type(backlash) is int:
+            backlash = [backlash, backlash, backlash]
+        elif backlash is None:
+            backlash = self.config_dict['backlash']
+        override = self.config_dict['override']
 
         # Check backlash  and the vector to move by have the correct format.
-        assert np.all(backlash >= 0), "Backlash must >= 0 for all [x, y, z]."
         backlash = _verify_vector(backlash)
+        assert np.all(backlash >= 0), "Backlash must >= 0 for all [x, y, z]."
         r = _verify_vector(vector)
 
         # Generate the list of movements to make. If backlash is [0, 0, 0],
@@ -200,19 +204,19 @@ class Stage(Instrument):
             else:
                 raise ValueError('New position is outside allowed range.')
 
-    def move_to_pos(self, final):
+    def move_to_pos(self, final, backlash=None):
         new_position = _verify_vector(final)
         rel_mov = np.subtract(new_position, self.position)
-        return self.move_rel(rel_mov)
+        return self.move_rel(rel_mov, backlash)
 
-    def focus_rel(self, z):
+    def focus_rel(self, z, backlash=None):
         """Move the stage in the Z direction by z micro steps."""
-        self.move_rel([0, 0, z])
+        self.move_rel([0, 0, z], backlash)
 
-    def centre_stage(self):
+    def centre_stage(self, backlash=None):
         """Move the stage such that self.position is (0,0,0) which in theory
         centres it."""
-        self.move_to_pos([0, 0, 0])
+        self.move_to_pos([0, 0, 0], backlash)
 
     def _reset_pos(self):
         # Hard resets the stored position, just in case things go wrong.
