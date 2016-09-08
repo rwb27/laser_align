@@ -105,7 +105,7 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
     :param delay: The time delay between each individual measurement taken
     at a specific position."""
 
-    b.ignore_saturation = False
+    exp_obj.scope.sensor.ignore_saturation = False
 
     # Verify positions_dict format. The num_arrays is the number of arrays
     # of positions that will be measured in sequence.
@@ -133,7 +133,6 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
         # Generate array of positions to move to.
         pos = order_gen(move_by['x'], move_by['y'],
                         move_by['z'], initial_position)
-        attrs = {'mmts_per_reading': number, 'delay_between': delay}
         try:
             # For each position in the range specified, take an image, apply
             # all the functions in func_list on it, then either save the
@@ -147,11 +146,7 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # Iterations finished - save the subset of results.
             if save_mode == 'save_subset' or (save_mode == 'save_final'
                                               and e is KeyboardInterrupt):
-                # Save after every array of motions.
-                print "Saving captured results."
-                results = np.array(results, dtype=np.float)
-                exp_obj.gr.create_dataset('brightness_subset', data=results,
-                                          attrs=attrs)
+                save_results(exp_obj, results, number, delay, why_ended=str(e))
             if e is KeyboardInterrupt:
                 # Move to original position and exit program.
                 print "Aborted, moving back to initial position. Exiting " \
@@ -171,15 +166,11 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             return move_capture(exp_obj, positions_dict, func_list, order_gen,
                                 save_mode, end_func, valid_keys, number, delay)
 
-    results = np.array(results, dtype=np.float)
-    b.ignore_saturation = False
+    exp_obj.scope.sensor.ignore_saturation = False
     if save_mode != 'save_each':
         if save_mode == 'save_final':
-            exp_obj.gr.create_dataset('brightness_final', data=results,
-                                      attrs={'mmts_per_reading': number,
-                                             'delay_between': delay})
-        elif all(save_mode != valid_mode for valid_mode in
-                 ['save_subset', None]):
+            save_results(exp_obj, results, number, delay, 'brightness_final')
+        elif save_mode != 'save_subset' and save_mode is not None:
             raise ValueError('Invalid save mode.')
 
         # Process the result and return it. Remember end_func is unchanged
@@ -278,8 +269,21 @@ def read_move_save(exp_obj, gen_obj, func_list, save_mode, number, delay,
                    exp_obj.scope.stage.position[0],
                    exp_obj.scope.stage.position[1],
                    exp_obj.scope.stage.position[2],
-                   processed[0], processed[1]]
+                   processed[0], processed[1], number, delay,
+                   exp_obj.scope.sensor]
         print reading
         results.append(reading)
 
     return results
+
+
+def save_results(exp_obj, results, number, delay, name='brightness',
+                 why_ended='none', attrs=None):
+    """Saves the results with custom attributes."""
+    if attrs is None:
+        attrs = {'mmts_per_reading': number, 'delay': delay,
+                 'why_ended': why_ended}
+
+    print "Saving captured results."
+    results = np.array(results, dtype=np.float)
+    exp_obj.gr.create_dataset(name, data=results, attrs=attrs)

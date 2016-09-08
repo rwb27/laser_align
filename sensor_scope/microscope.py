@@ -65,7 +65,7 @@ class LightDetector(Instrument):
     command to the Arduino. The logging feature of Instrument is not used,
     but can be invoked in future if this class is used directly."""
 
-    def __init__(self, config_file, **kwargs):
+    def __init__(self, config_file, gain=70, **kwargs):
         """An abstracted photo-diode class.
         :param config_file: A string with the path to the config file,
         or the times_data.
@@ -84,6 +84,9 @@ class LightDetector(Instrument):
         self.ser = serial.Serial(self.config_dict['tty'],
                                  baudrate=self.config_dict['baudrate'],
                                  timeout=1)
+
+        self.gain = gain
+        self.ignore_saturation = False
 
     def __del__(self):
         self.ser.close()
@@ -266,3 +269,5 @@ def _gen(n):
     while i < n:
         yield i
         i += 1
+
+

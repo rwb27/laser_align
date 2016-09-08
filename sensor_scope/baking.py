@@ -8,8 +8,6 @@ import time
 
 import numpy as np
 
-ignore_saturation = False
-
 
 def baker(fun, args=None, kwargs=None, position_to_pass_through=(0, 0)):
     """Returns an object given by the function 'fun' with its arguments,
@@ -68,14 +66,14 @@ def stop_on_nonzero(measurement):
     return measurement
 
 
-def saturation_reached(measurement):
+def saturation_reached(measurement, sensor_obj):
     """Function to raise Exception if measurements saturate, so that the
     user is recommended to turn down the gain setting, with an input requested.
     """
-    if measurement[0] == 1023:
+    if measurement[0] == 1023 and sensor_obj.gain >= 0:
         # This is the max value that the 10-bit serial port can provide.
         # Change if this is not the max value.
-        if not ignore_saturation:
+        if not sensor_obj.ignore_saturation:
             while True:
                 answer = raw_input('Measurement saturation reached. The user '
                                    'is recommended to turn down the gain by '
@@ -89,7 +87,8 @@ def saturation_reached(measurement):
                 if answer == 'retry' or answer == 'ignore' \
                         or answer == 'ignore all':
                     if answer == 'retry':
-                        # All measurements have to be taken again.
+                        # All measurements have to be taken again for this set.
+                        sensor_obj.gain -= 10
                         raise Saturation
                     elif answer == 'ignore':
                         # Continue as if nothing is wrong.
@@ -100,8 +99,7 @@ def saturation_reached(measurement):
                         # function are ignored. That function changes
                         # ignore_saturation to False at the beginning and
                         # end of its run.
-                        global ignore_saturation
-                        ignore_saturation = True
+                        sensor_obj.ignore_saturation = True
                         break
     return measurement
 
@@ -142,18 +140,20 @@ def fixed_timer(x, y, z, initial_pos, count=5, t=1):
                 break
 
 
-def do_not_revisit(results, proposed_pos):
+def do_not_revisit(results, proposed_pos, overlap_allowed=False):
     """Check visit of the positions in proposed_array have
     already been
     visited recently, and do not visit them again.
     :param results: The results list.
     :param proposed_pos: The array of positions to visit next,
-    in the
-    format [x column, y column, z column]."""
+    in theformat [x column, y column, z column].
+    :param overlap_allowed: Set to True to allow overlaps with already
+    measured points."""
 
     proposed_pos = set(tuple(row) for row in proposed_pos)
 
-    if not results:
+    if (not results) or overlap_allowed:
+        # If overlap is allowed, then all proposed positions will be visited.
         visited_pos = set()
     else:
         # Ensure results is not the empty list.

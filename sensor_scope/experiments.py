@@ -317,7 +317,7 @@ class HillWalk(_exp.ScopeExp):
         self.gr.create_dataset('hill_walk_brightness', data=results, attrs={
             'mmts_per_reading': number, 'delay_between': delay,
             'max_step': max_step})
-        b.ignore_saturation = False
+        self.scope.sensor.ignore_saturation = False
 
     @staticmethod
     def _check_sliced_results(results, slice_size, axis_index=None,
@@ -325,7 +325,7 @@ class HillWalk(_exp.ScopeExp):
         """Ensure the other position axes haven't changed, and the axis in
         question has all different positions. Return the appropriately
         sliced results.
-        :param results: The results array.
+        :param results: The results array/list.
         :param axis_index: The index of the position that is varying.
         :param slice_size: The number of the last rows of the results array to
         use."""
@@ -356,21 +356,45 @@ class HillWalk(_exp.ScopeExp):
         else:
             return False
 
-    def _change_direction(self, results, axis_index, direction):
-        last_three_rows = self._check_sliced_results(results, 3, axis_index)
+    def _change_direction(self, results, axis_index, direction,
+                          num_per_parabola):
+        """Changes the direction of measurement if values are descending
+        monotonically for the entire set of num_per_parabola measurements,
+        such that decrease exceeds the noise error.
+        :param results: The results array.
+        :param axis_index: The index of the axis that is changing.
+        :param direction: The current direction of motion.
+        :return: The new direction of motion."""
+        try:
+            # Get between num_per_parabola and 2 * num_per_parabola -1 rows
+            # (allows comparison of all combinations of consecutive
+            # num_per_parabola results).
+            # This section of last_rows needs checking for:
+            # - noisy consecutive signals (consecutive meaning within n
+            # sigma).
+            # - descending
+            last_rows = self._check_sliced_results(
+                results, (2*num_per_parabola)-1, axis_index)
+            sort = last_rows[np.argsort(last_rows[:, axis_index])]
+            # TODO WE NEED TO IMPLEMENT SORTING HERE. Check for monotonic
+            # decreases.
+            # We want to find if the last 3 position/brightness
+            # measurements have a positive/negative gradient. If
+            # negative, reverse direction.
+            x = last_rows[:, axis_index]
+            y = last_rows[:, 4]
 
-        # We want to find if the last 3 position/brightness
-        # measurements have a positive/negative gradient. If
-        # negative, reverse direction.
-        x = last_three_rows[:, axis_index]
-        y = last_three_rows[:, 4]
-        if np.all(np.sign(np.ediff1d(y)) < 0) and np.ediff1d(np.sign(
-                np.ediff1d(x))) == 0:
-            # Change directions only if the positions are monotonically
-            # changing.
-            return direction * -1
-        else:
-            return direction
+            if np.all(np.sign(np.ediff1d(y)) < 0) and np.ediff1d(np.sign(
+                    np.ediff1d(x))) == 0:
+                # Change directions only if the positions are monotonically
+                # changing.
+                direction *= -1
+
+        except (IndexError, AssertionError):
+            # The array is not large enough for this to work.
+            pass
+
+        return direction
 
     def _ignore_noisy_signal(self, results, n_rows=10):
         """If the last 10 readings along the same axis are within 2 sigma of
@@ -413,56 +437,77 @@ class HillWalk2(_exp.ScopeExp):
         number = init_number
         delay = init_delay
         initial_pos = self.scope.stage.position
-        pos = initial_pos
-        b.ignore_saturation = False
+        self.scope.sensor.ignore_saturation = False
 
         for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
             axis_index = axis.index(1) + 1
-            try:
-                move_positions = np.arange(0, step_size * num_per_parabola,
-                                           step_size)
-                positions = np.outer(move_positions, np.array(axis)) + pos
-                gen = b.do_not_revisit(results, positions)
+            direction = 1
 
-                func_list = b.baker(b.saturation_reached) #TODO CHANGE to
-                # include saturation
-                # check,
-                # descending check
+            while True:
+                try:
+                    # Note down the position before the loop os measurements
+                    # starts, to return there if something goes wrong.
+                    current_pos = self.scope.stage.position
+                    move_positions = np.arange(-step_size*num_per_parabola/2.,
+                                               step_size*num_per_parabola/2.,
+                                               step_size)
+                    positions = np.outer(move_positions, np.array(axis)) + \
+                        current_pos
+                    gen = b.do_not_revisit(results, positions)
 
-                while True:
-                    results = _exp.read_move_save(self, gen, func_list,
-                                                  save_mode, number, delay,
-                                                  results)
+                    func_list = b.baker(b.saturation_reached,
+                                        args=[self.scope.sensor])
 
-            except b.Saturation:
-                # If the measurement saturates, then take that set of
-                # measurements again, with the new latest of parameters that
-                # change (step_size, number, delay). Don't ignore saturation
-                # exceptions here, as this is fine alignment! Note the
-                # ignore_saturations parameter is reset after every set of
-                # num_per_parabola measurements, as we advise against
-                # choosing the 'ignore all' parameter!
-                self.scope.stage.move_to_pos(initial_pos)
-                b.ignore_saturation = False
-                self.run(step_size, number, delay)
-                return
+                    while True:
+                        results = _exp.read_move_save(self, gen, func_list,
+                                                      save_mode, number, delay,
+                                                      results)
 
-            except (StopIteration, KeyboardInterrupt) as e:
-                # Iterations finished - save the subset of results.
-                if save_mode == 'save_subset' or (save_mode == 'save_final'
-                                                  and e is KeyboardInterrupt):
-                    # Save after every array of motions.
-                    print "Saving captured results."
-                    results = np.array(results, dtype=np.float)
-                    self.gr.create_dataset('brightness_subset', data=results,
-                                           attrs={'mmts_per_reading': number,
-                                                  'delay_between': delay})
-                if e is KeyboardInterrupt:
+                except b.Saturation:
+                    # If the measurement saturates, then take that set of
+                    # measurements again, with the new values of parameters
+                    # that change (step_size, number, delay). Don't ignore
+                    # saturation exceptions here, as this is fine alignment!
+                    # Note the ignore_saturations parameter is reset after
+                    # every set of
+                    # num_per_parabola measurements, as we advise against
+                    # choosing the 'ignore all' parameter!
+                    self.scope.stage.move_to_pos(current_pos, backlash=5000)
+                    continue
+
+                except KeyboardInterrupt:
+                    if save_mode == 'save_subset' or save_mode == 'save_final':
+                        _exp.save_results(self, results, number, delay,
+                                          why_ended='keyboard_interrupt')
+
                     # Move to original position and exit program.
-                    print "Aborted, moving back to initial position. Exiting" \
-                          " program."
-                    self.scope.stage.move_to_pos(initial_pos)
+                    print "Aborted, moving back to initial position. " \
+                          "Exiting program."
+                    self.scope.stage.move_to_pos(initial_pos,
+                                                 backlash=5000)
                     sys.exit()
 
+                except StopIteration:
+                    # Iterations finished - save the subset of results.
+                    if save_mode == 'save_subset':
+                        _exp.save_results(self, results, number, delay,
+                                          why_ended=str(StopIteration))
 
+                    # Test for whether signal is noisy.
 
+                self.scope.sensor.ignore_saturation = False
+
+    def last_n_rows(self, results, num_per_parabola, n, max_step):
+        """Get the maximum number of last rows from results, i.e. between
+        num_per_parabola and n rows, such that those rows have readings that
+        are consecutive (each readings differs from its neighbour by <
+        max_step) and only one axis is varying."""
+
+        # The position axis that is taken to vary is the one that changes
+        # between the last and second last results before sorting.
+
+    def get_most_recent(self, results, position):
+        """Searches for the position array in the results, and returns that
+        row. If the same position is found multiple times, the most recent
+        position is returned. Number and delay are also matched between the
+        rows."""
