@@ -124,7 +124,7 @@ class DriftReCentre(_exp.ScopeExp):
                                             included_data, **kwargs)
 
     def run(self, func_list=b.baker(b.unchanged), save_mode='save_final',
-            number=1000, delay=0.1):
+            number=1000, delay=0.1, initial_align=False):
         """Default is to measure for 100s. See the config file for sleep
         times."""
         # Do an initial alignment and then take that position as the initial
@@ -138,20 +138,23 @@ class DriftReCentre(_exp.ScopeExp):
 
         drifts = []
         for i in xrange(len(sleep_times)):
-            if i == 0:
+            if i == 0 and initial_align:
                 align.run(func_list=func_list, save_mode=save_mode)
             else:
-                # THIS COULD TAKE TOO LONG!
-                hill_walk.run(number=number, delay=delay)
+                hill_walk.run()
             pos = self.scope.stage.position
             sleep_start = t.time()
+            timed_list = []
             while _exp.elapsed(sleep_start) < sleep_times[i]:
-                timed_mmts.run()
+                timed_list.append(timed_mmts.run(save_mode=None))
+            self.gr.create_dataset('timed_run', data=np.array(timed_list),
+                                   attrs={'number': number, 'delay': delay,
+                                          'sleep_time': sleep_times[i]})
             if i == 0:
                 last_pos = pos
             drift = pos - last_pos
             last_pos = pos
-            drifts.append([sleep_times[i], drift])
+            drifts.append([sleep_times[i], drift[0], drift[1], drift[2]])
 
         # Measure the position after it has drifted by working out how much
         # it needs to move by to re-centre it.
@@ -199,9 +202,9 @@ class TimedMeasurements(_exp.ScopeExp):
         order_gen = b.baker(b.fixed_timer, kwargs={
             'count': self.config_dict["N"], 't': self.config_dict["t"]},
                             position_to_pass_through=(0, 3))
-        _exp.move_capture(self, {}, order_gen=order_gen,
-                          func_list=func_list, save_mode=save_mode,
-                          number=1, delay=0)
+        return _exp.move_capture(self, {}, order_gen=order_gen,
+                                 func_list=func_list, save_mode=save_mode,
+                                 number=1, delay=0)
 
 
 class HillWalk(_exp.ScopeExp):
@@ -215,7 +218,7 @@ class HillWalk(_exp.ScopeExp):
         super(HillWalk, self).__init__(microscope, config_file, group,
                                        included_data, **kwargs)
 
-    def run(self, max_step=100, number=100, delay=0.0, min_step=5):
+    def run(self, max_step=25, number=100, delay=0.0, min_step=1):
         """ONLY use when you have a non-zero initial reading. Process for this
         method:
         1) For the max_step size, start with the x axis and continuously
@@ -250,7 +253,7 @@ class HillWalk(_exp.ScopeExp):
                         # Check for saturation of each measurement. Remember
                         # to set ignore_saturation to False at the end of
                         # all measurements.
-                        mmt = b.saturation_reached(mmt)
+                        mmt = b.saturation_reached(mmt, self.scope.sensor)
                     except b.Saturation:
                         self.scope.stage.move_to_pos(initial_pos)
                         self.run(max_step, number, delay)
@@ -274,8 +277,8 @@ class HillWalk(_exp.ScopeExp):
                         pass
 
                     try:
-                        direction = self._change_direction(results, axis_index,
-                                                           direction)
+                        direction, step_size = self._change_direction(
+                            results, axis_index, direction, 3, step_size)
                         print "direction", direction
                     except (IndexError, AssertionError):
                         # Either not enough list elements for this to be a
@@ -361,7 +364,7 @@ class HillWalk(_exp.ScopeExp):
             return False
 
     def _change_direction(self, results, axis_index, direction,
-                          num_per_parabola):
+                          num_per_parabola, step_size):
         """Changes the direction of measurement if values are descending
         monotonically for the entire set of num_per_parabola measurements,
         such that decrease exceeds the noise error.
@@ -378,7 +381,7 @@ class HillWalk(_exp.ScopeExp):
             # sigma).
             # - descending
             last_rows = self._check_sliced_results(
-                results, (2*num_per_parabola)-1, axis_index)
+                results, 3, axis_index)
             sort = last_rows[np.argsort(last_rows[:, axis_index])]
             # TODO WE NEED TO IMPLEMENT SORTING HERE. Check for monotonic
             # decreases.
@@ -388,7 +391,7 @@ class HillWalk(_exp.ScopeExp):
             x = last_rows[:, axis_index]
             y = last_rows[:, 4]
 
-            if np.all(np.sign(np.ediff1d(y)) < 0) and np.ediff1d(np.sign(
+            if np.all(np.sign(np.ediff1d(y)) <= 0) and np.ediff1d(np.sign(
                     np.ediff1d(x))) == 0:
                 # Change directions only if the positions are monotonically
                 # changing.
@@ -398,7 +401,7 @@ class HillWalk(_exp.ScopeExp):
             # The array is not large enough for this to work.
             pass
 
-        return direction
+        return direction, step_size
 
     def _ignore_noisy_signal(self, results, n_rows=10):
         """If the last 10 readings along the same axis are within 2 sigma of

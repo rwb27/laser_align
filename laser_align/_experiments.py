@@ -129,7 +129,7 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             except KeyError:
                 # If key does not exist, then keep this axis fixed.
                 move_by[key] = np.array([0])
-        print "move-by", move_by
+
         # Generate array of positions to move to.
         pos = order_gen(move_by['x'], move_by['y'],
                         move_by['z'], initial_position)

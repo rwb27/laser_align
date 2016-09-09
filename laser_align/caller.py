@@ -15,6 +15,7 @@ Usage:
     caller.py beam_walk [--output=<output>]
     caller.py hill_walk [--output=<output>]
     caller.py measure
+    caller.py drift_recentre [--output=<output>]
     caller.py hill_walk2 [--output=<output>]
     caller.py (-h | --help)
 
@@ -78,6 +79,9 @@ if __name__ == '__main__':
             elif sys_args['hill_walk2']:
                 hill_walk = exp.HillWalk2(scope, config)
                 hill_walk.run()
+            elif sys_args['drift_recentre']:
+                drift = exp.DriftReCentre(scope, config)
+                drift.run()
 
         elif sys_args['move']:
             positions = []
