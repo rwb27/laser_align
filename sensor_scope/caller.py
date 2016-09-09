@@ -15,6 +15,7 @@ Usage:
     caller.py beam_walk [--output=<output>]
     caller.py hill_walk [--output=<output>]
     caller.py measure
+    caller.py hill_walk2 [--output=<output>]
     caller.py (-h | --help)
 
 Options:
@@ -74,6 +75,9 @@ if __name__ == '__main__':
             elif sys_args['hill_walk']:
                 hilly = exp.HillWalk(scope, config)
                 hilly.run()
+            elif sys_args['hill_walk2']:
+                hill_walk = exp.HillWalk2(scope, config)
+                hill_walk.run()
 
         elif sys_args['move']:
             positions = []

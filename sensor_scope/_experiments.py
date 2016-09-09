@@ -175,7 +175,7 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
 
         # Process the result and return it. Remember end_func is unchanged
         # by default, which returns the array as-is.
-        return end_func(results)
+        return end_func(np.array(results))
     elif save_mode == 'save_each':
         if end_func is not None or end_func is not b.baker(b.unchanged):
             w.warn('end_func will not be used when the save_mode is '
@@ -270,7 +270,7 @@ def read_move_save(exp_obj, gen_obj, func_list, save_mode, number, delay,
                    exp_obj.scope.stage.position[1],
                    exp_obj.scope.stage.position[2],
                    processed[0], processed[1], number, delay,
-                   exp_obj.scope.sensor]
+                   exp_obj.scope.sensor.gain]
         print reading
         results.append(reading)
 

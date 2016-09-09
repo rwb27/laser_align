@@ -161,6 +161,7 @@ def do_not_revisit(results, proposed_pos, overlap_allowed=False):
             tuple(row) for row in np.array(results)[:, 1:4])
 
     new_pos = proposed_pos - visited_pos
+    print "ne_pos", np.array(sorted(list(new_pos)))
     for position in new_pos:
         yield np.array(position)
 
