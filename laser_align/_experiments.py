@@ -185,7 +185,7 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
 
 
 def apply_functions(mmt, func_list):
-    """Applies each function from func_list to the unprocessed mmt."""
+    """Applies each function from func_list to the mmt."""
     processed = mmt
 
     # Converting to list first allows single functions to be entered.
