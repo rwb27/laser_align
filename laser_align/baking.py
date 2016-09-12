@@ -140,16 +140,21 @@ def fixed_timer(x, y, z, initial_pos, count=5, t=1):
                 break
 
 
-def do_not_revisit(results, proposed_pos, overlap_allowed=False):
+def yield_pos(positions):
+    """A generator for each position in the positions to visit array.
+    :param positions: Array of positions to visit."""
+    for position in positions:
+        yield np.array(position)
+
+
+def revisit_check(results, proposed_pos, overlap_allowed):
     """Check visit of the positions in proposed_array have
-    already been
-    visited recently, and do not visit them again.
+    already been visited recently, and do not visit them again.
     :param results: The results list.
     :param proposed_pos: The array of positions to visit next,
-    in theformat [x column, y column, z column].
+    in the format [x column, y column, z column].
     :param overlap_allowed: Set to True to allow overlaps with already
     measured points."""
-
     proposed_pos = set(tuple(row) for row in proposed_pos)
 
     if (not results) or overlap_allowed:
@@ -161,9 +166,7 @@ def do_not_revisit(results, proposed_pos, overlap_allowed=False):
             tuple(row) for row in np.array(results)[:, 1:4])
 
     new_pos = proposed_pos - visited_pos
-    print "ne_pos", np.array(sorted(list(new_pos)))
-    for position in new_pos:
-        yield np.array(position)
+    return new_pos
 
 
 # Functions to act on the final entire set of results.
@@ -186,28 +189,35 @@ def max_fifth_col(results_arr, scope_obj, initial_position):
     return
 
 
-# TODO CHECK THIS IS CORRECT
-def move_to_parmax(results_arr, scope_obj, axis):
+def to_parmax(results_arr, scope_obj, axis, move=True):
     """Given a results array from move_capture, and an axis to look at,
     fits that axis's positions with the measured quantities to a parabola,
     returns the error and moves the scope_obj stage to the maximum point of the
     parabola. Experiment can only be performed on a single axis."""
     x = results_arr[:, ['x', 'y', 'z'].index(axis) + 1]
+    x_range = (np.min(x), np.max(x))
     y = results_arr[:, 4]
+
     assert np.where(y == np.max(y)) != 0 and \
         np.where(y == np.max(y)) != len(y), 'Extrapolation occurred - ' \
                                             'measure over a wider range.'
-    print "x", x, "y", y
-    coeffs = np.polyfit(x, y, 2)    # Find some way to get errors from this.
-    print "coeffs", coeffs
+
+    reg = np.polyfit(x, y, 2, full=True)
+    coeffs = reg[0]
+    residuals = reg[1]
+
     coeffs_deriv = np.array([2, 1]) * coeffs[:2]    # Simulate differentiation.
     x_stat = -coeffs_deriv[1] / coeffs_deriv[0]
-
+    pred_y = coeffs[0]*x_stat**2 + coeffs[1]*x_stat + coeffs[2]
     new_pos = results_arr[0, 1:4]     # Get the values that stay the same.
     new_pos[['x', 'y', 'z'].index(axis)] = x_stat   # Overlay with max.
     print "new pos parmax", new_pos
-    scope_obj.stage.move_to_pos(new_pos)
-    return
+
+    if move:
+        scope_obj.stage.move_to_pos(new_pos)
+        return
+    else:
+        return new_pos, pred_y, x_range, residuals, coeffs
 
 
 class Saturation(Exception):
@@ -223,4 +233,15 @@ class NonZeroReading(Exception):
 class NoisySignal(Exception):
     """Raise when excessive noise has been detected, so operation is
     terminated and raster scan is done instead."""
+    pass
+
+
+class Overlapped(Exception):
+    """Raise when all positions to be visited by the do_not_revisit
+    generator have already been visited."""
+    pass
+
+
+class ZeroSignal(Exception):
+    """Raise when all of the readings are zero."""
     pass

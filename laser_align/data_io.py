@@ -190,6 +190,7 @@ def series_maker(series_name, x, y, xerr=None, yerr=None, series_dict=None,
         yerr = np.zeros(y.size)
 
     data_array = np.vstack((x, y, xerr, yerr)).T
+
     series_dict[series_name] = (data_array, (marker_format, line_format))
     return series_dict
 

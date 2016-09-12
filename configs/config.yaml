@@ -90,4 +90,13 @@ raster3d_n_step:    [[0, 1000]]
 # Timed measurements at same spot.
 N: 100
 t: 1
+
+# Hill walk2 - these are currently not being used
+max_step: 100
+init_number: 100
+init_delay: 0.0
+min_step: 5
+num_per_parabola: 7
+sigma_level: 2
+sig_level: 0.05
 ...
