@@ -157,7 +157,7 @@ def revisit_check(results, proposed_pos, overlap_allowed):
     measured points."""
     proposed_pos = set(tuple(row) for row in proposed_pos)
 
-    if not list(results) or overlap_allowed:
+    if (not results) or overlap_allowed:
         # If overlap is allowed, then all proposed positions will be visited.
         visited_pos = set()
     else:
@@ -197,7 +197,11 @@ def to_parmax(results_arr, scope_obj, axis, move=True):
     x = results_arr[:, ['x', 'y', 'z'].index(axis) + 1]
     x_range = (np.min(x), np.max(x))
     y = results_arr[:, 4]
-    print x, y
+
+    assert np.where(y == np.max(y)) != 0 and \
+        np.where(y == np.max(y)) != len(y), 'Extrapolation occurred - ' \
+                                            'measure over a wider range.'
+
     reg = np.polyfit(x, y, 2, full=True)
     coeffs = reg[0]
     residuals = reg[1]
@@ -205,18 +209,13 @@ def to_parmax(results_arr, scope_obj, axis, move=True):
     coeffs_deriv = np.array([2, 1]) * coeffs[:2]    # Simulate differentiation.
     x_stat = -coeffs_deriv[1] / coeffs_deriv[0]
     pred_y = coeffs[0]*x_stat**2 + coeffs[1]*x_stat + coeffs[2]
-
     new_pos = results_arr[0, 1:4]     # Get the values that stay the same.
     new_pos[['x', 'y', 'z'].index(axis)] = x_stat   # Overlay with max.
     print "new pos parmax", new_pos
 
     if move:
         scope_obj.stage.move_to_pos(new_pos)
-        return new_pos, pred_y, x_range, residuals, coeffs
-    elif coeffs[0] > 0:
-        # Requirement for maximum point, otherwise move to measured
-        # maximum position.
-        return False
+        return
     else:
         return new_pos, pred_y, x_range, residuals, coeffs
 

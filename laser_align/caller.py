@@ -77,7 +77,7 @@ if __name__ == '__main__':
                 hilly = exp.HillWalk(scope, config)
                 hilly.run()
             elif sys_args['hill_walk2']:
-                hill_walk = exp.AdaptiveHillWalk(scope, config)
+                hill_walk = exp.HillWalk2(scope, config)
                 hill_walk.run()
             elif sys_args['drift_recentre']:
                 drift = exp.DriftReCentre(scope, config)
