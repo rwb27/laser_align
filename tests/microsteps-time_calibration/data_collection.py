@@ -13,7 +13,6 @@ results = {}
 print "Starting in 10 seconds."
 time.sleep(10)
 print "started"
-
 for axis in [0, 1, 2]:
     mean_results = np.zeros((1, len(positions), 2))
     for i in range(3):
