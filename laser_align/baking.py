@@ -70,7 +70,7 @@ def saturation_reached(measurement, sensor_obj):
     """Function to raise Exception if measurements saturate, so that the
     user is recommended to turn down the gain setting, with an input requested.
     """
-    if measurement[0] == 1023 and sensor_obj.gain >= 0:
+    if measurement[0] >= 900 and sensor_obj.gain >= 0:
         # This is the max value that the 10-bit serial port can provide.
         # Change if this is not the max value.
         if not sensor_obj.ignore_saturation:

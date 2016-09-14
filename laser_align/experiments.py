@@ -560,12 +560,13 @@ class AdaptiveHillWalk(_exp.ScopeExp):
 
                         _exp.save_results(self, results, self.number,
                                           self.delay, why_ended='set')
-                        self.axes[axis_index - 1].plot(
-                            results[:, axis_index], results[:, 4]/10 ** (
-                                results[:, 8]/10) * 30000)
-                        plt.show()
-                        print "showing"
+                        #self.axes[axis_index - 1].plot(
+                        #    results[:, axis_index], results[:, 4]/10 ** (
+                        #        results[:, 8]/10) * 30000)
+                        #plt.show()
+                        #print "showing"
                         if self.fit_to_parabola(results, axis_index):
+                            print "breaking"
                             break
 
                     self.scope.sensor.ignore_saturation = False
@@ -707,11 +708,11 @@ class AdaptiveHillWalk(_exp.ScopeExp):
             axis_index - 1], move=False)
 
         if params is False:
-            # A parabola with a minimum point was found, or the
-            # predicted maximum is lower than some measured maximum.
-            within_range = True
+            # A parabola with a minimum point was found.
+            within_range = False
             new_pos = last_rows[np.where(last_rows[:, 4] == np.max(
                 last_rows[:, 4])), 1:4][0][0]
+            print "Parabola fitting found a minimum, re-measuring"
 
         elif params[2][0] <= params[0][axis_index - 1] <= params[2][1]:
             # The calculated maximum lies within the range measured. Now
@@ -722,17 +723,21 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                 # Predicted maximum is higher, move to the predicted
                 # maximum.
                 new_pos = params[0]
-                print "POS2", new_pos
+                print "Moving to maximum of parabola: ", new_pos
                 self.step_size[axis_index - 1] /= 2
             else:
-                print "ypred", params[1]
+                print "Predicted max. was ", params[1]
                 new_pos = last_rows[np.where(last_rows[:, 4] == np.max(
                     last_rows[:, 4])), 1:4][0][0]
+                print "Moving to maximum point as it's brighter than the " \
+                      "parabola: ", np.max(last_rows[:, 4])
         else:
             # Measured parabola is an extrapolation.
             within_range = False
             new_pos = last_rows[np.where(last_rows[:, 4] == np.max(
                 last_rows[:, 4])), 1:4][0][0]
+            print "Predicted parabola maximum was too far away, moving to " \
+                  "the highest-intensity point in the scan."
 
         self.scope.stage.move_to_pos(new_pos)
         return within_range

@@ -9,23 +9,22 @@ import numpy as np
 nplab.datafile.set_current(r"C:\Users\a-amb\OneDrive - University Of "
                            r"Cambridge\tests.hdf5", mode="r")
 df = nplab.current_datafile()
+ax = plt.axes(projection='3d')
 
-ser1 = df['AdaptiveHillWalk/AdaptiveHillWalk_40/brightness_1'][:, ...]
-#ser2 = df['DriftReCentre/DriftReCentre_1/hill_walk_brightness_0'][:, ...]
-#ser3 = df['DriftReCentre/DriftReCentre_1/hill_walk_brightness_1'][:, ...]
-#ser4 = df['DriftReCentre/DriftReCentre_1/hill_walk_brightness_2'][:, ...]
-#ser5 = df['DriftReCentre/DriftReCentre_1/hill_walk_brightness_3'][:, ...]
+for i in range(32):
+    ser1 = df['AdaptiveHillWalk/AdaptiveHillWalk_54/brightness_{}'.format(i)][
+           :, ...]
+    length = ser1[:, 0].size
+    colours = np.ones(length)
+    ax.scatter(ser1[:, 1], ser1[:, 2], ser1[:, 3], s=ser1[:, 4] / 10**(
+        ser1[:, 8]/10) * 300000, label='{}'.format(ser1[0, 0]))
 
-fig = plt.figure()
-ax1 = fig.add_subplot(211)
-ax1.scatter(ser1[12:19, 2], ser1[12:19, 4])
+plt.xlabel('x')
+plt.ylabel('y')
 
-ax2 = fig.add_subplot(212, sharex=ax1)
-ax2.scatter(ser1[12:19, 2], ser1[12:19, 0])
+plt.legend()
 plt.show()
-
-print ser1[:, ...]
-
+plt.axis('equal')
 #mpl.rcParams['legend.fontsize'] = 10
 
 #fig = plt.figure()
