@@ -19,7 +19,7 @@ xyz_bound:            [320000, 320000, 320000]
 microsteps:           16
 
 # Backlash in microsteps for the [x, y, z] motors respectively.
-backlash:             [200, 200, 200]
+backlash:             [500, 500, 500]
 
 override:             false
 
@@ -92,11 +92,11 @@ N: 100
 t: 1
 
 # Hill walk2 - these are currently not being used
-max_step: 100
+max_step: 50
 init_number: 100
 init_delay: 0.0
-min_step: 5
-num_per_parabola: 7
+min_step: 1
+num_per_parabola: 11
 sigma_level: 2
 sig_level: 0.05
 ...
