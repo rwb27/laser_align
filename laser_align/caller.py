@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 
 """caller.py
-Main front-end of script, to call experiments and GUI to run, and reads 
-config files.
+Main front-end of script, to call experiments, run GUI, read config files.
 
 Usage:
     caller.py align [<configs>...] [--output=<output>]
     caller.py autofocus [<configs>...] [--output=<output>]
-    caller.py tiled [<configs>...] [--output=<output>]
+    caller.py raster [<configs>...] [--output=<output>]
     caller.py raster_3d [<configs>...] [--output=<output>]
     caller.py controller [<configs>...] [--output=<output>]
     caller.py move [--x=<x>] [--y=<y>] [--z=<z>] [--output=<output>]
     caller.py timed [--output=<output>]
-    caller.py beam_walk [--output=<output>]
     caller.py hill_walk [--output=<output>]
     caller.py measure
     caller.py drift_recentre [--output=<output>]
@@ -44,15 +42,13 @@ if __name__ == '__main__':
     else:
         configs = sys_args['<configs>']
 
-    # List of baked functions to do post-processing, if any.
-
     for config in configs:
         if not sys_args['move']:
             scope = micro.SensorScope(config)
             if sys_args['autofocus']:
                 focus = exp.AlongZ(scope, config)
                 focus.run()
-            elif sys_args['tiled']:
+            elif sys_args['raster']:
                 tiled = exp.RasterXY(scope, config)
                 tiled.run()
             elif sys_args['align']:
@@ -67,10 +63,6 @@ if __name__ == '__main__':
             elif sys_args['timed']:
                 timed = exp.TimedMeasurements(scope, config)
                 timed.run()
-            elif sys_args['beam_walk']:
-                beam_walk = exp.BeamWalk(scope, config,
-                                         raster_n_step=[[39, 500]])
-                beam_walk.run()
             elif sys_args['measure']:
                 print scope.sensor.average_n(1, 0)
             elif sys_args['hill_walk']:

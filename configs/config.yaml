@@ -5,6 +5,8 @@
 # Serial connection
 tty: /dev/ttyACM0
 baudrate:   9600    # Bit rate, ensure it matches that of the Arduino connection.
+initial_gain: 70
+gain_step:    10       # What increment to reduce the gain in.
 
 # ------------------------------------------------- Stage parameters  -------------------------------------------------
 
@@ -15,7 +17,8 @@ channel:              1
 # 'override' to true to ignore these bounds.
 xyz_bound:            [320000, 320000, 320000]
 
-# Microsteps per step???
+# Microsteps per step??? The purpose of this is somewhere in microscope.py but its precise use is unknown. Remove if it
+# is not needed.
 microsteps:           16
 
 # Backlash in microsteps for the [x, y, z] motors respectively.
@@ -76,9 +79,7 @@ parabola_iterations:  1
 # in 21 total measurements. It will then move to the region of highest sharpness and continue with the next set in the
 # main list.
 mmt_range:        [[10, 50]]
-               #   [10, 200]
-               #   [10  200]
-               #   [12  100]]
+
 
 # ------------------------------------------------ Drift and Recentre -------------------------------------------------
 
@@ -92,10 +93,10 @@ N: 100
 t: 1
 
 # Hill walk2 - these are currently not being used
-max_step: 50
+max_step: 100
 init_number: 100
 init_delay: 0.0
-min_step: 1
+min_step: 10
 num_per_parabola: 11
 sigma_level: 2
 sig_level: 0.05

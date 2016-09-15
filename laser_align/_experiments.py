@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-"""Contains base-level functions that are required for the others to run."""
+"""Contains base-level functions that are required for the experiments to
+run."""
 
 import sys
 import time as t
@@ -10,7 +11,6 @@ from nplab.experiment import Experiment
 
 import baking as b
 import data_io as d
-from baking import Saturation, NonZeroReading
 
 
 class ScopeExp(Experiment):
@@ -154,12 +154,12 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                 exp_obj.scope.stage.move_to_pos(initial_position)
                 sys.exit()
 
-        except NonZeroReading:
+        except b.NonZeroReading:
             # After reading a non-zero value stay at that current position,
             # save all results up to that point.
             print "Non-zero value read."
 
-        except Saturation:
+        except b.Saturation:
             # If the max value has been read, then the user must turn down
             # the gain. Once turned down, this entire move_sequence must be
             # re-measured.

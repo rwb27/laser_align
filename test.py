@@ -1,12 +1,12 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import time
+import scipy.stats as stat
+import scipy.integrate as integrate
 
-plt.ion()
-fig, axes = plt.subplots(1, 3, sharey=True)
-axes[0].plot([1,2,3],[4,5,6])
-plt.show()
-plt.show()
-axes[1].plot([1,2,3],[4,5,6])
-plt.ioff()
+
+
+a = np.array([[1,2,3],[0,2,4],[1,3,1]])
+print a[a[:,0].argsort()]
+
+
+
 

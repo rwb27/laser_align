@@ -5,7 +5,6 @@ move_capture function, along with the baker function to enable them to do
 so."""
 
 import time
-
 import numpy as np
 
 
@@ -71,8 +70,8 @@ def saturation_reached(measurement, sensor_obj):
     user is recommended to turn down the gain setting, with an input requested.
     """
     if measurement[0] >= 900 and sensor_obj.gain >= 0:
-        # This is the max value that the 10-bit serial port can provide.
-        # Change if this is not the max value.
+        # This is the chosen value for saturation because the scale is
+        # non-linear at the top end of the readings.
         if not sensor_obj.ignore_saturation:
             while True:
                 answer = raw_input('Measurement saturation reached. The user '
@@ -88,14 +87,14 @@ def saturation_reached(measurement, sensor_obj):
                         or answer == 'ignore all':
                     if answer == 'retry':
                         # All measurements have to be taken again for this set.
-                        sensor_obj.gain -= 10
+                        sensor_obj.gain -= sensor_obj.gain_step
                         raise Saturation
                     elif answer == 'ignore':
                         # Continue as if nothing is wrong.
                         break
                     elif answer == 'ignore all':
-                        # Change this to ensure that all subsequent
-                        # saturations for the duration of this move_capture
+                        # Ensure that all subsequent
+                        # saturations for the duration of this
                         # function are ignored. That function changes
                         # ignore_saturation to False at the beginning and
                         # end of its run.
@@ -147,28 +146,6 @@ def yield_pos(positions):
         yield np.array(position)
 
 
-def revisit_check(results, proposed_pos, overlap_allowed):
-    """Check visit of the positions in proposed_array have
-    already been visited recently, and do not visit them again.
-    :param results: The results list.
-    :param proposed_pos: The array of positions to visit next,
-    in the format [x column, y column, z column].
-    :param overlap_allowed: Set to True to allow overlaps with already
-    measured points."""
-    proposed_pos = set(tuple(row) for row in proposed_pos)
-
-    if not list(results) or overlap_allowed:
-        # If overlap is allowed, then all proposed positions will be visited.
-        visited_pos = set()
-    else:
-        # Ensure results is not the empty list.
-        visited_pos = set(
-            tuple(row) for row in np.array(results)[:, 1:4])
-
-    new_pos = proposed_pos - visited_pos
-    return new_pos
-
-
 # Functions to act on the final entire set of results.
 def max_fifth_col(results_arr, scope_obj, initial_position):
     """Given a results array made of [[times], [x_pos], [y_pos], [z_pos],
@@ -197,7 +174,6 @@ def to_parmax(results_arr, scope_obj, axis, move=True):
     x = results_arr[:, ['x', 'y', 'z'].index(axis) + 1]
     x_range = (np.min(x), np.max(x))
     y = results_arr[:, 4]
-    print x, y
     reg = np.polyfit(x, y, 2, full=True)
     coeffs = reg[0]
     residuals = reg[1]
@@ -237,12 +213,4 @@ class NoisySignal(Exception):
     pass
 
 
-class Overlapped(Exception):
-    """Raise when all positions to be visited by the do_not_revisit
-    generator have already been visited."""
-    pass
 
-
-class ZeroSignal(Exception):
-    """Raise when all of the readings are zero."""
-    pass

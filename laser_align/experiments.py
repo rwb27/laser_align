@@ -8,10 +8,11 @@ data_io.py."""
 import time as t
 import numpy as np
 import sys
+import scipy.stats as stat
+import scipy.integrate as integrate
 
 import _experiments as _exp
 import baking as b
-import matplotlib.pyplot as plt
 
 
 class AlongZ(_exp.ScopeExp):
@@ -443,9 +444,6 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         self.sigma_level = None
         self.reset()
 
-        self.fig, self.axes = plt.subplots(3, 1, sharey=True)
-        plt.ion()
-
     def reset(self):
         self.step_size = np.ones(3) * self.config_dict['max_step']
         self.number = self.config_dict['init_number']
@@ -462,13 +460,11 @@ class AdaptiveHillWalk(_exp.ScopeExp):
             for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
                 axis_index = axis.index(1) + 1
                 print 'axis', axis_index
-                direction = 1
                 while True:
                     try:
                         results = []
                         start_pos = self.scope.stage.position
-                        positions, noisy_attempt = self.next_positions(
-                            results, direction, axis)
+                        positions = self.next_positions(axis)
                         gen = b.yield_pos(positions)
 
                         func_list = b.baker(b.saturation_reached,
@@ -484,11 +480,9 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                         # If the measurement saturates, then take that set of
                         # measurements again, with the new values of parameters
                         # that change (step_size, number, delay). Don't ignore
-                        # saturation exceptions here, as this is fine alignment!
-                        # Note the ignore_saturations parameter is reset after
-                        # every set of
-                        # num_per_parabola measurements, as we advise against
-                        # choosing the 'ignore all' parameter!
+                        # saturation exceptions here, as this is fine
+                        # alignment!
+
                         results = np.array(results)
                         _exp.save_results(self, results, self.number,
                                           self.delay, why_ended='Saturation')
@@ -505,199 +499,65 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                         # Move to original position and exit program.
                         print "Aborted, moving back to initial position. " \
                               "Exiting program."
-                        self.scope.stage.move_to_pos(initial_pos)
+                        #self.scope.stage.move_to_pos(initial_pos)
                         sys.exit()
 
                     except StopIteration:
                         # Iterations finished - save the subset of results.
                         results = np.array(results)
-                        if save_mode == 'save_subset':
-                            _exp.save_results(
-                                self, results, self.number, self.delay,
-                                why_ended=str(StopIteration))
+                        _exp.save_results(
+                            self, results, self.number, self.delay,
+                            why_ended=str(StopIteration))
 
-                            # Test for whether signals are all zero for the last
-                            # set.
-                            #try:
-                            #    self.all_zeros(results, axis_index)
-                            #except b.ZeroSignal:
-                            #    # If all readings are zero, turn up the
-                            #    # gain and retry a raster scan over a small area.
-                            #    while True:
-                            #        if self.scope.sensor.gain != 70:
-                            #            answer = raw_input('Turn up the gain
-                            # once '
-                            #                               'and enter \'done\' '
-                            #                               'when finished: ')
-                            #            if answer == 'done':
-                            #                self.scope.sensor.gain += 10
-                            #                break
-                        #
-                        #    raster = RasterXY(self.scope, self.config_dict,
-                        #                      raster_n_step=[[5, 100]])
-                        #    raster.run()
-                        #
-                        #    # Then run this hillwalk again.
-                        #    self.run()
-                        #    return
-                        #
-                        # Test for whether signal is noisy.
-                        #positions, noisy_attempt = self.act_if_noisy(
-                        #    results, positions, direction, axis,
-                        # noisy_attempt)
-
-                        # Check if results ascending/descending and change
-                        # direction if needed.
-                        #direction = self.change_direction(results, axis_index,
-                        #                                  direction)
-
-                        # Check for parabolae and move to the appropriate
-                        # maximum. Adjust step size, number and delay.
-
-                        # Get consecutive results for later use.
-                        #consec = self.get_consec(results, axis_index,
-                        #                         self.config_dict['max_step'])
-
-                        _exp.save_results(self, results, self.number,
-                                          self.delay, why_ended='set')
-                        #self.axes[axis_index - 1].plot(
-                        #    results[:, axis_index], results[:, 4]/10 ** (
-                        #        results[:, 8]/10) * 30000)
-                        #plt.show()
-                        #print "showing"
                         if self.fit_to_parabola(results, axis_index):
                             print "breaking"
                             break
 
                     self.scope.sensor.ignore_saturation = False
-
-    def act_if_noisy(self, results, positions, direction, axis, attempt):
-        """Tests for if the signal is noisy. If it is, on the first attempt
-        the same positions are re-measured with 5 x the number per average
-        and 0.1s extra delay between measurements, as long as this doesn't
-        exceed the drift time factor. If it does, or this is the second
-        attempt, raise an exception. If the signal is not noisy, return the
-        next positions to visit."""
-        if self._check_noisy(results, axis):
-            # The signal has been found to be noisy this time around. If
-            # this is the first attempt, re-measure with a 5 x higher number
-            # per average (expected to reduce error in mean by sqrt(5)) and
-            # increase the delay by 0.1s. We also need to ensure the total
-            # measurement time is much less than the drift time. So ensure
-            # that number * delay < 50s, the TODO approximate scale to
-            # minimise Allan deviation. If this is not the case,
-            # raise NoisySignal. Also raise NoisySignal if this is the
-            # second attempt.
-            if 5 * self.number * (self.delay + 0.1) > self.DRIFT_TIME/20. or \
-                            attempt > 1:
-                raise b.NoisySignal
-            else:
-                self.number *= 5
-                self.delay += 0.1
-                attempt += 1
-            # Return the new positions to visit - the same ones that were
-            # just measured if the signal was noisy.
-            return positions, attempt
-        else:
-            # If the signal was not noisy, return the new positions to go to.
-            return self.next_positions(results, direction, axis)
-
-    def _check_noisy(self, results, axis):
-        """The array 'results' is the array of unsorted results. If, for the
-        last measured set, more than
-        1/2*num_per_parabola of the brightness readings are within sigma_level
-        * error of their neighbours, then the signal is noisy. Repeat the
-        readings with a higher number and delay, and if results are still noisy
-        then raise a NoisySignal exception."""
-        try:
-            last_rows = self._slice_results(
-                results, self.num_per_parabola, axis.index(1) + 1)
-        except (IndexError, AssertionError):
-            pass
-
-        # The maximum number of allowed noisy signals in the array of
-        # consecutive results.
-        max_noisy_size = np.ceil(self.num_per_parabola/2.)
-        noisy = 0
-
-        # To check if noisy, compare each brightness to the previous one to
-        # see if it is in the range.
-        for i in xrange(last_rows[:, 0].size):
-            min_value = last_rows[i-1, 4] - self.sigma_level * \
-                                                 last_rows[i-1, 5]
-            max_value = last_rows[i-1, 4] + self.sigma_level * \
-                                                 last_rows[i-1, 5]
-            if (min_value <= last_rows[i, 4] <= max_value) and i != 0:
-                # The i != 0 condition prevents the first row being compared
-                # to the last.
-                noisy += 1
-
-        if noisy >= max_noisy_size:
-            return True
-        else:
-            return False
+                self.step_size[axis_index - 1] /= 2
 
     @staticmethod
-    def _quad_bandwidth(coeffs, fraction):
-        """For a quadratic function with coefficients given, calculate the
-        width in x over which the function is a proportion of the maximum of
-        this quadratic. NOTE Ensure the quadratic has a maximum,
-        not a minimum!
-        :param coeffs: The array of coefficients [a, b, c] for a*x**2 + b*x
-        + c.
-        :param fraction: The fraction for which to measure the width of x.
-        For a value of 0.2, for example, the range over which y=0.8*y_max is
-        found."""
-        roots = np.roots(np.array([coeffs[0], coeffs[1], coeffs[2] - (
-            1 - fraction)*(coeffs[2] - coeffs[1]**2/(4*coeffs[0]))]))
-        x_range = np.max(roots) - np.min(roots)
-        return x_range
+    def thresh_com(x, y):
+        """Threshold the results at the half-range level and find their
+        centre of mass.
+        :param x: The array of the last set of positions, sorted in
+        ascending order.
+        :param y: The brightness measurements corresponding to x.
+        :return: The centre of mass in position and the thresholded
+        brightness array."""
+        thresh_level = np.mean([np.min(y), np.max(y)])
+        thresh = stat.threshold(y, threshmin=thresh_level)
+        normalisation = integrate.simps(thresh, x)
+        numerator = integrate.simps(x * thresh, x)
 
-    def all_zeros(self, results, axis_index):
-        try:
-            last_rows = self._slice_results(
-                results, self.num_per_parabola, axis_index)
-            if np.all(last_rows[:, 4] == 0):
-                raise b.ZeroSignal
-        except (IndexError, AssertionError):
-            pass
+        return numerator / normalisation, thresh
 
-    def change_direction(self, results, axis_index, direction):
-        """Changes the direction of measurement if values are descending
-        monotonically for the entire set of num_per_parabola measurements,
-        such that decrease exceeds the noise error.
-        :param results: The results array.
-        :param axis_index: The index of the axis that is changing.
-        :param direction: The current direction of motion.
-        :return: The new direction of motion."""
-        try:
-            # Get between num_per_parabola and 2 * num_per_parabola -1 rows
-            # (allows comparison of all combinations of consecutive
-            # num_per_parabola results).
-            # This section of last_rows needs checking for:
-            # - noisy consecutive signals (consecutive meaning within n
-            # sigma).
-            # - descending
-            last_rows = self._slice_results(
-                results, self.num_per_parabola, axis_index)
-            sort = last_rows[np.argsort(last_rows[:, axis_index])]
+    def process_com(self, results, axis_index):
+        # Get the last set of measurements taken.
+        sliced = self._slice_results(results, self.num_per_parabola,
+                                     axis_index)
 
-            # We want to find if the last num_per_parabola position/brightness
-            # measurements have a positive/negative gradient. If
-            # negative, reverse direction. The change between consecutive
-            # measurements must be negative or zero.
-            y = sort[:, 4]
+        # Sort these by the position axis that varies and get centre of mass.
+        sorted_arr = sliced[sliced[:, axis_index].argsort()]
+        com, brightness_thresh = self.thresh_com(sorted_arr[:, axis_index],
+                                                 sorted_arr[:, 4])
 
-            if np.all(np.sign(np.ediff1d(y)) <= 0):
-                # Change directions only if the positions are monotonically
-                # changing - they have been pre-sorted beforehand.
-                direction *= -1
+        # Move to max position.
+        new_pos = results[0, 1:4]
+        new_pos[axis_index - 1] = com
+        self.scope.stage.move_to_pos(new_pos)
 
-        except (IndexError, AssertionError):
-            # The array is not large enough for this to work.
-            pass
+        # If the first and last elements of the brightness are thresholded
+        # to zero, take this as the maximum being within the range of
+        # measurements. In this case, we can move onto the next axis. If
+        # not, move to the maximum but re-measure the same axis without
+        # changing the step size.
+        if brightness_thresh[0] == 0 and brightness_thresh[-1] == 0:
+            within_range = True
+        else:
+            within_range = False
 
-        return direction
+        return within_range
 
     def fit_to_parabola(self, results, axis_index):
         last_rows = self._slice_results(results, self.num_per_parabola,
@@ -724,7 +584,6 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                 # maximum.
                 new_pos = params[0]
                 print "Moving to maximum of parabola: ", new_pos
-                self.step_size[axis_index - 1] /= 2
             else:
                 print "Predicted max. was ", params[1]
                 new_pos = last_rows[np.where(last_rows[:, 4] == np.max(
@@ -742,241 +601,18 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         self.scope.stage.move_to_pos(new_pos)
         return within_range
 
-    def move_to_parabola(self, consec_results, axis_index):
-        """Given the entire array of consecutive results, split them up,
-        find parabolae and move to the appropriate maximum."""
-        consec_list = self._get_consec_sets(consec_results)
-        parabolae_param = self._find_parabolae(consec_list, axis_index)
-        print "size", parabolae_param.size
-        max_row = consec_results[np.where(consec_results[:, 4] ==
-                                          np.max(consec_results[:, 4]))]
-        print "max_row", max_row
-        if parabolae_param.size > 0 and \
-            np.any(parabolae_param[:, 2][0] < max_row[axis_index] <
-                   parabolae_param[:, 2][1]):
-            # If maximum is within the range of other parabolae, move to
-            # the maximum of the parabola with the highest predicted
-            # brightness.
-            relevant_params = parabolae_param[np.where(
-                parabolae_param[:, 1] == np.max(parabolae_param[:, 1]))]
-            new_pos = relevant_params[1:4]
-
-            # Modify number and delay based on residuals, and step_size
-            # based on width of parabola.
-            self.step_size = self._quad_bandwidth(relevant_params[4], 0.2)
-        else:
-            # The maximum exceeds the predicted parabola maximum,
-            # or no parabolae were detected - move to the actual maximum.
-            new_pos = max_row[1:4]
-            self.step_size /= 2
-        print new_pos
-
-        # TODO MAKE THE RESPONSES DIFFERENT FOR MAX AND PARABOLA.
-        self.delay += 0.1
-        self.number += 50
-
-        self.scope.stage.move_to_pos(new_pos)
-
-    def _fit_parabola(self, consec_set, axis_index):
-        """For a set of sorted, processed results, fit to a parabola and
-        assess the degree of fit. If multiple parabolae are found in this
-        set of results, move to the one with the highest maximum and lowest
-        error."""
-
-        #diffs_size = (self.num_per_parabola - 1)/2.
-        #signs = np.hstack((np.ones(diffs_size), -np.ones(diffs_size)))
-
-        #if np.all(np.sign(np.ediff1d(consec_set[:, 4])) == signs):
-        axis_string = ['x', 'y', 'z'][axis_index - 1]
-        return b.to_parmax(consec_set, self.scope, axis_string, move=True)
-        #else:
-        #    return False
-
-    def _find_parabolae(self, consec_list, axis_index):
-        """Pass in a set of consecutive, processed, sorted results in the
-        form of a list of arrays of consecutive results using
-        get_consec_sets."""
-        parabolae_params = []
-        for arr in consec_list:
-            print consec_list
-            fit = self._fit_parabola(arr, axis_index)
-            print fit
-            if fit is not False:
-                new_pos, pred_y, x_range, residuals, coeffs = fit
-                parabolae_params.append([new_pos, pred_y, x_range, residuals,
-                                         coeffs])
-
-        # When all sets have been checked, we have several outcomes. Either
-        # there are no parabolae, in which case move to the maximum reading
-        # and adjust step_size, number and delay, or there is one parabola
-        # containing the measured maximum, or there is one parabola
-        # not containing the measured maximum, or there are multiple
-        # parabolae. In every case, move to the highest maximum possible
-        # unless it lies outside a parabola, in which case re-measure with
-        # finer parameters.
-        print parabolae_params
-        return np.array(parabolae_params)
-
-    def _get_consec_sets(self, proc_res):
-        """Get all sets of consecutive results of length num_per_parabola
-        from the array of sorted, processed results. Return these as a list of
-        arrays."""
-        # To calculate the number of consecutive sets in results, note that
-        # for an array with N rows, row indices go from 0 to N-1. The number
-        # of times we can pick num_per_parabola consecutive rows is such
-        # that the top index is between 0 and N-1-num_per_parabola. This is
-        # the same as the size of the result rows for indexing,
-        # which requires one extra index at the end:
-        iterations = proc_res[:, 0].size - self.num_per_parabola
-        consec_list = []
-        for i in xrange(iterations):
-            # So for num_per_parabola=7 we get rows 0:6, then 1:7, etc.
-            consec_list.append(proc_res[i:i + self.num_per_parabola, :])
-        return consec_list
-
-    def next_positions(self, results, direction, axis, current_pos=None):
-        attempt = 1
-        new_pos = ()
+    def next_positions(self, axis, current_pos=None):
+        """Generate scan points along a particular direction.
+        :param axis: The vector to indicate the axis that is changing.
+        :param current_pos: A vector of the current position. If None,
+        it will be read from the scope object being used."""
         if current_pos is None:
             current_pos = self.scope.stage.position
-        move_positions = np.sort(np.arange(-self.step_size[list(axis).index(
-            1)] * (self.num_per_parabola)/2., self.step_size[list(axis).index(
-            1)] * (self.num_per_parabola + 1)/2., self.step_size[list(
-            axis).index(1)]) * direction)
-        while len(new_pos) == 0:
-            # If we want to move in the positive direction, the current
-            # position is the max of those in the array of positions to go
-            # to if there is overlap. For the negative direction, it is the
-            # minimum. To get around this, multiply negative directions by
-            # 'direction' (=-1)
-            positions = np.outer(move_positions, np.array(axis)) + current_pos
-            new_pos = b.revisit_check(results, positions, True)
-            if direction == 1:
-                current_pos = np.max(positions * axis)
-            elif direction == -1:
-                current_pos = np.min(positions * axis)
-        print positions
-        return positions, attempt
-
-    def get_consec(self, results, axis_index, max_step):
-        """From an array of results, select the appropriate ones to check for a
-        parabola later. Process and find the consecutive ones.
-        :param results: The results array, in the format with column titles:
-        time elapsed, x, y, z, brightness, error, number per average, delay per
-        mmt, gain.
-        :param axis_index: The index of the position axis in the array that was
-        just measured - only values varying along this axis are considered.
-        :param max_step: The maximum step size for measurements to be
-        considered consecutive.
-        :return: The measurements that the consecutive to the ones just taken.
-        """
-
-        # This function must be applied just after a series of measurements,
-        # which are sorted by time.
-        last_row = results[-1, :]
-        example_pos = last_row[1:4]
-        gain = last_row[-1]
-
-        # To get the results ready for processing, the algorithm is:
-        # 1) Only keep rows with the same values for the unchanged position
-        #    axes as the last mmt set.
-        # 2) Only keep rows with the same gain as the last mmt set.
-        # 3) Sort the array by time and positions.
-        # 4) Delete values older than DRIFT_TIME.
-        # 5) Get the most recent versions of values if multiple have been taken
-        #    at the same point.
-        # 6) Find all values consecutive to the ones taken in the last set,
-        #    along the varying axis.
-
-        func_list = [b.baker(self._filter_unchanged_axes,
-                             args=['results', axis_index, example_pos]),
-                     b.baker(self._filter_gain, args=['results', gain]),
-                     b.baker(self._sort_array, args=['results', axis_index]),
-                     b.baker(self._del_old_values, args=['results']),
-                     b.baker(self._get_latest, args=['results', axis_index]),
-                     b.baker(self._get_consec, args=[
-                         'results', axis_index, max_step])]
-
-        results = _exp.apply_functions(results, func_list)
-        return np.array(results)
-
-    @staticmethod
-    def _filter_unchanged_axes(results, axis_index, example_position):
-        """Return the part of the array where the values for the unchanged
-        position axes are those in example_position (an example position array
-        where only axis_index - 1 is allowed to vary)."""
-
-        for i in xrange(1, 4):
-            if i != axis_index:
-                results = results[np.where(results[:, i] == example_position[
-                    i - 1]), :][0]
-
-        return results
-
-    @staticmethod
-    def _filter_gain(results, gain):
-        """Return the results array only containing the rows with same gain
-        specified."""
-        return results[np.where(results[:, -1] == gain)]
-
-    @staticmethod
-    def _sort_array(results, axis_index):
-        """Sort an array by the first 4 indices (time, 3-displacement).
-        :param results: Results array filtered by one specific gain value.
-        :param axis_index: The index of the position axis that varies."""
-
-        # Get the order in which to sort the array. Sort first by the axes
-        # that do not change. This should result in [0, axis_index,
-        # other_pos_axes] at the end. So, sorting occurs by the unchanged
-        # position axes first, then by the changing position, then by time.
-        sort_by = []
-        for axis in xrange(4):
-            if axis != axis_index:
-                sort_by.append(axis)
-        sort_by.insert(1, axis_index)
-
-        # This method sorts by the last element in the tuple first.
-        row_order = np.lexsort((results[:, sort_by[0]],
-                                results[:, sort_by[1]],
-                                results[:, sort_by[2]],
-                                results[:, sort_by[3]]))
-        return results[row_order, :]
-
-    def _del_old_values(self, results):
-        """Delete values older than those taken > DRIFT_TIME ago."""
-        now_elapsed = _exp.elapsed(self.scope.start)
-        deleted = np.delete(results, np.where(now_elapsed - results[:, 0] >
-                                              self.DRIFT_TIME), axis=0)
-        if deleted.size > 0:
-            return deleted
-        else:
-            raise ValueError
-
-    @staticmethod
-    def _get_latest(results, axis_index):
-        """Find the most recent value of each measurement in results, assuming
-        it has already been sorted, filtered for gain, old values deleted,
-        and filtered by position axes that do not change."""
-        recent_array = []
-        for position in np.nditer(np.unique(results[:, axis_index])):
-            temp = results[np.where(results[:, axis_index] == position)]
-            temp = temp[np.where(temp[:, 0] == np.max(temp[:, 0])), :][0][0]
-            recent_array.append(temp)
-        return np.array(recent_array)
-
-    @staticmethod
-    def _get_consec(results, axis_index, max_step):
-        """Find n consecutive positions on on either side of the positions
-        array, in the sorted results array. Consecutive means they differ
-        from their neighbours by <= max_step."""
-
-        # Readings are taken as not consecutive when they differ from their
-        # neighbours by > max_step. The code below gives the indices to split
-        # the results array along, into different sets of measurements.
-        split_along = \
-        np.where(np.absolute(np.ediff1d(results[:, axis_index])) >
-                 max_step)[0] + 1
-        return np.split(results, split_along)
+        step_size = self.step_size[list(axis).index(1)]
+        N = self.num_per_parabola
+        move_positions = step_size * (np.arange(N) - (N - 1)/2.)
+        positions = np.outer(move_positions, np.array(axis)) + current_pos
+        return positions
 
     @staticmethod
     def _slice_results(results, slice_size, axis_index,
@@ -998,7 +634,6 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                     other_indices.append(ind)
             assert [np.unique(last_rows[:, other_index]).size == 1 for
                     other_index in other_indices]
-
             assert np.unique(last_rows[:, axis_index]).size == slice_size
 
         return last_rows

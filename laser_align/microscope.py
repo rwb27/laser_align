@@ -30,8 +30,6 @@ class SensorScope(Instrument):
         - channel: Channel of I2C bus to connect to motors for the stage.
         - max_iterations:"""
 
-        # TODO NEED MICROMETRES PER MICROSTEP!
-
         super(SensorScope, self).__init__()
 
         # If config is entered as a path string, the file from the path
@@ -40,9 +38,8 @@ class SensorScope(Instrument):
         # objects, rather than once and its value passed around.
         self.config_dict = d.make_dict(config, **kwargs)
 
-        self.sensor = LightDetector(self.config_dict, **kwargs)
+        self.sensor = PhotoDiode(self.config_dict, **kwargs)
         self.stage = Stage(self.config_dict, **kwargs)
-        # self.light = twoLED.Lightboard()
 
         # Set up data recording. Default values will be saved in the group
         # 'SensorScope'.
@@ -57,23 +54,26 @@ class SensorScope(Instrument):
     def __del__(self):
         del self.sensor
         del self.stage
-        # del self.light
 
 
-class LightDetector(Instrument):
+class PhotoDiode(Instrument):
     """Class to read brightness value from sensor by providing a Serial
     command to the Arduino. The logging feature of Instrument is not used,
     but can be invoked in future if this class is used directly."""
 
-    def __init__(self, config_file, gain=70, **kwargs):
+    def __init__(self, config_file, **kwargs):
         """An abstracted photo-diode class.
         :param config_file: A string with the path to the config file,
         or the times_data.
         :param kwargs:
             tty: The serial connection address as a string.
-            baudrate: The baudrate through the port."""
+            baudrate: The baudrate through the port.
+            initial_gain: The initial gain value for the photodiode.
+            gain_step: For a manually adjusting gain value, this setting
+            determines what increment the gain should be reduced by each
+            time saturation of the signal occurs."""
 
-        super(LightDetector, self).__init__()
+        super(PhotoDiode, self).__init__()
         # If config_file is entered as a path string, the file from the path
         # will be read. If it is a dictionary, it is not changed. This
         # prevents the config file being read repeatedly by different
@@ -85,7 +85,8 @@ class LightDetector(Instrument):
                                  baudrate=self.config_dict['baudrate'],
                                  timeout=1)
 
-        self.gain = gain
+        self.gain = self.config_dict['initial_gain']
+        self.gain_step = self.config_dict['gain_step']
         self.ignore_saturation = False
 
     def __del__(self):
@@ -135,8 +136,6 @@ class LightDetector(Instrument):
         :return: The average value of the measurements."""
         results = self._read(n, t)
         return np.mean(results), np.std(results, ddof=1)/np.sqrt(n)
-
-    # TODO LOOK UP WHAT OTHER ADCS CAN ALSO DO
 
 
 class Stage(Instrument):
