@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """Contains functions to perform a set of measurements and output the results
-to a datafile or graph. These functions are built on top of _experiments.py and
-data_io.py."""
+to a data file or graph. These functions are built on top of _experiments.py
+and data_io.py."""
 
 import time as t
 import numpy as np
