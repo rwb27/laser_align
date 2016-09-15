@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-"""caller.py
-Main front-end of script, to call experiments, run GUI, read config files.
+"""Main front-end of script, to call experiments, run GUI, read config files.
 
 Usage:
-    caller.py align [<configs>...] [--output=<output>]
+    caller.py align [<configs>...] [--output=<output>] [
     caller.py autofocus [<configs>...] [--output=<output>]
     caller.py raster [<configs>...] [--output=<output>]
     caller.py raster_3d [<configs>...] [--output=<output>]
@@ -14,12 +13,17 @@ Usage:
     caller.py hill_walk [--output=<output>]
     caller.py measure
     caller.py drift_recentre [--output=<output>]
-    caller.py hill_walk2 [--output=<output>]
+    caller.py hill_walk2 [--output=<output>] [--initial_gain=<initial_gain>] [--gain_step=<gain_step>] [--max_step=<max_step>] [--init_number=<num>] [--init_delay=<delay>] [--min_step=<min_step>]
     caller.py (-h | --help)
 
+
+
 Options:
-    -h, --help   Display this usage statement.
-    --output=<output>   The HDF5 file to store data [default: tests.hdf5]."""
+    -h, --help                      Display this usage statement.
+    --output=<output>               The HDF5 file to store data [default: tests.hdf5].
+    --initial_gain=<initial_gain>   The initial gain on the photodiode.
+    --gain_step=<gain_step>         The increment to reduce the gain by upon each saturation.
+"""
 
 from docopt import docopt
 import nplab
@@ -41,6 +45,12 @@ if __name__ == '__main__':
         configs = [DEFAULT_PATH]
     else:
         configs = sys_args['<configs>']
+
+    adaptive_kwargs = {}
+    for custom in ['--initial_gain', '--gain_step', '--max_step',
+                   '--init_number', '--init_delay', '--min_step']:
+        if sys_args[custom]:
+            adaptive_kwargs[custom] = sys_args[custom]
 
     for config in configs:
         if not sys_args['move']:
@@ -69,7 +79,8 @@ if __name__ == '__main__':
                 hilly = exp.HillWalk(scope, config)
                 hilly.run()
             elif sys_args['hill_walk2']:
-                hill_walk = exp.AdaptiveHillWalk(scope, config)
+                hill_walk = exp.AdaptiveHillWalk(scope, config,
+                                                 **adaptive_kwargs)
                 hill_walk.run()
             elif sys_args['drift_recentre']:
                 drift = exp.DriftReCentre(scope, config)

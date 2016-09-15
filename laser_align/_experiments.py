@@ -7,6 +7,7 @@ import sys
 import time as t
 import warnings as w
 import numpy as np
+
 from nplab.experiment import Experiment
 
 import baking as b

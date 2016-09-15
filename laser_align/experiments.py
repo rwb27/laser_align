@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-"""experiments.py
-Contains functions to perform a set of measurements and output the results to a
-datafile or graph. These functions are built on top of _experiments.py and
+"""Contains functions to perform a set of measurements and output the results
+to a datafile or graph. These functions are built on top of _experiments.py and
 data_io.py."""
 
 import time as t
@@ -463,8 +462,8 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                 while True:
                     try:
                         results = []
-                        start_pos = self.scope.stage.position
-                        positions = self.next_positions(axis)
+                        current_pos = self.scope.stage.position
+                        positions = self.next_positions(axis, current_pos)
                         gen = b.yield_pos(positions)
 
                         func_list = b.baker(b.saturation_reached,
@@ -486,7 +485,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                         results = np.array(results)
                         _exp.save_results(self, results, self.number,
                                           self.delay, why_ended='Saturation')
-                        self.scope.stage.move_to_pos(start_pos)
+                        self.scope.stage.move_to_pos(current_pos)
                         continue
 
                     except KeyboardInterrupt:
@@ -496,10 +495,6 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                                 self, results, self.number, self.delay,
                                 why_ended=str(KeyboardInterrupt))
 
-                        # Move to original position and exit program.
-                        print "Aborted, moving back to initial position. " \
-                              "Exiting program."
-                        #self.scope.stage.move_to_pos(initial_pos)
                         sys.exit()
 
                     except StopIteration:
@@ -509,12 +504,13 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                             self, results, self.number, self.delay,
                             why_ended=str(StopIteration))
 
-                        if self.fit_to_parabola(results, axis_index):
+                        if self.process_com(results, axis_index):
                             print "breaking"
                             break
 
                     self.scope.sensor.ignore_saturation = False
                 self.step_size[axis_index - 1] /= 2
+                print "step size is now ", self.step_size
 
     @staticmethod
     def thresh_com(x, y):
@@ -533,6 +529,13 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         return numerator / normalisation, thresh
 
     def process_com(self, results, axis_index):
+        """Find the thresholded centre of mass, move to it and decide
+        whether to move onto the next axis or not.
+        :param results: The measured array of results.
+        :param axis_index: The index of the position axis that varies.
+        :return: The Boolean variable within_range to decide whether to move
+        onto the next axis or not."""
+
         # Get the last set of measurements taken.
         sliced = self._slice_results(results, self.num_per_parabola,
                                      axis_index)
@@ -545,6 +548,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         # Move to max position.
         new_pos = results[0, 1:4]
         new_pos[axis_index - 1] = com
+        print "Moving to new position ", new_pos
         self.scope.stage.move_to_pos(new_pos)
 
         # If the first and last elements of the brightness are thresholded
@@ -554,8 +558,10 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         # changing the step size.
         if brightness_thresh[0] == 0 and brightness_thresh[-1] == 0:
             within_range = True
+            print "Breaking out of this axis's loop. "
         else:
             within_range = False
+            print "Repeat measurements for this axis."
 
         return within_range
 
@@ -601,13 +607,11 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         self.scope.stage.move_to_pos(new_pos)
         return within_range
 
-    def next_positions(self, axis, current_pos=None):
+    def next_positions(self, axis, current_pos):
         """Generate scan points along a particular direction.
         :param axis: The vector to indicate the axis that is changing.
-        :param current_pos: A vector of the current position. If None,
-        it will be read from the scope object being used."""
-        if current_pos is None:
-            current_pos = self.scope.stage.position
+        :param current_pos: A vector of the current position."""
+
         step_size = self.step_size[list(axis).index(1)]
         N = self.num_per_parabola
         move_positions = step_size * (np.arange(N) - (N - 1)/2.)

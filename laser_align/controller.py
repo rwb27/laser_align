@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-"""controller.py
-Script containing class to control and take measurements using the microscope
-via the keyboard."""
+"""Script containing class to control and take measurements using the
+microscope via the keyboard."""
 
 import cv2
 

@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-"""microscope.py
-This script contains all the classes required to make the microscope work. This
-includes the abstract LightSensor and Stage classes and their combination
+"""This script contains all the classes required to make the microscope work.
+This includes the abstract LightSensor and Stage classes and their combination
 into a single SensorScope class that allows both to be controlled together. It
 is based on the script by James Sharkey."""
 
 import re
 import time
+import numpy as np
+
 import smbus
 import serial
-import numpy as np
 from nplab.instrument import Instrument
 
 import data_io as d
@@ -18,8 +18,8 @@ import data_io as d
 
 class SensorScope(Instrument):
     """Class to combine camera and stage into a single usable class. The
-    microscope may be slow to be created; it must wait for the camera,and stage
-    to be ready for use."""
+    microscope may be slow to be created; it must wait for the camera,
+    and stage to be ready for use."""
     
     def __init__(self, config, **kwargs):
         """Use this class instead of using the Camera and Stage classes!

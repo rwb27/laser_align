@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""data_io.py
-Contains functions for datafile processing and IO."""
+"""Contains functions for datafile processing and IO."""
 
 import numpy as np
 import yaml
