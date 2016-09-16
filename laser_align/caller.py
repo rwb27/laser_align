@@ -3,7 +3,7 @@
 """Main front-end of script, to call experiments, run GUI, read config files.
 
 Usage:
-    caller.py align [<configs>...] [--output=<output>] [
+    caller.py align [<configs>...] [--output=<output>]
     caller.py autofocus [<configs>...] [--output=<output>]
     caller.py raster [<configs>...] [--output=<output>]
     caller.py raster_3d [<configs>...] [--output=<output>]

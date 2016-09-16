@@ -444,7 +444,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         self.reset()
 
     def reset(self):
-        self.step_size = np.ones(3) * self.config_dict['max_step']
+        self.step_size = self.config_dict['max_step']
         self.number = self.config_dict['init_number']
         self.delay = self.config_dict['init_delay']
         self.num_per_parabola = self.config_dict['num_per_parabola']
@@ -454,63 +454,125 @@ class AdaptiveHillWalk(_exp.ScopeExp):
 
         initial_pos = self.scope.stage.position
         self.scope.sensor.ignore_saturation = False
+        xy_results = []
+        maxima_values = []
+        z_step = self.step_size[2]
+        z_direction = 1
 
-        while np.any(self.step_size > self.config_dict['min_step']):
-            for axis in [[1, 0, 0], [0, 1, 0], [0, 0, 1]]:
-                axis_index = axis.index(1) + 1
-                print 'axis', axis_index
-                while True:
-                    try:
-                        results = []
-                        current_pos = self.scope.stage.position
-                        positions = self.next_positions(axis, current_pos)
-                        gen = b.yield_pos(positions)
+        for i in range(3):
+            while np.any(self.step_size[:2] > self.config_dict['min_step']):
+                # Change the algorithm to align well in x and y, then adjust z
+                # slightly and see the difference
+                for axis in [[1, 0, 0], [0, 1, 0]]:
+                    axis_index = axis.index(1) + 1
+                    print 'axis', axis_index
+                    while True:
+                        try:
+                            results = []
+                            current_pos = self.scope.stage.position
+                            positions = self.next_positions(axis, current_pos)
+                            gen = b.yield_pos(positions)
 
-                        func_list = b.baker(b.saturation_reached,
-                                            args=['mmt-placeholder',
-                                                  self.scope.sensor])
+                            func_list = b.baker(b.saturation_reached,
+                                                args=['mmt-placeholder',
+                                                      self.scope.sensor])
 
-                        while True:
-                            results = _exp.read_move_save(
-                                self, gen, func_list, save_mode, self.number,
-                                self.delay, results)
+                            while True:
+                                results = _exp.read_move_save(
+                                    self, gen, func_list, save_mode, self.number,
+                                    self.delay, results)
 
-                    except b.Saturation:
-                        # If the measurement saturates, then take that set of
-                        # measurements again, with the new values of parameters
-                        # that change (step_size, number, delay). Don't ignore
-                        # saturation exceptions here, as this is fine
-                        # alignment!
+                        except b.Saturation:
+                            # If the measurement saturates, then take that set of
+                            # measurements again, with the new values of parameters
+                            # that change (step_size, number, delay). Don't ignore
+                            # saturation exceptions here, as this is fine
+                            # alignment!
 
-                        results = np.array(results)
-                        _exp.save_results(self, results, self.number,
-                                          self.delay, why_ended='Saturation')
-                        self.scope.stage.move_to_pos(current_pos)
-                        continue
+                            results = np.array(results)
+                            _exp.save_results(self, results, self.number,
+                                              self.delay, why_ended='Saturation')
+                            self.scope.stage.move_to_pos(current_pos)
+                            continue
 
-                    except KeyboardInterrupt:
-                        if save_mode == 'save_subset' or save_mode == \
-                                'save_final':
+                        except KeyboardInterrupt:
+                            if save_mode == 'save_subset' or save_mode == \
+                                    'save_final':
+                                _exp.save_results(
+                                    self, results, self.number, self.delay,
+                                    why_ended=str(KeyboardInterrupt))
+
+                            sys.exit()
+
+                        except StopIteration:
+                            # Iterations finished - save the subset of results.
+                            results = np.array(results)
+                            # Note only unsaturated results are saved in
+                            # xy_results, and that later, only results with the
+                            # lowest gain are used in calculation.
+                            xy_results.append(results)
                             _exp.save_results(
                                 self, results, self.number, self.delay,
-                                why_ended=str(KeyboardInterrupt))
+                                why_ended=str(StopIteration))
 
-                        sys.exit()
+                            if self.process_com(results, axis_index):
+                                print "breaking"
+                                break
 
-                    except StopIteration:
-                        # Iterations finished - save the subset of results.
-                        results = np.array(results)
-                        _exp.save_results(
-                            self, results, self.number, self.delay,
-                            why_ended=str(StopIteration))
+                        self.scope.sensor.ignore_saturation = False
+                    self.step_size[axis_index - 1] /= 2
+                    print "step size is now ", self.step_size
 
-                        if self.process_com(results, axis_index):
-                            print "breaking"
-                            break
+            # After aligning in x and y, note down the position, max brightness
+            # and width of the peak. Note we get width from the set of previous
+            # xy_results, by looking at where brightness exceeds the half
+            # maximum.
+            peak_position = self.scope.stage.position
+            brightness = self.scope.sensor.average_n(self.number, t=self.delay)
+            xy_results = np.array(xy_results)
 
-                    self.scope.sensor.ignore_saturation = False
-                self.step_size[axis_index - 1] /= 2
-                print "step size is now ", self.step_size
+            # We need to take results with the same value of gain, so separate
+            # such that only the lowest values of gain (strongest signals) are
+            # kept.
+            lowest_gain = xy_results[np.where(xy_results[:, :, 8] == np.min(
+                xy_results[:, :, 8]))]
+            above_half_max = lowest_gain[np.where(lowest_gain[:, :, 4] >= 0.5 *
+                                                  brightness[0])]
+
+            # Get a rough measure of the width of the xy region by just finding
+            # the average of the range in each of x and y.
+            width = np.mean((self.arr_range(above_half_max[:, :, 1]),
+                             self.arr_range(above_half_max[:, :, 2])))
+
+            # Append this to maxima values to store details of the brightness.
+            maxima_values.append([peak_position[0], peak_position[1],
+                                  peak_position[2], brightness[0], brightness[1],
+                                  width])
+
+            try:
+                # Ensure last reading is outside the range of the previous
+                # readings and its error.
+                if not (maxima_values[-2][3] - maxima_values[-2][4] <=
+                            maxima_values[-1][3] <= maxima_values[-2][3] +
+                            maxima_values[-2][4]):
+
+                    if maxima_values[-2][3] >= maxima_values[-1][3] and \
+                            maxima_values[-2][5] <= maxima_values[-1][5]:
+                        # If the readings are getting dimmer and wider, change
+                        # z direction.
+                        z_direction *= -1
+            except IndexError:
+                # Not enough readings to compare this.
+                pass
+
+            # Move in z by a step size that decreases slowly. Reset x and y
+            # step sizes after each z motion. TODO Allow z step size to reduce.
+            self.scope.stage.focus_rel(z_step * z_direction)
+            self.reset()
+
+    @staticmethod
+    def arr_range(arr):
+        return np.max(arr) - np.min(arr)
 
     @staticmethod
     def thresh_com(x, y):

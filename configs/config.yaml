@@ -56,7 +56,7 @@ save:                 g
 # ---------------------------------------------------- RasterXY images ---------------------------------------------------
 # The number of steps per axis to take i.e. generates an n+1 x n+1 images in total, and number of microsteps between
 # each measurement.
-raster_n_step:    [[64, 1000],
+raster_n_step:    [[30, 500],
                    [9, 100]]
 
 save_mode:        save_subset
@@ -86,14 +86,14 @@ mmt_range:        [[10, 50]]
 # How long in seconds to sleep for between initial alignment and drift measurement, as a list of times to measure in s.
 sleep_times:      [10, 100, 1000, 10000, 100000]
 
-raster3d_n_step:    [[0, 1000]]
+raster3d_n_step:    [[30, 50]]
 
 # Timed measurements at same spot.
 N: 100
 t: 1
 
 # Hill walk2 - these are currently not being used
-max_step: 100
+max_step: [100, 100, 100]
 init_number: 100
 init_delay: 0.0
 min_step: 10
