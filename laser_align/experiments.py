@@ -461,9 +461,11 @@ class AdaptiveHillWalk(_exp.ScopeExp):
 
         for i in range(3):
             while np.any(self.step_size[:2] > self.config_dict['min_step']):
-                # Change the algorithm to align well in x and y, then adjust z
+                # Changed the algorithm to align well in x and y, then adjust z
                 # slightly and see the difference
                 for axis in [[1, 0, 0], [0, 1, 0]]:
+                    count = 0   # Track how many times that axis has been
+                    # measured this time.
                     axis_index = axis.index(1) + 1
                     print 'axis', axis_index
                     while True:
@@ -476,7 +478,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                             func_list = b.baker(b.saturation_reached,
                                                 args=['mmt-placeholder',
                                                       self.scope.sensor])
-
+                            count += 1
                             while True:
                                 results = _exp.read_move_save(
                                     self, gen, func_list, save_mode, self.number,
@@ -515,7 +517,8 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                                 self, results, self.number, self.delay,
                                 why_ended=str(StopIteration))
 
-                            if self.process_com(results, axis_index):
+                            if self.process_com(results, axis_index) or \
+                                    count >= 5:
                                 print "breaking"
                                 break
 
@@ -546,15 +549,16 @@ class AdaptiveHillWalk(_exp.ScopeExp):
 
             # Append this to maxima values to store details of the brightness.
             maxima_values.append([peak_position[0], peak_position[1],
-                                  peak_position[2], brightness[0], brightness[1],
-                                  width])
+                                  peak_position[2], brightness[0],
+                                  brightness[1], width])
+            print "maxima values", maxima_values
 
             try:
                 # Ensure last reading is outside the range of the previous
                 # readings and its error.
                 if not (maxima_values[-2][3] - maxima_values[-2][4] <=
-                            maxima_values[-1][3] <= maxima_values[-2][3] +
-                            maxima_values[-2][4]):
+                        maxima_values[-1][3] <= maxima_values[-2][3] +
+                        maxima_values[-2][4]):
 
                     if maxima_values[-2][3] >= maxima_values[-1][3] and \
                             maxima_values[-2][5] <= maxima_values[-1][5]:
@@ -568,7 +572,12 @@ class AdaptiveHillWalk(_exp.ScopeExp):
             # Move in z by a step size that decreases slowly. Reset x and y
             # step sizes after each z motion. TODO Allow z step size to reduce.
             self.scope.stage.focus_rel(z_step * z_direction)
+            print "moved to pos", self.scope.stage.position
             self.reset()
+
+        _exp.save_results(self, np.array(maxima_values), self.number,
+                          self.delay, name='maxima_values',
+                          why_ended='complete')
 
     @staticmethod
     def arr_range(arr):
