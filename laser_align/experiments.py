@@ -458,7 +458,8 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         maxima_values = []
         z_step = self.step_size[2]
         z_direction = 1
-
+        print self.config_dict['min_step']
+        print self.step_size[:2]
         for i in range(3):
             while np.any(self.step_size[:2] > self.config_dict['min_step']):
                 # Changed the algorithm to align well in x and y, then adjust z
