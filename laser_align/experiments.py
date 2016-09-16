@@ -457,11 +457,11 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         xy_results = []
         maxima_values = []
         z_step = self.step_size[2]
+        xy_step = self.step_size[:2]
         z_direction = 1
-        print self.config_dict['min_step']
-        print self.step_size[:2]
+
         for i in range(3):
-            while np.any(self.step_size[:2] > self.config_dict['min_step']):
+            while not np.any(xy_step < self.config_dict['min_step']):
                 # Changed the algorithm to align well in x and y, then adjust z
                 # slightly and see the difference
                 for axis in [[1, 0, 0], [0, 1, 0]]:
@@ -520,12 +520,11 @@ class AdaptiveHillWalk(_exp.ScopeExp):
 
                             if self.process_com(results, axis_index) or \
                                     count >= 5:
-                                print "breaking"
                                 break
 
                         self.scope.sensor.ignore_saturation = False
-                    self.step_size[axis_index - 1] /= 2
-                    print "step size is now ", self.step_size
+                    xy_step[axis_index - 1] /= 2
+                    print "step size is now ", xy_step
 
             # After aligning in x and y, note down the position, max brightness
             # and width of the peak. Note we get width from the set of previous
