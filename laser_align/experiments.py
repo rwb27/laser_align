@@ -78,7 +78,9 @@ class RasterXYZ(_exp.ScopeExp):
         # Take measurements and move to position of maximum brightness.
         _exp.move_capture(self, {'x': self.config_dict['raster3d_n_step'],
                                  'y': self.config_dict['raster3d_n_step'],
-                                 'z': self.config_dict['raster3d_n_step']},
+                                 'z': [[self.config_dict['raster3d_n_step'][0][
+                                            0], self.config_dict[
+                                     'raster3d_n_step'][0][1]*15]]},
                           func_list=func_list, save_mode=save_mode,
                           end_func=end)
         print self.scope.stage.position
@@ -458,6 +460,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         maxima_values = []
         z_step = self.step_size[2]
         xy_step = self.step_size[:2]
+        print xy_step
         z_direction = 1
 
         for i in range(3):
@@ -525,6 +528,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                         self.scope.sensor.ignore_saturation = False
                     xy_step[axis_index - 1] /= 2
                     print "step size is now ", xy_step
+                    print self.config_dict['min_step']
 
             # After aligning in x and y, note down the position, max brightness
             # and width of the peak. Note we get width from the set of previous
@@ -585,8 +589,8 @@ class AdaptiveHillWalk(_exp.ScopeExp):
 
     @staticmethod
     def thresh_com(x, y):
-        """Threshold the results at the half-range level and find their
-        centre of mass.
+        """Threshold the results at the half-range level and find the
+        centre of mass of the peak of maximum intensity-width.
         :param x: The array of the last set of positions, sorted in
         ascending order.
         :param y: The brightness measurements corresponding to x.
