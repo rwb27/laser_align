@@ -1,0 +1,345 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module laser_align._experiments</title>
+<meta charset="utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="laser_align.html"><font color="#ffffff">laser_align</font></a>._experiments</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:///C:/users/abhishek/onedrive/documents/4th%20year/vacation%20report/code/laser_align/laser_align/_experiments.py">c:\users\abhishek\onedrive\documents\4th year\vacation report\code\laser_align\laser_align\_experiments.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;base-level&nbsp;functions&nbsp;that&nbsp;are&nbsp;required&nbsp;for&nbsp;the&nbsp;experiments&nbsp;to<br>
+run.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="laser_align.baking.html">laser_align.baking</a><br>
+<a href="laser_align.data_io.html">laser_align.data_io</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="warnings.html">warnings</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>(<a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="laser_align._experiments.html#ScopeExp">ScopeExp</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ScopeExp">class <strong>ScopeExp</strong></a>(<a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Parent&nbsp;class&nbsp;of&nbsp;any&nbsp;experiments&nbsp;done&nbsp;using&nbsp;the&nbsp;SensorScope&nbsp;object.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align._experiments.html#ScopeExp">ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="ScopeExp-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="ScopeExp-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group, included_data, **kwargs)</dt><dd><tt>Defines&nbsp;a&nbsp;bunch&nbsp;of&nbsp;object&nbsp;attributes&nbsp;common&nbsp;to&nbsp;all&nbsp;scope<br>
+experiments.<br>
+:param&nbsp;microscope:&nbsp;The&nbsp;microscope&nbsp;object.<br>
+:param&nbsp;config_file:&nbsp;Either&nbsp;a&nbsp;dictionary&nbsp;of&nbsp;configuration&nbsp;parameters<br>
+or&nbsp;a&nbsp;string&nbsp;with&nbsp;the&nbsp;path&nbsp;to&nbsp;the&nbsp;YAML&nbsp;files&nbsp;that&nbsp;contains&nbsp;them.<br>
+:param&nbsp;group:&nbsp;The&nbsp;HDF5&nbsp;data&nbsp;group&nbsp;object&nbsp;where&nbsp;all&nbsp;datafiles&nbsp;created<br>
+using&nbsp;this&nbsp;experiment&nbsp;are&nbsp;saved.&nbsp;If&nbsp;None,&nbsp;defaults&nbsp;to&nbsp;the&nbsp;group&nbsp;with<br>
+same&nbsp;name&nbsp;as&nbsp;the&nbsp;experiment&nbsp;being&nbsp;run.&nbsp;The&nbsp;customisability&nbsp;is&nbsp;useful<br>
+because&nbsp;some&nbsp;experiments&nbsp;may&nbsp;consist&nbsp;of&nbsp;several&nbsp;others,&nbsp;but&nbsp;you&nbsp;want<br>
+all&nbsp;data&nbsp;to&nbsp;be&nbsp;saved&nbsp;to&nbsp;the&nbsp;same&nbsp;group.<br>
+:param&nbsp;included_data:&nbsp;The&nbsp;keys&nbsp;of&nbsp;the&nbsp;config&nbsp;parameters&nbsp;to&nbsp;be<br>
+included,&nbsp;so&nbsp;that&nbsp;only&nbsp;these&nbsp;are&nbsp;written&nbsp;as&nbsp;attributes&nbsp;to&nbsp;the&nbsp;HDF5<br>
+file&nbsp;upon&nbsp;recording.<br>
+:param&nbsp;kwargs:&nbsp;Named&nbsp;arguments&nbsp;can&nbsp;be&nbsp;changed&nbsp;from&nbsp;their&nbsp;default&nbsp;values<br>
+in&nbsp;the&nbsp;config&nbsp;file&nbsp;using&nbsp;this&nbsp;argument.&nbsp;Valid&nbsp;kwargs&nbsp;are&nbsp;the&nbsp;same&nbsp;as<br>
+the&nbsp;strings&nbsp;in&nbsp;the&nbsp;default&nbsp;'included_data'&nbsp;tuple.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="ScopeExp-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-run"><strong>run</strong></a>(self, *args, **kwargs)</dt><dd><tt>This&nbsp;method&nbsp;should&nbsp;be&nbsp;the&nbsp;meat&nbsp;of&nbsp;the&nbsp;experiment&nbsp;(needs&nbsp;overriden).<br>
+&nbsp;<br>
+This&nbsp;is&nbsp;where&nbsp;your&nbsp;experiment&nbsp;code&nbsp;goes.&nbsp;&nbsp;Note&nbsp;that&nbsp;you&nbsp;should&nbsp;use<br>
+`self.<a href="#ScopeExp-wait_or_stop">wait_or_stop</a>()`&nbsp;to&nbsp;pause&nbsp;your&nbsp;experiment&nbsp;between&nbsp;readings,&nbsp;to<br>
+allow&nbsp;the&nbsp;background&nbsp;thread&nbsp;to&nbsp;be&nbsp;stopped&nbsp;if&nbsp;necessary.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;set&nbsp;`self.<strong>latest_data</strong>`,&nbsp;this&nbsp;may&nbsp;be&nbsp;used&nbsp;to&nbsp;display&nbsp;your<br>
+results&nbsp;in&nbsp;real&nbsp;time.&nbsp;&nbsp;You&nbsp;can&nbsp;also&nbsp;use&nbsp;`self.<a href="#ScopeExp-log">log</a>()`&nbsp;to&nbsp;output&nbsp;text<br>
+describing&nbsp;the&nbsp;experiment's&nbsp;progress;&nbsp;this&nbsp;may&nbsp;be&nbsp;picked&nbsp;up&nbsp;and&nbsp;<br>
+displayed&nbsp;graphically&nbsp;or&nbsp;in&nbsp;the&nbsp;console.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="ScopeExp-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#ScopeExp-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="ScopeExp-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="ScopeExp-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="ScopeExp-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="ScopeExp-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-apply_functions"><strong>apply_functions</strong></a>(mmt, func_list)</dt><dd><tt>Applies&nbsp;each&nbsp;function&nbsp;from&nbsp;func_list&nbsp;to&nbsp;the&nbsp;mmt.</tt></dd></dl>
+ <dl><dt><a name="-elapsed"><strong>elapsed</strong></a>(starting)</dt><dd><tt>Calculates&nbsp;time&nbsp;elapsed&nbsp;from&nbsp;some&nbsp;start&nbsp;time.</tt></dd></dl>
+ <dl><dt><a name="-move_capture"><strong>move_capture</strong></a>(exp_obj, positions_dict, func_list<font color="#909090">=&lt;function wrapped&gt;</font>, order_gen<font color="#909090">=&lt;function wrapped&gt;</font>, save_mode<font color="#909090">='save_subset'</font>, end_func<font color="#909090">=&lt;function wrapped&gt;</font>, valid_keys<font color="#909090">=('x', 'y', 'z')</font>, num_per_avg<font color="#909090">=100</font>, delay<font color="#909090">=0</font>)</dt><dd><tt>Function&nbsp;to&nbsp;carry&nbsp;out&nbsp;a&nbsp;sequence&nbsp;of&nbsp;measurements&nbsp;as&nbsp;per&nbsp;iter_list,<br>
+take&nbsp;a&nbsp;measurement&nbsp;at&nbsp;each&nbsp;position,&nbsp;post-process&nbsp;it&nbsp;and&nbsp;return&nbsp;a&nbsp;final<br>
+result.<br>
+&nbsp;<br>
+:param&nbsp;exp_obj:&nbsp;The&nbsp;experiment&nbsp;object.<br>
+&nbsp;<br>
+:param&nbsp;positions_dict:&nbsp;A&nbsp;dictionary&nbsp;of&nbsp;lists&nbsp;of&nbsp;2-tuples&nbsp;to&nbsp;indicate&nbsp;all<br>
+positions&nbsp;where&nbsp;images&nbsp;should&nbsp;be&nbsp;taken:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{'x':&nbsp;[(n_x1,&nbsp;step_x1),&nbsp;...],&nbsp;'y':&nbsp;[(n_y1,&nbsp;step_y1),&nbsp;...],&nbsp;'z':&nbsp;...],<br>
+where&nbsp;each&nbsp;key&nbsp;indicates&nbsp;the&nbsp;axis&nbsp;to&nbsp;move,&nbsp;'n'&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;times<br>
+to&nbsp;step&nbsp;(resulting&nbsp;in&nbsp;n+1&nbsp;images)&nbsp;and&nbsp;'step'&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;microsteps<br>
+between&nbsp;each&nbsp;subsequent&nbsp;image.&nbsp;So&nbsp;{'x':&nbsp;[(3,&nbsp;100)]}&nbsp;would&nbsp;move&nbsp;only&nbsp;the<br>
+x-axis&nbsp;of&nbsp;the&nbsp;microscope,&nbsp;taking&nbsp;4&nbsp;images&nbsp;at&nbsp;x=-150,&nbsp;x=-50,&nbsp;x=50,<br>
+x=150&nbsp;microsteps&nbsp;relative&nbsp;to&nbsp;the&nbsp;initial&nbsp;position.&nbsp;Note&nbsp;that:<br>
+-&nbsp;Not&nbsp;all&nbsp;keys&nbsp;need&nbsp;to&nbsp;be&nbsp;specified.<br>
+-&nbsp;All&nbsp;lists&nbsp;must&nbsp;be&nbsp;the&nbsp;same&nbsp;length.<br>
+-&nbsp;All&nbsp;measurements&nbsp;will&nbsp;be&nbsp;taken&nbsp;symmetrically&nbsp;about&nbsp;the&nbsp;initial&nbsp;position.<br>
+&nbsp;<br>
+The&nbsp;position&nbsp;of&nbsp;each&nbsp;tuple&nbsp;in&nbsp;the&nbsp;list&nbsp;is&nbsp;important.&nbsp;If&nbsp;we&nbsp;have<br>
+{'x':&nbsp;[(1,&nbsp;100),&nbsp;(0,&nbsp;100)],<br>
+&nbsp;'y':&nbsp;[(2,&nbsp;&nbsp;50),&nbsp;(3,&nbsp;&nbsp;40)]},<br>
+then&nbsp;tuples&nbsp;of&nbsp;the&nbsp;same&nbsp;index&nbsp;from&nbsp;each&nbsp;list&nbsp;will&nbsp;be&nbsp;combined&nbsp;into&nbsp;an<br>
+array.&nbsp;This&nbsp;means&nbsp;that&nbsp;for&nbsp;the&nbsp;0th&nbsp;index&nbsp;of&nbsp;the&nbsp;list,&nbsp;for&nbsp;x&nbsp;we&nbsp;have&nbsp;the<br>
+positions&nbsp;[-50,&nbsp;50]&nbsp;and&nbsp;[0]&nbsp;and&nbsp;for&nbsp;y&nbsp;[-50,&nbsp;0,&nbsp;50]&nbsp;and&nbsp;[-60,&nbsp;-20,&nbsp;20,&nbsp;60]<br>
+respectively.&nbsp;[-50,&nbsp;50]&nbsp;and&nbsp;[-50,&nbsp;0,&nbsp;50]&nbsp;will&nbsp;be&nbsp;combined&nbsp;to&nbsp;get&nbsp;the<br>
+resulting&nbsp;array&nbsp;of&nbsp;[[-50,&nbsp;-50],&nbsp;[-50,&nbsp;0],&nbsp;[-50,&nbsp;50],&nbsp;[50,&nbsp;-50],&nbsp;[50,&nbsp;0],<br>
+[50,&nbsp;50]],&nbsp;and&nbsp;the&nbsp;latter&nbsp;two&nbsp;to&nbsp;get&nbsp;[[0,&nbsp;-60],&nbsp;[0,&nbsp;-20],&nbsp;[0,&nbsp;20],<br>
+[0,&nbsp;60]].&nbsp;These&nbsp;are&nbsp;all&nbsp;the&nbsp;positions&nbsp;the&nbsp;stage&nbsp;will&nbsp;move&nbsp;to&nbsp;(the&nbsp;format<br>
+here&nbsp;is&nbsp;[x,&nbsp;y]),&nbsp;iterating&nbsp;through&nbsp;each&nbsp;array&nbsp;in&nbsp;the&nbsp;order&nbsp;given&nbsp;before<br>
+applying&nbsp;end_func&nbsp;ONCE&nbsp;RIGHT&nbsp;AT&nbsp;THE&nbsp;END.&nbsp;To&nbsp;run&nbsp;after&nbsp;each&nbsp;array,<br>
+run&nbsp;this&nbsp;function&nbsp;multiple&nbsp;times.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;prefer&nbsp;to&nbsp;take&nbsp;images&nbsp;once&nbsp;for&nbsp;all&nbsp;the&nbsp;'x'&nbsp;and,&nbsp;separately,&nbsp;once<br>
+for&nbsp;all&nbsp;the&nbsp;'y',&nbsp;run&nbsp;this&nbsp;function&nbsp;twice,&nbsp;once&nbsp;for&nbsp;'x',&nbsp;once&nbsp;for&nbsp;'y'.<br>
+&nbsp;<br>
+:param&nbsp;func_list:&nbsp;The&nbsp;post-processing&nbsp;curried&nbsp;function&nbsp;list,&nbsp;created&nbsp;using<br>
+the&nbsp;baker&nbsp;function&nbsp;in&nbsp;the&nbsp;_experiments.py&nbsp;module.<br>
+&nbsp;<br>
+:param&nbsp;order_gen:&nbsp;A&nbsp;generator&nbsp;object&nbsp;that&nbsp;determines&nbsp;the&nbsp;order&nbsp;to&nbsp;visit<br>
+each&nbsp;position.&nbsp;Takes&nbsp;arguments&nbsp;(x_positions_array,&nbsp;y_positions_arry,<br>
+z_positions_array,&nbsp;intial_position_vector).<br>
+&nbsp;<br>
+:param&nbsp;save_mode:&nbsp;How&nbsp;to&nbsp;save&nbsp;at&nbsp;the&nbsp;end&nbsp;of&nbsp;each&nbsp;iteration.<br>
+-&nbsp;'save_each':&nbsp;Every&nbsp;single&nbsp;measurement&nbsp;is&nbsp;saved:&nbsp;{'x':&nbsp;[(3,&nbsp;100)]}<br>
+&nbsp;&nbsp;would&nbsp;result&nbsp;in&nbsp;4&nbsp;post-processed&nbsp;results&nbsp;being&nbsp;saved,&nbsp;which&nbsp;is&nbsp;useful&nbsp;if<br>
+&nbsp;&nbsp;the&nbsp;post-processed&nbsp;results&nbsp;are&nbsp;image&nbsp;arrays.<br>
+-&nbsp;'save_final':&nbsp;Every&nbsp;single&nbsp;measurement&nbsp;is&nbsp;made&nbsp;before&nbsp;the&nbsp;entire&nbsp;set&nbsp;of<br>
+&nbsp;&nbsp;results,&nbsp;as&nbsp;an&nbsp;array,&nbsp;is&nbsp;saved&nbsp;along&nbsp;with&nbsp;their&nbsp;positions,&nbsp;in&nbsp;the<br>
+&nbsp;&nbsp;format&nbsp;[[x-column],&nbsp;[y-column],&nbsp;[z-column],&nbsp;[measurements-column]].&nbsp;This<br>
+&nbsp;&nbsp;is&nbsp;good&nbsp;for&nbsp;the&nbsp;post-processed&nbsp;results&nbsp;that&nbsp;are&nbsp;single&nbsp;numerical&nbsp;value.<br>
+-&nbsp;'save_subset':&nbsp;Each&nbsp;array&nbsp;is&nbsp;measured&nbsp;before&nbsp;being&nbsp;saved&nbsp;(for&nbsp;example,&nbsp;in<br>
+&nbsp;&nbsp;the&nbsp;description&nbsp;of&nbsp;iter_dict,&nbsp;there&nbsp;are&nbsp;two&nbsp;arrays&nbsp;being&nbsp;iterated<br>
+&nbsp;&nbsp;through).<br>
+-&nbsp;None:&nbsp;Data&nbsp;is&nbsp;not&nbsp;saved&nbsp;at&nbsp;all,&nbsp;but&nbsp;is&nbsp;returned.&nbsp;Might&nbsp;be&nbsp;useful&nbsp;if<br>
+&nbsp;&nbsp;this&nbsp;is&nbsp;intermediate&nbsp;step.<br>
+&nbsp;<br>
+:param&nbsp;end_func:&nbsp;A&nbsp;curried&nbsp;function,&nbsp;which&nbsp;is&nbsp;executed&nbsp;on&nbsp;the&nbsp;array&nbsp;of<br>
+final&nbsp;results.&nbsp;This&nbsp;can&nbsp;be&nbsp;useful&nbsp;to&nbsp;move&nbsp;to&nbsp;a&nbsp;position&nbsp;where&nbsp;the&nbsp;final<br>
+measurement&nbsp;is&nbsp;maximised.&nbsp;Note:&nbsp;if&nbsp;save_mode&nbsp;is&nbsp;'save_each',&nbsp;the&nbsp;results<br>
+array&nbsp;will&nbsp;be&nbsp;empty&nbsp;so&nbsp;end_func&nbsp;must&nbsp;be&nbsp;None.<br>
+&nbsp;<br>
+:param&nbsp;valid_keys:&nbsp;A&nbsp;tuple&nbsp;of&nbsp;strings&nbsp;containing&nbsp;all&nbsp;keys&nbsp;that&nbsp;are&nbsp;valid<br>
+ways&nbsp;to&nbsp;move.&nbsp;if&nbsp;rotational&nbsp;degrees&nbsp;of&nbsp;freedom&nbsp;are&nbsp;introduced,&nbsp;this&nbsp;can<br>
+include&nbsp;theta,&nbsp;etc.<br>
+&nbsp;<br>
+:param&nbsp;num_per_avg:&nbsp;The&nbsp;number&nbsp;of&nbsp;measurements&nbsp;to&nbsp;average&nbsp;over&nbsp;at&nbsp;each<br>
+position.<br>
+&nbsp;<br>
+:param&nbsp;delay:&nbsp;The&nbsp;time&nbsp;delay&nbsp;between&nbsp;each&nbsp;individual&nbsp;measurement&nbsp;taken<br>
+at&nbsp;a&nbsp;specific&nbsp;position.</tt></dd></dl>
+ <dl><dt><a name="-read_move_save"><strong>read_move_save</strong></a>(exp_obj, gen_obj, func_list, save_mode, number, delay, results)</dt><dd><tt>Function&nbsp;to&nbsp;repeatedly&nbsp;move&nbsp;to&nbsp;specific&nbsp;positions,&nbsp;take&nbsp;an&nbsp;average<br>
+measurement,&nbsp;save&nbsp;it&nbsp;as&nbsp;appropriate,&nbsp;and&nbsp;move&nbsp;on.&nbsp;Part&nbsp;of&nbsp;move_capture.<br>
+:param&nbsp;exp_obj:&nbsp;The&nbsp;experiment&nbsp;object.<br>
+:param&nbsp;gen_obj:&nbsp;An&nbsp;instantiated&nbsp;generator&nbsp;function&nbsp;object.<br>
+:param&nbsp;func_list:&nbsp;A&nbsp;list&nbsp;of&nbsp;functions&nbsp;to&nbsp;act&nbsp;on&nbsp;each&nbsp;measurement&nbsp;taken.<br>
+:param&nbsp;save_mode:&nbsp;The&nbsp;string&nbsp;specifying&nbsp;how&nbsp;and&nbsp;when&nbsp;to&nbsp;save&nbsp;the&nbsp;data.<br>
+:param&nbsp;number:&nbsp;The&nbsp;number&nbsp;of&nbsp;measurements&nbsp;to&nbsp;take&nbsp;before&nbsp;averaging&nbsp;these<br>
+into&nbsp;a&nbsp;single&nbsp;result.<br>
+:param&nbsp;delay:&nbsp;The&nbsp;time&nbsp;delay&nbsp;between&nbsp;individual&nbsp;measurements&nbsp;that&nbsp;will<br>
+be&nbsp;averaged.<br>
+:param&nbsp;results:&nbsp;The&nbsp;results&nbsp;list.<br>
+:return:&nbsp;The&nbsp;modified&nbsp;results&nbsp;list.</tt></dd></dl>
+ <dl><dt><a name="-save_results"><strong>save_results</strong></a>(exp_obj, results, num_per_avg, delay, name<font color="#909090">='brightness'</font>, why_ended<font color="#909090">='no_error'</font>, attrs<font color="#909090">=None</font>)</dt><dd><tt>Saves&nbsp;the&nbsp;results&nbsp;with&nbsp;custom&nbsp;attributes.</tt></dd></dl>
+</td></tr></table>
+</body></html>

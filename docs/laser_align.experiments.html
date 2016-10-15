@@ -1,0 +1,1827 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module laser_align.experiments</title>
+<meta charset="utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="laser_align.html"><font color="#ffffff">laser_align</font></a>.experiments</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:///C:/users/abhishek/onedrive/documents/4th%20year/vacation%20report/code/laser_align/laser_align/experiments.py">c:\users\abhishek\onedrive\documents\4th year\vacation report\code\laser_align\laser_align\experiments.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;functions&nbsp;to&nbsp;perform&nbsp;a&nbsp;set&nbsp;of&nbsp;measurements&nbsp;and&nbsp;output&nbsp;the&nbsp;results<br>
+to&nbsp;a&nbsp;data&nbsp;file&nbsp;or&nbsp;graph.&nbsp;These&nbsp;functions&nbsp;are&nbsp;built&nbsp;on&nbsp;top&nbsp;of&nbsp;_experiments.py<br>
+and&nbsp;data_io.py.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="laser_align._experiments.html">laser_align._experiments</a><br>
+<a href="laser_align.baking.html">laser_align.baking</a><br>
+</td><td width="25%" valign=top><a href="scipy.integrate.html">scipy.integrate</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="scipy.stats.html">scipy.stats</a><br>
+<a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>(<a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="laser_align.experiments.html#Align">Align</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#AlongZ">AlongZ</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#DriftReCentre">DriftReCentre</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#HillWalk">HillWalk</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#KeepCentred">KeepCentred</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#RasterXY">RasterXY</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#RasterXYZ">RasterXYZ</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#ThresholdedComFit">ThresholdedComFit</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.experiments.html#TimedMeasurements">TimedMeasurements</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Align">class <strong>Align</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;to&nbsp;align&nbsp;the&nbsp;spot&nbsp;to&nbsp;position&nbsp;of&nbsp;maximum&nbsp;brightness&nbsp;using&nbsp;a<br>
+raster&nbsp;followed&nbsp;by&nbsp;a&nbsp;simple&nbsp;hill&nbsp;walk.&nbsp;Note&nbsp;there&nbsp;are&nbsp;some&nbsp;included_data<br>
+args&nbsp;here&nbsp;that&nbsp;are&nbsp;obsolete,&nbsp;such&nbsp;as&nbsp;the&nbsp;parabola&nbsp;ones.&nbsp;CHECK.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#Align">Align</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="Align-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations')</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="Align-run"><strong>run</strong></a>(self, func_list<font color="#909090">=&lt;function wrapped&gt;</font>, save_mode<font color="#909090">='save_final'</font>)</dt><dd><tt>Algorithm&nbsp;for&nbsp;alignment&nbsp;is&nbsp;to&nbsp;iterate&nbsp;the&nbsp;<a href="#RasterXY">RasterXY</a>&nbsp;procedure&nbsp;several<br>
+times&nbsp;with&nbsp;decreasing&nbsp;width&nbsp;and&nbsp;increasing&nbsp;precision,&nbsp;and&nbsp;then&nbsp;using<br>
+the&nbsp;parabola&nbsp;of&nbsp;brightness&nbsp;to&nbsp;try&nbsp;and&nbsp;find&nbsp;the&nbsp;maximum&nbsp;point&nbsp;by<br>
+shifting&nbsp;slightly.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="Align-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="Align-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="Align-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="Align-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="Align-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="Align-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#Align-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="Align-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="Align-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="Align-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="Align-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="Align-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="Align-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="Align-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="Align-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="Align-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="AlongZ">class <strong>AlongZ</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Measure&nbsp;brightness&nbsp;by&nbsp;varying&nbsp;z&nbsp;only,&nbsp;and&nbsp;move&nbsp;to&nbsp;the&nbsp;position&nbsp;of&nbsp;max<br>
+brightness.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#AlongZ">AlongZ</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="AlongZ-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('mmt_range',)</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="AlongZ-run"><strong>run</strong></a>(self, save_mode<font color="#909090">='save_final'</font>)</dt></dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="AlongZ-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="AlongZ-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="AlongZ-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#AlongZ-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="AlongZ-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="AlongZ-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="AlongZ-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="AlongZ-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DriftReCentre">class <strong>DriftReCentre</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Experiment&nbsp;to&nbsp;allow&nbsp;time&nbsp;for&nbsp;the&nbsp;spot&nbsp;to&nbsp;drift&nbsp;from&nbsp;its&nbsp;initial<br>
+position&nbsp;for&nbsp;some&nbsp;time,&nbsp;then&nbsp;bring&nbsp;it&nbsp;back&nbsp;to&nbsp;the&nbsp;centre&nbsp;and&nbsp;measure<br>
+the&nbsp;drift.&nbsp;Currently&nbsp;not&nbsp;in&nbsp;a&nbsp;usable&nbsp;state&nbsp;given&nbsp;the&nbsp;fine&nbsp;alignment<br>
+algorithm&nbsp;is&nbsp;not&nbsp;that&nbsp;accurate.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#DriftReCentre">DriftReCentre</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="DriftReCentre-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('sleep_times', 'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations')</font>, **kwargs)</dt><dd><tt>#&nbsp;TODO&nbsp;ensure&nbsp;you&nbsp;average&nbsp;over&nbsp;the&nbsp;appropriate&nbsp;time&nbsp;for&nbsp;the&nbsp;noise&nbsp;not&nbsp;to<br>
+#&nbsp;TODO&nbsp;matter.&nbsp;Check&nbsp;the&nbsp;allan&nbsp;deviation&nbsp;plot.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-run"><strong>run</strong></a>(self, func_list<font color="#909090">=&lt;function wrapped&gt;</font>, save_mode<font color="#909090">='save_final'</font>, num_per_avg<font color="#909090">=1000</font>, delay<font color="#909090">=0.1</font>, initial_align<font color="#909090">=False</font>)</dt><dd><tt>Default&nbsp;is&nbsp;to&nbsp;measure&nbsp;for&nbsp;100s.&nbsp;See&nbsp;the&nbsp;config&nbsp;file&nbsp;for&nbsp;sleep<br>
+times.&nbsp;Do&nbsp;an&nbsp;initial&nbsp;alignment&nbsp;and&nbsp;then&nbsp;take&nbsp;that&nbsp;position&nbsp;as&nbsp;the<br>
+initial&nbsp;position.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="DriftReCentre-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="DriftReCentre-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="DriftReCentre-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#DriftReCentre-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="DriftReCentre-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="DriftReCentre-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="DriftReCentre-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="DriftReCentre-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="HillWalk">class <strong>HillWalk</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Experiment&nbsp;to&nbsp;walk&nbsp;until&nbsp;a&nbsp;5-point&nbsp;peak&nbsp;is&nbsp;found,&nbsp;and&nbsp;then&nbsp;repeats<br>
+this&nbsp;for&nbsp;each&nbsp;axis,&nbsp;after&nbsp;which&nbsp;the&nbsp;step&nbsp;size&nbsp;is&nbsp;reduced.&nbsp;One&nbsp;of&nbsp;the&nbsp;first<br>
+attempts&nbsp;to&nbsp;a&nbsp;fine&nbsp;alignment&nbsp;algorithm,&nbsp;kept&nbsp;because&nbsp;it&nbsp;works&nbsp;but&nbsp;not<br>
+very&nbsp;well.&nbsp;May&nbsp;be&nbsp;deleted&nbsp;once&nbsp;a&nbsp;better&nbsp;one&nbsp;is&nbsp;developed.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#HillWalk">HillWalk</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="HillWalk-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('raster_n_step', 'mmt_range')</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="HillWalk-run"><strong>run</strong></a>(self, max_step<font color="#909090">=25</font>, number<font color="#909090">=100</font>, delay<font color="#909090">=0.0</font>, min_step<font color="#909090">=1</font>)</dt><dd><tt>ONLY&nbsp;use&nbsp;when&nbsp;you&nbsp;have&nbsp;a&nbsp;non-zero&nbsp;initial&nbsp;reading.&nbsp;Process&nbsp;for&nbsp;this<br>
+method:<br>
+1)&nbsp;For&nbsp;the&nbsp;max_step&nbsp;size,&nbsp;start&nbsp;with&nbsp;the&nbsp;x&nbsp;axis&nbsp;and&nbsp;continuously<br>
+repeat.<br>
+2)&nbsp;Get&nbsp;position,&nbsp;get&nbsp;brightness&nbsp;as&nbsp;specified&nbsp;by&nbsp;number&nbsp;and&nbsp;delay,&nbsp;add<br>
+this&nbsp;to&nbsp;results.<br>
+3)&nbsp;For&nbsp;each&nbsp;reading,&nbsp;get&nbsp;the&nbsp;last&nbsp;11&nbsp;readings&nbsp;if&nbsp;possible.&nbsp;Sort&nbsp;them<br>
+by&nbsp;the&nbsp;position&nbsp;axis&nbsp;that&nbsp;is&nbsp;varying&nbsp;(check&nbsp;that&nbsp;the&nbsp;others&nbsp;aren't,<br>
+and&nbsp;get&nbsp;the&nbsp;sign&nbsp;of&nbsp;their&nbsp;changes.&nbsp;If&nbsp;it&nbsp;increases&nbsp;then&nbsp;decreases<br>
+symmetrically,&nbsp;fit&nbsp;to&nbsp;parabola&nbsp;and&nbsp;move&nbsp;to&nbsp;the&nbsp;calculated&nbsp;maximum.&nbsp;Then<br>
+break&nbsp;out&nbsp;of&nbsp;the&nbsp;loop&nbsp;and&nbsp;start&nbsp;with&nbsp;the&nbsp;next&nbsp;axis.<br>
+4)&nbsp;If&nbsp;this&nbsp;is&nbsp;unsuccessful,&nbsp;get&nbsp;the&nbsp;last&nbsp;3&nbsp;readings&nbsp;and&nbsp;check<br>
+that&nbsp;only&nbsp;one&nbsp;position&nbsp;is&nbsp;varying.&nbsp;If&nbsp;brightness&nbsp;has&nbsp;monotonically<br>
+decreased&nbsp;for&nbsp;the&nbsp;last&nbsp;three&nbsp;readings,&nbsp;change&nbsp;direction.<br>
+5)&nbsp;Work&nbsp;out&nbsp;the&nbsp;next&nbsp;position&nbsp;to&nbsp;go&nbsp;to&nbsp;by&nbsp;first&nbsp;ensuring&nbsp;that&nbsp;it&nbsp;has<br>
+not&nbsp;been&nbsp;visited&nbsp;less&nbsp;than&nbsp;DRIFT_TIME&nbsp;seconds&nbsp;ago.&nbsp;Move&nbsp;to&nbsp;the&nbsp;new<br>
+position&nbsp;and&nbsp;repeat&nbsp;for&nbsp;the&nbsp;next&nbsp;axis,&nbsp;and&nbsp;for&nbsp;a&nbsp;smaller&nbsp;max_step&nbsp;size<br>
+when&nbsp;that&nbsp;is&nbsp;finished.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>DRIFT_TIME</strong> = 1000</dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="HillWalk-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="HillWalk-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="HillWalk-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#HillWalk-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="HillWalk-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="HillWalk-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="HillWalk-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="HillWalk-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="KeepCentred">class <strong>KeepCentred</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>After&nbsp;the&nbsp;initial&nbsp;alignment,&nbsp;keep&nbsp;hillwalking&nbsp;with&nbsp;a&nbsp;very&nbsp;small&nbsp;step<br>
+size.&nbsp;Again,&nbsp;not&nbsp;usable&nbsp;until&nbsp;a&nbsp;better&nbsp;fine&nbsp;alignment&nbsp;algorithm&nbsp;is<br>
+developed.&nbsp;There&nbsp;are&nbsp;again&nbsp;some&nbsp;obsolete&nbsp;parameters&nbsp;here,&nbsp;such&nbsp;as<br>
+relating&nbsp;to&nbsp;the&nbsp;parabola.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#KeepCentred">KeepCentred</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="KeepCentred-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations')</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="KeepCentred-run"><strong>run</strong></a>(self, func_list<font color="#909090">=&lt;function wrapped&gt;</font>, save_mode<font color="#909090">='save_final'</font>, max_step<font color="#909090">=10</font>, min_step<font color="#909090">=1</font>, number<font color="#909090">=100</font>, delay<font color="#909090">=0</font>)</dt></dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="KeepCentred-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="KeepCentred-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="KeepCentred-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#KeepCentred-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="KeepCentred-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="KeepCentred-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="KeepCentred-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="KeepCentred-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="RasterXY">class <strong>RasterXY</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;to&nbsp;conduct&nbsp;experiments&nbsp;where&nbsp;a&nbsp;square&nbsp;raster&nbsp;scan&nbsp;is&nbsp;taken&nbsp;with<br>
+the&nbsp;photo-diode&nbsp;and&nbsp;post-processed.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#RasterXY">RasterXY</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="RasterXY-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('raster_n_step',)</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="RasterXY-run"><strong>run</strong></a>(self, func_list<font color="#909090">=&lt;function wrapped&gt;</font>, save_mode<font color="#909090">='save_final'</font>)</dt></dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="RasterXY-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="RasterXY-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="RasterXY-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#RasterXY-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="RasterXY-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="RasterXY-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="RasterXY-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="RasterXY-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="RasterXYZ">class <strong>RasterXYZ</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;to&nbsp;conduct&nbsp;experiments&nbsp;where&nbsp;a&nbsp;cubic&nbsp;raster&nbsp;scan&nbsp;is&nbsp;taken&nbsp;with<br>
+the&nbsp;photo-diode&nbsp;and&nbsp;post-processed.&nbsp;MOVES&nbsp;TO&nbsp;ORIGINAL&nbsp;POSITION&nbsp;AFTER<br>
+DONE.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#RasterXYZ">RasterXYZ</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="RasterXYZ-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('raster3d_n_step',)</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="RasterXYZ-run"><strong>run</strong></a>(self, func_list<font color="#909090">=&lt;function wrapped&gt;</font>, save_mode<font color="#909090">='save_final'</font>)</dt></dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="RasterXYZ-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="RasterXYZ-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="RasterXYZ-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#RasterXYZ-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="RasterXYZ-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="RasterXYZ-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="RasterXYZ-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="RasterXYZ-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ThresholdedComFit">class <strong>ThresholdedComFit</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>More&nbsp;sophisticated&nbsp;hill&nbsp;walk&nbsp;algorithm&nbsp;that&nbsp;measures&nbsp;in&nbsp;only&nbsp;one<br>
+direction,&nbsp;and&nbsp;fits&nbsp;a&nbsp;thresholded&nbsp;centre&nbsp;of&nbsp;mass&nbsp;to&nbsp;each&nbsp;set&nbsp;of<br>
+mmts.&nbsp;Measures&nbsp;first&nbsp;in&nbsp;x&nbsp;and&nbsp;y,&nbsp;then&nbsp;adjusts&nbsp;z&nbsp;to&nbsp;see&nbsp;the&nbsp;difference.<br>
+This&nbsp;is&nbsp;a&nbsp;step&nbsp;beyond&nbsp;what&nbsp;is&nbsp;described&nbsp;in&nbsp;the&nbsp;Vacation&nbsp;Work&nbsp;Report&nbsp;-&nbsp;I<br>
+did&nbsp;not&nbsp;have&nbsp;time&nbsp;to&nbsp;test&nbsp;this&nbsp;so&nbsp;omitted&nbsp;it.&nbsp;There&nbsp;are&nbsp;a&nbsp;lot&nbsp;of<br>
+obsolete&nbsp;methods&nbsp;here&nbsp;-&nbsp;check&nbsp;using&nbsp;right&nbsp;click&nbsp;-&gt;&nbsp;check&nbsp;usages&nbsp;in<br>
+PyCharm.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#ThresholdedComFit">ThresholdedComFit</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="ThresholdedComFit-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('max_step', 'init_number', 'init_delay', 'min_step', 'num_per_parabola', 'sigma_level', 'sig_level')</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="ThresholdedComFit-fit_to_parabola"><strong>fit_to_parabola</strong></a>(self, results, axis_index)</dt></dl>
+
+<dl><dt><a name="ThresholdedComFit-next_positions"><strong>next_positions</strong></a>(self, axis, current_pos)</dt><dd><tt>Generate&nbsp;scan&nbsp;points&nbsp;along&nbsp;a&nbsp;particular&nbsp;direction.<br>
+:param&nbsp;axis:&nbsp;The&nbsp;vector&nbsp;to&nbsp;indicate&nbsp;the&nbsp;axis&nbsp;that&nbsp;is&nbsp;changing.<br>
+:param&nbsp;current_pos:&nbsp;A&nbsp;vector&nbsp;of&nbsp;the&nbsp;current&nbsp;position.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-process_com"><strong>process_com</strong></a>(self, results, axis_index)</dt><dd><tt>Find&nbsp;the&nbsp;thresholded&nbsp;centre&nbsp;of&nbsp;mass,&nbsp;move&nbsp;to&nbsp;it&nbsp;and&nbsp;decide<br>
+whether&nbsp;to&nbsp;move&nbsp;onto&nbsp;the&nbsp;next&nbsp;axis&nbsp;or&nbsp;not.<br>
+:param&nbsp;results:&nbsp;The&nbsp;measured&nbsp;array&nbsp;of&nbsp;results.<br>
+:param&nbsp;axis_index:&nbsp;The&nbsp;index&nbsp;of&nbsp;the&nbsp;position&nbsp;axis&nbsp;that&nbsp;varies.<br>
+:return:&nbsp;The&nbsp;Boolean&nbsp;variable&nbsp;within_range&nbsp;to&nbsp;decide&nbsp;whether&nbsp;to&nbsp;move<br>
+onto&nbsp;the&nbsp;next&nbsp;axis&nbsp;or&nbsp;not.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-reset"><strong>reset</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="ThresholdedComFit-run"><strong>run</strong></a>(self, save_mode<font color="#909090">='save_final'</font>)</dt></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="ThresholdedComFit-arr_range"><strong>arr_range</strong></a>(arr)</dt></dl>
+
+<dl><dt><a name="ThresholdedComFit-thresh_com"><strong>thresh_com</strong></a>(x, y)</dt><dd><tt>Threshold&nbsp;the&nbsp;results&nbsp;at&nbsp;the&nbsp;half-range&nbsp;level&nbsp;and&nbsp;find&nbsp;the<br>
+centre&nbsp;of&nbsp;mass&nbsp;of&nbsp;the&nbsp;peak&nbsp;of&nbsp;maximum&nbsp;intensity-width.<br>
+:param&nbsp;x:&nbsp;The&nbsp;array&nbsp;of&nbsp;the&nbsp;last&nbsp;set&nbsp;of&nbsp;positions,&nbsp;sorted&nbsp;in<br>
+ascending&nbsp;order.<br>
+:param&nbsp;y:&nbsp;The&nbsp;brightness&nbsp;measurements&nbsp;corresponding&nbsp;to&nbsp;x.<br>
+:return:&nbsp;The&nbsp;centre&nbsp;of&nbsp;mass&nbsp;in&nbsp;position&nbsp;and&nbsp;the&nbsp;thresholded<br>
+brightness&nbsp;array.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>DRIFT_TIME</strong> = 1000</dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="ThresholdedComFit-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="ThresholdedComFit-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="ThresholdedComFit-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#ThresholdedComFit-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="ThresholdedComFit-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="ThresholdedComFit-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="ThresholdedComFit-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="ThresholdedComFit-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TimedMeasurements">class <strong>TimedMeasurements</strong></a>(<a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Experiment&nbsp;to&nbsp;repeatedly&nbsp;measure&nbsp;the&nbsp;average&nbsp;of&nbsp;N&nbsp;measurements&nbsp;at<br>
+the&nbsp;same&nbsp;position,&nbsp;'count'&nbsp;times&nbsp;with&nbsp;'time'&nbsp;seconds&nbsp;between&nbsp;each&nbsp;set&nbsp;of&nbsp;10<br>
+measurements.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.experiments.html#TimedMeasurements">TimedMeasurements</a></dd>
+<dd><a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a></dd>
+<dd><a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a></dd>
+<dd><a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+<dd><a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="TimedMeasurements-__init__"><strong>__init__</strong></a>(self, microscope, config_file, group<font color="#909090">=None</font>, included_data<font color="#909090">=('N', 't')</font>, **kwargs)</dt></dl>
+
+<dl><dt><a name="TimedMeasurements-run"><strong>run</strong></a>(self, func_list<font color="#909090">=&lt;function wrapped&gt;</font>, save_mode<font color="#909090">='save_final'</font>)</dt></dl>
+
+<hr>
+Methods inherited from <a href="laser_align._experiments.html#ScopeExp">laser_align._experiments.ScopeExp</a>:<br>
+<dl><dt><a name="TimedMeasurements-__del__"><strong>__del__</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><a name="TimedMeasurements-log"><strong>log</strong></a>(self, message)</dt><dd><tt>Log&nbsp;a&nbsp;message&nbsp;to&nbsp;the&nbsp;current&nbsp;HDF5&nbsp;file&nbsp;and&nbsp;to&nbsp;the&nbsp;experiment's&nbsp;history</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-run_in_background"><strong>run_in_background</strong></a> = background_action(self, run_in_background_thread<font color="#909090">=True</font>, *args, **kwargs)</dt></dl>
+
+<dl><dt><a name="TimedMeasurements-start"><strong>start</strong></a>(self)</dt><dd><tt>Start&nbsp;the&nbsp;experiment&nbsp;running&nbsp;in&nbsp;a&nbsp;background&nbsp;thread.&nbsp;&nbsp;See&nbsp;run_in_background.</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-stop"><strong>stop</strong></a>(self)</dt><dd><tt>Stop&nbsp;the&nbsp;experiment&nbsp;running,&nbsp;if&nbsp;supported.&nbsp;&nbsp;May&nbsp;take&nbsp;a&nbsp;little&nbsp;while.</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-wait_or_stop"><strong>wait_or_stop</strong></a>(self, timeout, raise_exception<font color="#909090">=True</font>)</dt><dd><tt>Wait&nbsp;for&nbsp;the&nbsp;specified&nbsp;time&nbsp;in&nbsp;seconds.&nbsp;&nbsp;Stop&nbsp;if&nbsp;requested.<br>
+&nbsp;<br>
+This&nbsp;waits&nbsp;for&nbsp;a&nbsp;given&nbsp;time,&nbsp;unless&nbsp;the&nbsp;experiment&nbsp;has&nbsp;been&nbsp;manually&nbsp;<br>
+stopped,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;will&nbsp;terminate&nbsp;the&nbsp;thread&nbsp;by&nbsp;raising&nbsp;an<br>
+ExperimentStopped&nbsp;exception.&nbsp;&nbsp;You&nbsp;should&nbsp;call&nbsp;this&nbsp;whenever&nbsp;your<br>
+experiment&nbsp;is&nbsp;in&nbsp;a&nbsp;state&nbsp;that&nbsp;would&nbsp;be&nbsp;OK&nbsp;to&nbsp;stop,&nbsp;such&nbsp;as&nbsp;between<br>
+readings.<br>
+&nbsp;<br>
+If&nbsp;raise_exception&nbsp;is&nbsp;False,&nbsp;it&nbsp;will&nbsp;simply&nbsp;return&nbsp;False&nbsp;when&nbsp;the<br>
+experiment&nbsp;should&nbsp;stop.&nbsp;&nbsp;This&nbsp;is&nbsp;appropriate&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;it&nbsp;in&nbsp;a<br>
+while&nbsp;loop,&nbsp;e.g.&nbsp;``while&nbsp;self.<a href="#TimedMeasurements-wait_or_stop">wait_or_stop</a>(10,raise_exception=False):``<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;want&nbsp;to&nbsp;explicitly&nbsp;handle&nbsp;the&nbsp;ExperimentStopped&nbsp;exception&nbsp;to<br>
+close&nbsp;down&nbsp;cleanly.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>latest_data</strong></dt>
+<dd><tt>The&nbsp;last&nbsp;dataset/group&nbsp;we&nbsp;acquired</tt></dd>
+</dl>
+<dl><dt><strong>log_messages</strong></dt>
+<dd><tt>Log&nbsp;messages&nbsp;from&nbsp;the&nbsp;latest&nbsp;run</tt></dd>
+</dl>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;experiment&nbsp;is&nbsp;currently&nbsp;running&nbsp;in&nbsp;the&nbsp;background.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.experiment.experiment.html#Experiment">nplab.experiment.experiment.Experiment</a>:<br>
+<dl><dt><strong>log_to_console</strong> = False</dl>
+
+<hr>
+Methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="TimedMeasurements-bundle_metadata"><strong>bundle_metadata</strong></a>(self, data, enable<font color="#909090">=True</font>, **kwargs)</dt><dd><tt>Add&nbsp;metadata&nbsp;to&nbsp;a&nbsp;dataset,&nbsp;returning&nbsp;an&nbsp;ArrayWithAttrs.<br>
+&nbsp;<br>
+Arguments:<br>
+data&nbsp;:&nbsp;np.ndarray<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;data&nbsp;with&nbsp;which&nbsp;to&nbsp;bundle&nbsp;the&nbsp;metadata<br>
+enable&nbsp;:&nbsp;boolean&nbsp;(optional,&nbsp;default&nbsp;to&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;this&nbsp;argument&nbsp;to&nbsp;False&nbsp;to&nbsp;do&nbsp;nothing,&nbsp;i.e.&nbsp;just&nbsp;return&nbsp;data.<br>
+**kwargs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Addditional&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;get_metadata&nbsp;(for&nbsp;example,&nbsp;you&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;specify&nbsp;a&nbsp;list&nbsp;of&nbsp;`property_names`&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;default<br>
+&nbsp;&nbsp;&nbsp;&nbsp;metadata,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;names&nbsp;to&nbsp;exclude.</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-get_metadata"><strong>get_metadata</strong></a>(self, property_names<font color="#909090">=[]</font>, include_default_names<font color="#909090">=True</font>, exclude<font color="#909090">=None</font>)</dt><dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd></dl>
+
+<hr>
+Class methods inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><a name="TimedMeasurements-create_data_group"><strong>create_data_group</strong></a>(cls, name, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;group&nbsp;to&nbsp;store&nbsp;a&nbsp;reading.<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+:param&nbsp;attrs:&nbsp;may&nbsp;be&nbsp;a&nbsp;dictionary,&nbsp;saved&nbsp;as&nbsp;HDF5&nbsp;metadata</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-create_dataset"><strong>create_dataset</strong></a>(cls, name, flush<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Store&nbsp;a&nbsp;reading&nbsp;in&nbsp;a&nbsp;dataset&nbsp;(or&nbsp;make&nbsp;a&nbsp;new&nbsp;dataset&nbsp;to&nbsp;fill&nbsp;later).<br>
+&nbsp;<br>
+:param&nbsp;name:&nbsp;should&nbsp;be&nbsp;a&nbsp;noun&nbsp;describing&nbsp;what&nbsp;the&nbsp;reading&nbsp;is&nbsp;(image,<br>
+spectrum,&nbsp;etc.)<br>
+&nbsp;<br>
+Other&nbsp;arguments&nbsp;are&nbsp;passed&nbsp;to&nbsp;`nplab.datafile.Group.create_dataset`.</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-get_instance"><strong>get_instance</strong></a>(cls, create<font color="#909090">=True</font>, exceptions<font color="#909090">=True</font>, *args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;an&nbsp;instance&nbsp;of&nbsp;this&nbsp;class,&nbsp;if&nbsp;one&nbsp;exists.<br>
+&nbsp;<br>
+Usually&nbsp;returns&nbsp;the&nbsp;first&nbsp;available&nbsp;instance.</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-get_instances"><strong>get_instances</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;available&nbsp;instances&nbsp;of&nbsp;this&nbsp;class.</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-get_root_data_folder"><strong>get_root_data_folder</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt><dd><tt>Return&nbsp;a&nbsp;sensibly-named&nbsp;data&nbsp;folder&nbsp;in&nbsp;the&nbsp;default&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="TimedMeasurements-instances_set"><strong>instances_set</strong></a>(cls)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>metadata</strong></dt>
+<dd><tt>A&nbsp;dictionary&nbsp;of&nbsp;settings,&nbsp;properties,&nbsp;etc.&nbsp;to&nbsp;save&nbsp;along&nbsp;with&nbsp;data.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;property&nbsp;specified&nbsp;in&nbsp;the&nbsp;arguments&nbsp;or<br>
+in&nbsp;`self.<strong>metadata_property_names</strong>`.<br>
+&nbsp;<br>
+Arguments:<br>
+property_names&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;specifying&nbsp;the&nbsp;names&nbsp;of&nbsp;properties&nbsp;(of&nbsp;this&nbsp;object)&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieved&nbsp;and&nbsp;returned&nbsp;in&nbsp;the&nbsp;dictionary.<br>
+include_default_names&nbsp;:&nbsp;boolean,&nbsp;optional&nbsp;(default&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;True&nbsp;(the&nbsp;default),&nbsp;include&nbsp;the&nbsp;default&nbsp;metadata&nbsp;along&nbsp;with&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;specified&nbsp;names.&nbsp;&nbsp;This&nbsp;means&nbsp;that&nbsp;get_metadata&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;arguments&nbsp;to&nbsp;retrieve&nbsp;the&nbsp;default&nbsp;metadata.<br>
+exclude&nbsp;:&nbsp;list&nbsp;of&nbsp;strings,&nbsp;optional<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;list&nbsp;of&nbsp;properties&nbsp;to&nbsp;exclude&nbsp;(primarily&nbsp;useful&nbsp;when&nbsp;you&nbsp;want&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;some&nbsp;of&nbsp;the&nbsp;default&nbsp;entries).&nbsp;&nbsp;Nothing&nbsp;is&nbsp;excluded&nbsp;by&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;default.</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="nplab.instrument.html#Instrument">nplab.instrument.Instrument</a>:<br>
+<dl><dt><strong>metadata_property_names</strong> = ()</dl>
+
+<hr>
+Methods inherited from <a href="nplab.utils.show_gui_mixin.html#ShowGUIMixin">nplab.utils.show_gui_mixin.ShowGUIMixin</a>:<br>
+<dl><dt><a name="TimedMeasurements-show_gui"><strong>show_gui</strong></a>(self, blocking<font color="#909090">=None</font>, block<font color="#909090">=None</font>, force_new_window<font color="#909090">=False</font>)</dt><dd><tt>Display&nbsp;a&nbsp;GUI&nbsp;window&nbsp;for&nbsp;the&nbsp;class.<br>
+&nbsp;<br>
+You&nbsp;may&nbsp;override&nbsp;this&nbsp;method&nbsp;to&nbsp;display&nbsp;a&nbsp;window&nbsp;to&nbsp;control&nbsp;the<br>
+object.&nbsp;&nbsp;However,&nbsp;it's&nbsp;better&nbsp;(and&nbsp;less&nbsp;work)&nbsp;to&nbsp;provide&nbsp;a<br>
+method&nbsp;`get_qt_ui()`.&nbsp;&nbsp;This&nbsp;shoudl&nbsp;return&nbsp;a&nbsp;QWidget&nbsp;subclass&nbsp;that<br>
+is&nbsp;the&nbsp;GUI&nbsp;for&nbsp;the&nbsp;object.&nbsp;&nbsp;This&nbsp;method&nbsp;will&nbsp;take&nbsp;care&nbsp;of&nbsp;ensuring<br>
+there's&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;and&nbsp;displaying&nbsp;the&nbsp;GUI.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;are&nbsp;using&nbsp;traitsui,&nbsp;then&nbsp;edit_traits/configure_traits&nbsp;<br>
+methods&nbsp;exist,&nbsp;and&nbsp;this&nbsp;method&nbsp;will&nbsp;simply&nbsp;pop&nbsp;up&nbsp;a&nbsp;traits&nbsp;window<br>
+for&nbsp;the&nbsp;object.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;use&nbsp;blocking=False,&nbsp;it&nbsp;will&nbsp;return&nbsp;immediately&nbsp;-&nbsp;this&nbsp;allows<br>
+you&nbsp;to&nbsp;continue&nbsp;using&nbsp;the&nbsp;console,&nbsp;assuming&nbsp;there's&nbsp;already&nbsp;a&nbsp;Qt<br>
+application&nbsp;running&nbsp;(usually&nbsp;the&nbsp;case&nbsp;if&nbsp;you're&nbsp;running&nbsp;from&nbsp;<br>
+Spyder).&nbsp;&nbsp;NB&nbsp;you&nbsp;may&nbsp;want&nbsp;to&nbsp;retain&nbsp;the&nbsp;return&nbsp;value&nbsp;if&nbsp;using&nbsp;this<br>
+mode,&nbsp;as&nbsp;otherwise&nbsp;the&nbsp;GUI&nbsp;may&nbsp;be&nbsp;garbage-collected&nbsp;and&nbsp;disappear.<br>
+For&nbsp;compatibility,&nbsp;this&nbsp;function&nbsp;accepts&nbsp;either&nbsp;``block``&nbsp;or<br>
+``blocking``&nbsp;as&nbsp;a&nbsp;keyword&nbsp;argument&nbsp;-&nbsp;if&nbsp;either&nbsp;is&nbsp;not&nbsp;None&nbsp;it&nbsp;will<br>
+use&nbsp;that&nbsp;value,&nbsp;otherwise&nbsp;it&nbsp;defaults&nbsp;to&nbsp;``True``.<br>
+&nbsp;<br>
+In&nbsp;the&nbsp;future,&nbsp;blocking=False&nbsp;may&nbsp;spawn&nbsp;a&nbsp;Qt&nbsp;application&nbsp;object&nbsp;in<br>
+a&nbsp;background&nbsp;thread&nbsp;-&nbsp;but&nbsp;that's&nbsp;not&nbsp;currently&nbsp;done&nbsp;so&nbsp;we&nbsp;rely&nbsp;on<br>
+a&nbsp;Qt&nbsp;application&nbsp;running&nbsp;already&nbsp;(e.g.&nbsp;via&nbsp;the&nbsp;"input&nbsp;hook").<br>
+&nbsp;<br>
+When&nbsp;using&nbsp;Qt,&nbsp;we&nbsp;default&nbsp;to&nbsp;only&nbsp;creating&nbsp;one&nbsp;UI,&nbsp;and&nbsp;return&nbsp;a<br>
+handle&nbsp;to&nbsp;it&nbsp;each&nbsp;time&nbsp;this&nbsp;is&nbsp;called.&nbsp;&nbsp;If&nbsp;``force_new_window``&nbsp;is&nbsp;<br>
+set&nbsp;to&nbsp;`True`,&nbsp;a&nbsp;new&nbsp;widget&nbsp;will&nbsp;be&nbsp;created&nbsp;regardless.&nbsp;&nbsp;This&nbsp;may<br>
+cause&nbsp;issues&nbsp;if&nbsp;the&nbsp;retained&nbsp;reference&nbsp;to&nbsp;the&nbsp;GUI&nbsp;in&nbsp;the&nbsp;object&nbsp;is<br>
+the&nbsp;only&nbsp;one&nbsp;existing&nbsp;-&nbsp;the&nbsp;previous&nbsp;window&nbsp;may&nbsp;disappear.</tt></dd></dl>
+
+</td></tr></table></td></tr></table>
+</body></html>

@@ -1,0 +1,281 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module laser_align.baking</title>
+<meta charset="utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="laser_align.html"><font color="#ffffff">laser_align</font></a>.baking</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:///C:/users/abhishek/onedrive/documents/4th%20year/vacation%20report/code/laser_align/laser_align/baking.py">c:\users\abhishek\onedrive\documents\4th year\vacation report\code\laser_align\laser_align\baking.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;measurement&nbsp;processing&nbsp;functions&nbsp;designed&nbsp;to&nbsp;be&nbsp;baked&nbsp;into&nbsp;the<br>
+move_capture&nbsp;function,&nbsp;along&nbsp;with&nbsp;the&nbsp;baker&nbsp;function&nbsp;to&nbsp;enable&nbsp;them&nbsp;to&nbsp;do<br>
+so.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="exceptions.html#Exception">exceptions.Exception</a>(<a href="exceptions.html#BaseException">exceptions.BaseException</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="laser_align.baking.html#NoisySignal">NoisySignal</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.baking.html#NonZeroReading">NonZeroReading</a>
+</font></dt><dt><font face="helvetica, arial"><a href="laser_align.baking.html#Saturation">Saturation</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NoisySignal">class <strong>NoisySignal</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Raise&nbsp;when&nbsp;excessive&nbsp;noise&nbsp;has&nbsp;been&nbsp;detected,&nbsp;so&nbsp;operation&nbsp;is<br>
+terminated&nbsp;and&nbsp;raster&nbsp;scan&nbsp;is&nbsp;done&nbsp;instead.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.baking.html#NoisySignal">NoisySignal</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="NoisySignal-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#NoisySignal-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;object&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="NoisySignal-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="NoisySignal-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="NoisySignal-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="NoisySignal-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="NoisySignal-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="NoisySignal-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="NoisySignal-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="NoisySignal-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="NoisySignal-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#NoisySignal-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="NoisySignal-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NonZeroReading">class <strong>NonZeroReading</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Raise&nbsp;when&nbsp;the&nbsp;photodiode&nbsp;returns&nbsp;a&nbsp;non-zero&nbsp;reading.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.baking.html#NonZeroReading">NonZeroReading</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="NonZeroReading-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#NonZeroReading-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;object&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="NonZeroReading-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="NonZeroReading-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="NonZeroReading-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="NonZeroReading-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="NonZeroReading-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="NonZeroReading-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="NonZeroReading-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="NonZeroReading-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="NonZeroReading-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#NonZeroReading-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="NonZeroReading-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Saturation">class <strong>Saturation</strong></a>(<a href="exceptions.html#Exception">exceptions.Exception</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Raise&nbsp;when&nbsp;the&nbsp;gain&nbsp;causes&nbsp;the&nbsp;reading&nbsp;to&nbsp;saturate&nbsp;at&nbsp;1023.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="laser_align.baking.html#Saturation">Saturation</a></dd>
+<dd><a href="exceptions.html#Exception">exceptions.Exception</a></dd>
+<dd><a href="exceptions.html#BaseException">exceptions.BaseException</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Methods inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><a name="Saturation-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="exceptions.html#Exception">exceptions.Exception</a>:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#Saturation-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;object&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+<hr>
+Methods inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><a name="Saturation-__delattr__"><strong>__delattr__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__delattr__">__delattr__</a>('name')&nbsp;&lt;==&gt;&nbsp;del&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="Saturation-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="Saturation-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="Saturation-__getslice__"><strong>__getslice__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__getslice__">__getslice__</a>(i,&nbsp;j)&nbsp;&lt;==&gt;&nbsp;x[i:j]<br>
+&nbsp;<br>
+Use&nbsp;of&nbsp;negative&nbsp;indices&nbsp;is&nbsp;not&nbsp;supported.</tt></dd></dl>
+
+<dl><dt><a name="Saturation-__reduce__"><strong>__reduce__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="Saturation-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="Saturation-__setattr__"><strong>__setattr__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__setattr__">__setattr__</a>('name',&nbsp;value)&nbsp;&lt;==&gt;&nbsp;x.name&nbsp;=&nbsp;value</tt></dd></dl>
+
+<dl><dt><a name="Saturation-__setstate__"><strong>__setstate__</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="Saturation-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#Saturation-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="Saturation-__unicode__"><strong>__unicode__</strong></a>(...)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="exceptions.html#BaseException">exceptions.BaseException</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+</dl>
+<dl><dt><strong>args</strong></dt>
+</dl>
+<dl><dt><strong>message</strong></dt>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-baker"><strong>baker</strong></a>(fun, args<font color="#909090">=None</font>, kwargs<font color="#909090">=None</font>, position_to_pass_through<font color="#909090">=(0, 0)</font>)</dt><dd><tt>Returns&nbsp;an&nbsp;object&nbsp;given&nbsp;by&nbsp;the&nbsp;function&nbsp;'fun'&nbsp;with&nbsp;its&nbsp;arguments,<br>
+known&nbsp;as&nbsp;a&nbsp;curried&nbsp;function&nbsp;or&nbsp;closure.&nbsp;These&nbsp;objects&nbsp;can&nbsp;be&nbsp;passed&nbsp;into<br>
+other&nbsp;functions&nbsp;to&nbsp;be&nbsp;evaluated.<br>
+&nbsp;<br>
+:param&nbsp;fun:&nbsp;The&nbsp;function&nbsp;object&nbsp;without&nbsp;any&nbsp;arguments&nbsp;specified.<br>
+:param&nbsp;args:&nbsp;A&nbsp;list&nbsp;of&nbsp;the&nbsp;positional&nbsp;arguments.&nbsp;Put&nbsp;any&nbsp;placeholder&nbsp;in<br>
+the&nbsp;index&nbsp;that&nbsp;will&nbsp;not&nbsp;be&nbsp;baked&nbsp;into&nbsp;the&nbsp;function.<br>
+:param&nbsp;kwargs:&nbsp;A&nbsp;list&nbsp;of&nbsp;keyword&nbsp;arguments.<br>
+:param&nbsp;position_to_pass_through:&nbsp;A&nbsp;tuple&nbsp;specifying&nbsp;the&nbsp;index&nbsp;of<br>
+positional&nbsp;arguments&nbsp;for&nbsp;the&nbsp;function&nbsp;'fun'&nbsp;that&nbsp;will&nbsp;be&nbsp;skipped&nbsp;in<br>
+baking.&nbsp;For&nbsp;example,&nbsp;(1,3)&nbsp;will&nbsp;skip&nbsp;positional&nbsp;arguments&nbsp;1&nbsp;through&nbsp;to<br>
+3,&nbsp;so&nbsp;that&nbsp;the&nbsp;baked&nbsp;arguments&nbsp;in&nbsp;function&nbsp;'fun'&nbsp;will&nbsp;be:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fun(baked,&nbsp;unbaked,&nbsp;unbaked,&nbsp;unbaked,&nbsp;baked...).<br>
+If&nbsp;a&nbsp;single&nbsp;position&nbsp;is&nbsp;to&nbsp;be&nbsp;skipped,&nbsp;enter&nbsp;an&nbsp;integer&nbsp;for&nbsp;this<br>
+argument.&nbsp;For&nbsp;example,&nbsp;entering&nbsp;1&nbsp;will&nbsp;result&nbsp;in:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fun(baked,&nbsp;unbaked,&nbsp;baked...).<br>
+NOTE:&nbsp;Ensure&nbsp;the&nbsp;result&nbsp;can&nbsp;fill&nbsp;in&nbsp;the&nbsp;exact&nbsp;number&nbsp;of&nbsp;missing<br>
+positional&nbsp;arguments!<br>
+:return:&nbsp;The&nbsp;object&nbsp;containing&nbsp;the&nbsp;function&nbsp;with&nbsp;its&nbsp;arguments.</tt></dd></dl>
+ <dl><dt><a name="-fixed_timer"><strong>fixed_timer</strong></a>(x, y, z, initial_pos, count<font color="#909090">=5</font>, t<font color="#909090">=1</font>)</dt><dd><tt>Generator&nbsp;to&nbsp;hold&nbsp;the&nbsp;stage&nbsp;at&nbsp;a&nbsp;fixed&nbsp;position&nbsp;(although&nbsp;it&nbsp;may<br>
+still&nbsp;drift)&nbsp;and&nbsp;measure&nbsp;brightness&nbsp;repeatedly&nbsp;at&nbsp;each&nbsp;position&nbsp;before<br>
+moving&nbsp;on.&nbsp;x,&nbsp;y,&nbsp;z,&nbsp;initial_pos&nbsp;defined&nbsp;as&nbsp;in&nbsp;raster.&nbsp;count&nbsp;is&nbsp;the&nbsp;total<br>
+number&nbsp;of&nbsp;average&nbsp;measurements&nbsp;to&nbsp;take&nbsp;per&nbsp;position,&nbsp;and&nbsp;t&nbsp;the&nbsp;time<br>
+interval&nbsp;to&nbsp;wait&nbsp;between&nbsp;each&nbsp;such&nbsp;measurement&nbsp;set.</tt></dd></dl>
+ <dl><dt><a name="-max_fifth_col"><strong>max_fifth_col</strong></a>(results_arr, scope_obj, initial_position)</dt><dd><tt>Given&nbsp;a&nbsp;results&nbsp;array&nbsp;made&nbsp;of&nbsp;[[times],&nbsp;[x_pos],&nbsp;[y_pos],&nbsp;[z_pos],<br>
+[quantity],&nbsp;...]&nbsp;format,&nbsp;move&nbsp;scope&nbsp;stage&nbsp;to&nbsp;the&nbsp;position&nbsp;with&nbsp;the<br>
+maximum&nbsp;value&nbsp;of&nbsp;'quantity'&nbsp;Recognises&nbsp;when&nbsp;there&nbsp;are&nbsp;multiple&nbsp;maxima<br>
+and:&nbsp;if&nbsp;they&nbsp;are&nbsp;zero,&nbsp;moves&nbsp;to&nbsp;original&nbsp;position,&nbsp;if&nbsp;they&nbsp;are&nbsp;not&nbsp;zero,<br>
+moves&nbsp;to&nbsp;the&nbsp;position&nbsp;of&nbsp;the&nbsp;first&nbsp;maximum.</tt></dd></dl>
+ <dl><dt><a name="-raster"><strong>raster</strong></a>(x, y, z, initial_pos)</dt><dd><tt>Generator&nbsp;to&nbsp;produce&nbsp;N&nbsp;x&nbsp;3&nbsp;array&nbsp;of&nbsp;all&nbsp;possible&nbsp;permutations&nbsp;of&nbsp;1D<br>
+arrays&nbsp;x,&nbsp;y&nbsp;and&nbsp;z,&nbsp;such&nbsp;that&nbsp;N&nbsp;=&nbsp;len(x)&nbsp;*&nbsp;len(y).&nbsp;For&nbsp;example&nbsp;x&nbsp;=&nbsp;[1,2]&nbsp;and<br>
+y&nbsp;=&nbsp;[3,&nbsp;4]&nbsp;yields&nbsp;[1,&nbsp;3,&nbsp;0],&nbsp;[1,&nbsp;4,&nbsp;0],&nbsp;[2,&nbsp;3,&nbsp;0],&nbsp;[2,&nbsp;4,&nbsp;0]&nbsp;respectively.<br>
+This&nbsp;is&nbsp;added&nbsp;to&nbsp;[0,&nbsp;0,&nbsp;0]&nbsp;before&nbsp;being&nbsp;output.</tt></dd></dl>
+ <dl><dt><a name="-saturation_reached"><strong>saturation_reached</strong></a>(measurement, sensor_obj)</dt><dd><tt>Function&nbsp;to&nbsp;raise&nbsp;<a href="exceptions.html#Exception">Exception</a>&nbsp;if&nbsp;measurements&nbsp;saturate,&nbsp;so&nbsp;that&nbsp;the<br>
+user&nbsp;is&nbsp;recommended&nbsp;to&nbsp;turn&nbsp;down&nbsp;the&nbsp;gain&nbsp;setting,&nbsp;with&nbsp;user&nbsp;input<br>
+requested&nbsp;upon&nbsp;completion.</tt></dd></dl>
+ <dl><dt><a name="-stop_on_nonzero"><strong>stop_on_nonzero</strong></a>(measurement)</dt><dd><tt>Function&nbsp;to&nbsp;raise&nbsp;<a href="exceptions.html#Exception">Exception</a>&nbsp;if&nbsp;the&nbsp;measurement&nbsp;is&nbsp;non-zero.</tt></dd></dl>
+ <dl><dt><a name="-to_parmax"><strong>to_parmax</strong></a>(results_arr, scope_obj, axis, move<font color="#909090">=True</font>)</dt><dd><tt>Given&nbsp;a&nbsp;results&nbsp;array&nbsp;from&nbsp;move_capture,&nbsp;and&nbsp;an&nbsp;axis&nbsp;to&nbsp;look&nbsp;at,<br>
+fits&nbsp;that&nbsp;axis's&nbsp;positions&nbsp;with&nbsp;the&nbsp;measured&nbsp;quantities&nbsp;to&nbsp;a&nbsp;parabola,<br>
+returns&nbsp;the&nbsp;error&nbsp;and&nbsp;moves&nbsp;the&nbsp;scope_obj&nbsp;stage&nbsp;to&nbsp;the&nbsp;maximum&nbsp;point&nbsp;of&nbsp;the<br>
+parabola.&nbsp;Experiment&nbsp;can&nbsp;only&nbsp;be&nbsp;performed&nbsp;on&nbsp;a&nbsp;single&nbsp;axis.<br>
+:param&nbsp;results_arr:&nbsp;The&nbsp;results&nbsp;array.<br>
+:param&nbsp;scope_obj:&nbsp;The&nbsp;microscope&nbsp;object&nbsp;to&nbsp;move.<br>
+:param&nbsp;axis:&nbsp;A&nbsp;character&nbsp;specifying&nbsp;the&nbsp;axis:&nbsp;'x',&nbsp;'y'&nbsp;or&nbsp;'z'.<br>
+:param&nbsp;move:&nbsp;Whether&nbsp;to&nbsp;move&nbsp;at&nbsp;the&nbsp;end&nbsp;or&nbsp;not.&nbsp;TODO:&nbsp;REMOVE&nbsp;from&nbsp;here<br>
+and&nbsp;make&nbsp;calculation&nbsp;and&nbsp;motion&nbsp;independent.</tt></dd></dl>
+ <dl><dt><a name="-unchanged"><strong>unchanged</strong></a>(arg)</dt><dd><tt>Returns&nbsp;the&nbsp;single&nbsp;input&nbsp;argument;&nbsp;the&nbsp;default&nbsp;function&nbsp;for&nbsp;image<br>
+post-processing&nbsp;to&nbsp;return&nbsp;the&nbsp;input&nbsp;array&nbsp;unchanged.</tt></dd></dl>
+ <dl><dt><a name="-yield_pos"><strong>yield_pos</strong></a>(positions)</dt><dd><tt>A&nbsp;generator&nbsp;for&nbsp;each&nbsp;position&nbsp;in&nbsp;the&nbsp;positions&nbsp;to&nbsp;visit&nbsp;array.<br>
+:param&nbsp;positions:&nbsp;Array&nbsp;of&nbsp;positions&nbsp;to&nbsp;visit.</tt></dd></dl>
+</td></tr></table>
+</body></html>

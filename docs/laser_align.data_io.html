@@ -1,0 +1,81 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module laser_align.data_io</title>
+<meta charset="utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="laser_align.html"><font color="#ffffff">laser_align</font></a>.data_io</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:///C:/users/abhishek/onedrive/documents/4th%20year/vacation%20report/code/laser_align/laser_align/data_io.py">c:\users\abhishek\onedrive\documents\4th year\vacation report\code\laser_align\laser_align\data_io.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;functions&nbsp;for&nbsp;datafile&nbsp;processing&nbsp;and&nbsp;IO.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top><a href="yaml.html">yaml</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-make_dict"><strong>make_dict</strong></a>(config, **kwargs)</dt><dd><tt>Read&nbsp;the&nbsp;dictionary,&nbsp;or&nbsp;create&nbsp;one&nbsp;from&nbsp;a&nbsp;YAML&nbsp;file,&nbsp;and&nbsp;replace&nbsp;any<br>
+optionally&nbsp;specified&nbsp;named&nbsp;parameters&nbsp;by&nbsp;those&nbsp;from&nbsp;kwargs.&nbsp;Returns&nbsp;the<br>
+modified&nbsp;dictionary.<br>
+:param&nbsp;config:&nbsp;Either&nbsp;a&nbsp;string&nbsp;specifying&nbsp;a&nbsp;path&nbsp;to&nbsp;the&nbsp;config&nbsp;file,<br>
+or&nbsp;the&nbsp;dictionary&nbsp;of&nbsp;config&nbsp;parameters.</tt></dd></dl>
+ <dl><dt><a name="-make_group"><strong>make_group</strong></a>(sc_exp_obj, group<font color="#909090">=None</font>, group_name<font color="#909090">='Group'</font>)</dt><dd><tt>If&nbsp;'group'&nbsp;is&nbsp;None,&nbsp;create&nbsp;a&nbsp;new&nbsp;group&nbsp;in&nbsp;the&nbsp;main&nbsp;datafile&nbsp;with&nbsp;name<br>
+'group_name',&nbsp;else&nbsp;if&nbsp;'group'&nbsp;is&nbsp;HDF5&nbsp;group&nbsp;object,&nbsp;refer&nbsp;to&nbsp;that&nbsp;group.<br>
+:param&nbsp;sc_exp_obj:&nbsp;ScopeExp&nbsp;object<br>
+:param&nbsp;group:&nbsp;Either&nbsp;None&nbsp;or&nbsp;refers&nbsp;to&nbsp;a&nbsp;group&nbsp;object.<br>
+:param&nbsp;group_name:&nbsp;The&nbsp;name&nbsp;of&nbsp;the&nbsp;group&nbsp;to&nbsp;be&nbsp;created,&nbsp;if&nbsp;group&nbsp;is&nbsp;None.<br>
+:return:&nbsp;The&nbsp;created&nbsp;group&nbsp;object.</tt></dd></dl>
+ <dl><dt><a name="-plot_prettify"><strong>plot_prettify</strong></a>(series_dict, title, x_title, y_title, output<font color="#909090">='show'</font>, x_log<font color="#909090">=False</font>, y_log<font color="#909090">=False</font>, cust_x_lims<font color="#909090">=None</font>, cust_y_lims<font color="#909090">=None</font>, x_sci<font color="#909090">=False</font>, y_sci<font color="#909090">=False</font>)</dt><dd><tt>Plots&nbsp;a&nbsp;graph,&nbsp;possibly&nbsp;with&nbsp;error&nbsp;bars,&nbsp;and&nbsp;makes&nbsp;it&nbsp;look&nbsp;nice.<br>
+:param&nbsp;series_dict:&nbsp;A&nbsp;dictionary&nbsp;of&nbsp;data&nbsp;series&nbsp;in&nbsp;the&nbsp;format<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{'series_1_name':&nbsp;([x_data_col,&nbsp;y_data_col,&nbsp;x_err_col,&nbsp;y_err_col],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;('marker_format',&nbsp;'line_form')),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...}<br>
+where&nbsp;each&nbsp;dictionary&nbsp;value&nbsp;is&nbsp;a&nbsp;tuple&nbsp;with&nbsp;an&nbsp;array&nbsp;as&nbsp;the&nbsp;first&nbsp;element<br>
+and&nbsp;the&nbsp;marker&nbsp;and&nbsp;line&nbsp;preferences&nbsp;as&nbsp;the&nbsp;second&nbsp;element.&nbsp;Set&nbsp;every&nbsp;entry<br>
+in&nbsp;an&nbsp;error&nbsp;column&nbsp;to&nbsp;0&nbsp;if&nbsp;it&nbsp;has&nbsp;no&nbsp;errors.<br>
+:param&nbsp;title:&nbsp;Graph&nbsp;title&nbsp;string.<br>
+:param&nbsp;x_title:&nbsp;X&nbsp;axis&nbsp;title&nbsp;string.<br>
+:param&nbsp;x_log:&nbsp;Set&nbsp;x&nbsp;axis&nbsp;to&nbsp;log&nbsp;scale&nbsp;if&nbsp;True.<br>
+:param&nbsp;x_sci:&nbsp;Set&nbsp;x&nbsp;axis&nbsp;scale&nbsp;to&nbsp;scientific.<br>
+:param&nbsp;cust_x_lims:&nbsp;Set&nbsp;custom&nbsp;x-axis&nbsp;limits&nbsp;by&nbsp;passing&nbsp;in&nbsp;a&nbsp;(min,<br>
+max)&nbsp;tuple.&nbsp;None&nbsp;means&nbsp;custom&nbsp;values&nbsp;retained.<br>
+:param&nbsp;y_title,&nbsp;y_log,&nbsp;cust_y_lims,&nbsp;y_sci:&nbsp;Analogous&nbsp;for&nbsp;y.<br>
+:param&nbsp;output:&nbsp;Graph&nbsp;output&nbsp;format.&nbsp;'show'&nbsp;to&nbsp;output&nbsp;to&nbsp;screen,&nbsp;'save'<br>
+to&nbsp;save&nbsp;to&nbsp;current&nbsp;directory&nbsp;and&nbsp;'none'&nbsp;to&nbsp;do&nbsp;nothing.</tt></dd></dl>
+ <dl><dt><a name="-series_maker"><strong>series_maker</strong></a>(series_name, x, y, xerr<font color="#909090">=None</font>, yerr<font color="#909090">=None</font>, series_dict<font color="#909090">=None</font>, marker_format<font color="#909090">='nopref'</font>, line_format<font color="#909090">='nopref'</font>)</dt><dd><tt>Appends&nbsp;a&nbsp;data&nbsp;series&nbsp;to&nbsp;the&nbsp;series_dict&nbsp;dictionary&nbsp;with&nbsp;the&nbsp;data<br>
+array&nbsp;correctly&nbsp;formatted.<br>
+:param&nbsp;series_name:&nbsp;The&nbsp;string&nbsp;key&nbsp;for&nbsp;series_dict.<br>
+:param&nbsp;x:&nbsp;x&nbsp;data&nbsp;1D&nbsp;array.<br>
+:param&nbsp;xerr:&nbsp;x&nbsp;errors&nbsp;column&nbsp;array.<br>
+:param&nbsp;y,&nbsp;yerr:&nbsp;Likewise&nbsp;for&nbsp;y.<br>
+:param&nbsp;marker_format:&nbsp;The&nbsp;string&nbsp;specifying&nbsp;the&nbsp;marker&nbsp;format.&nbsp;'nopref'<br>
+keeps&nbsp;it&nbsp;to&nbsp;system-chosen&nbsp;value;&nbsp;see&nbsp;marker&nbsp;codes&nbsp;for&nbsp;matplotlib&nbsp;to&nbsp;see<br>
+other&nbsp;values&nbsp;this&nbsp;can&nbsp;take.<br>
+:param&nbsp;line_format:&nbsp;As&nbsp;above&nbsp;for&nbsp;the&nbsp;series&nbsp;line&nbsp;style.<br>
+:param&nbsp;series_dict:&nbsp;The&nbsp;dictionary&nbsp;of&nbsp;data&nbsp;to&nbsp;append&nbsp;to.<br>
+:return:&nbsp;series_dict&nbsp;with&nbsp;the&nbsp;new&nbsp;series&nbsp;added.</tt></dd></dl>
+ <dl><dt><a name="-sub_dict"><strong>sub_dict</strong></a>(main_dict, subset_keys<font color="#909090">=None</font>, extra_entries<font color="#909090">=None</font>)</dt><dd><tt>Slice&nbsp;specific&nbsp;keys&nbsp;of&nbsp;a&nbsp;dictionary,&nbsp;add&nbsp;extra&nbsp;entries&nbsp;if&nbsp;specified,<br>
+and&nbsp;return&nbsp;the&nbsp;new&nbsp;dictionary.<br>
+:param&nbsp;main_dict:&nbsp;The&nbsp;main&nbsp;dictionary&nbsp;to&nbsp;slice.<br>
+:param&nbsp;subset_keys:&nbsp;The&nbsp;tuple&nbsp;of&nbsp;keys&nbsp;in&nbsp;main_dict&nbsp;to&nbsp;use.&nbsp;If&nbsp;None,<br>
+all&nbsp;keys&nbsp;are&nbsp;used.<br>
+:param&nbsp;extra_entries:&nbsp;A&nbsp;dictionary&nbsp;of&nbsp;extra&nbsp;entries&nbsp;to&nbsp;add&nbsp;to&nbsp;slice<br>
+dictionary.</tt></dd></dl>
+ <dl><dt><a name="-yaml_read"><strong>yaml_read</strong></a>(yaml_file)</dt><dd><tt>Parses&nbsp;a&nbsp;YAML&nbsp;file&nbsp;and&nbsp;returns&nbsp;the&nbsp;resulting&nbsp;dictionary.<br>
+:param&nbsp;yaml_file:&nbsp;the&nbsp;YAML&nbsp;file&nbsp;path,&nbsp;ending&nbsp;in&nbsp;.yaml.</tt></dd></dl>
+</td></tr></table>
+</body></html>
