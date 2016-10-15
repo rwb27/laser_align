@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import nplab
 
-nplab.datafile.set_current(r"C:\Users\a-amb\OneDrive - University Of "
-                           r"Cambridge\sophistic_hill_walk.h5", mode="r")
+nplab.datafile.set_current(r"C:\Users\Abhishek\OneDrive - University Of "
+                           r"Cambridge\data\laser-alignment\sophistic_hill_walk.h5", mode="r")
 df = nplab.current_datafile()
 data = df['HillWalk/HillWalk_4/hill_walk_brightness'][:, ...]
 

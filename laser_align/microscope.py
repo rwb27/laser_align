@@ -255,6 +255,7 @@ def _verify_vector(vector):
 def _formatter(reading):
     """Checks a reading has a desired format and returns True if so,
     else returns False."""
+    reading = str(reading)
     sub_readings = re.findall('(?<![0-9])([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|10['
                               '0-1][0-9]|102[0-3])\s+', reading)
     if len(sub_readings) != 1:

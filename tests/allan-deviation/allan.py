@@ -2,8 +2,10 @@
 measurements."""
 
 from scipy.integrate import simps
+from scipy.stats import linregress
 import numpy as np
 import h5py
+import laser_align.data_io as d
 import matplotlib.pyplot as plt
 
 
@@ -46,36 +48,47 @@ def get_dataset(file_path, path_strings):
 
     return results
 
+series_dict = {}
+big_results = []
+deets = [['2016-08-26-timed-weekend-run-averageover10.h5', 100, 32400, 5],
+         ['2016-09-02-timed-no-averaging.h5', 2, 500, 1]]
+for filename in deets:
+    df = h5py.File(r'C:\Users\Abhishek\OneDrive - University Of '
+                   r'Cambridge\data\timed-measurements\{}'.format(filename[0]))
+    results = []
+    for tau in np.arange(filename[1], filename[2], filename[3]):
+        allan_dev = allan(df['TimedMeasurements/TimedMeasurements_0'
+                             '/brightness_final'][:, 0],
+                          df['TimedMeasurements/TimedMeasurements_0'
+                             '/brightness_final'][:, 4], tau)
 
-df = h5py.File(r'C:\Users\a-amb\OneDrive - University Of '
-               r'Cambridge\data\timed-measurements\2016-08-26-timed-weekend'
-               r'-run.h5')
-results = []
-for tau in np.arange(20, 50000, 50):
-    allan_dev = allan(df['TimedMeasurements/TimedMeasurements_0'
-                         '/brightness_final'][:, 0],
-                      df['TimedMeasurements/TimedMeasurements_0'
-                         '/brightness_final'][:, 4], tau)
-    results.append([tau, allan_dev])
+        results.append([tau, allan_dev])
 
-results = np.array(results)
-plt.plot(results[:, 0], results[:, 1])
+    results = np.array(results)
+    big_results.append(results)
+    series_dict = d.series_maker(filename[0], results[:, 0], results[:, 1],
+                                 series_dict=series_dict)
+    df.close()
 
-df2 = h5py.File(r'C:\Users\a-amb\OneDrive - University Of '
-                r'Cambridge\timed_mmts_test_remote2.h5')
-for dataset in [0]:
-    results2 = []
-    for tau in np.arange(10, 1000, 10):
-        allan_dev = allan(df2['TimedMeasurements/TimedMeasurements_{}/'
-                              'brightness_final'.format(dataset)][:, 0],
-                          df2['TimedMeasurements/TimedMeasurements_{}'
-                              '/brightness_final'.format(dataset)][:, 4], tau)
-        results2.append([tau, allan_dev])
+#d.plot_prettify(series_dict, 'Plot of $\sigma_{A}$ as a function of $\\tau$',
+#                '$\\tau$/s', '$\sigma_{A}$/AU', x_log=True,
+#                y_log=True, output='none')
+#plt.legend().set_visible(False)
+#plt.show()
 
-    results2 = np.array(results2)
-    plt.plot(results2[:, 0], results2[:, 1])
-
-plt.xscale('log')
-plt.yscale('log')
+big_results[0] = np.log10(big_results[0])
+#big_results[0]
+plt.loglog(big_results[0][:, 0][100:], big_results[0][:, 1][100:])
 plt.show()
-df.close()
+plt.loglog(big_results[1][:, 0][:-440], big_results[1][:, 1][:-440])
+plt.show()
+
+x, y = big_results[1][:, 0][:-440], big_results[1][:, 1][:-440]
+
+slope, intercept, r, prob2, see = linregress(x, y)
+mx = x.mean()
+sx2 = ((x - mx) ** 2).sum()
+sd_intercept = see * np.sqrt(1. / len(x) + mx * mx / sx2)
+sd_slope = see * np.sqrt(1. / sx2)
+
+print slope, sd_slope
