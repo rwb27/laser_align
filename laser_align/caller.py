@@ -16,8 +16,6 @@ Usage:
     caller.py hill_walk2 [--output=<output>] [--initial_gain=<initial_gain>] [--gain_step=<gain_step>] [--max_step=<max_step>] [--init_number=<num>] [--init_delay=<delay>] [--min_step=<min_step>]
     caller.py (-h | --help)
 
-
-
 Options:
     -h, --help                      Display this usage statement.
     --output=<output>               The HDF5 file to store data [default: tests.hdf5].
@@ -79,8 +77,8 @@ if __name__ == '__main__':
                 hilly = exp.HillWalk(scope, config)
                 hilly.run()
             elif sys_args['hill_walk2']:
-                hill_walk = exp.AdaptiveHillWalk(scope, config,
-                                                 **adaptive_kwargs)
+                hill_walk = exp.ThresholdedComFit(scope, config,
+                                                  **adaptive_kwargs)
                 hill_walk.run()
             elif sys_args['drift_recentre']:
                 drift = exp.DriftReCentre(scope, config)

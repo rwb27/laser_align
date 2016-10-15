@@ -221,7 +221,7 @@ class Stage(Instrument):
         self.move_to_pos([0, 0, 0], backlash)
 
     def _reset_pos(self):
-        # Hard resets the stored position, just in case things go wrong.
+        """Hard resets the stored position, just in case things go wrong."""
         self.position = np.array([0, 0, 0])
 
 

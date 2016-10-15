@@ -16,7 +16,7 @@ import baking as b
 
 class AlongZ(_exp.ScopeExp):
     """Measure brightness by varying z only, and move to the position of max
-    brightness. Valid kwargs are: mmt_range"""
+    brightness."""
 
     def __init__(self, microscope, config_file, group=None,
                  included_data=('mmt_range',), **kwargs):
@@ -30,7 +30,7 @@ class AlongZ(_exp.ScopeExp):
 
         for n_step in self.config_dict['mmt_range']:
             # Allow the iteration to take place as many times as specified
-            # in the scope_dict file.
+            # in the config file.
             _exp.move_capture(self, {'z': [n_step]}, save_mode=save_mode,
                               end_func=end)
             print self.scope.stage.position
@@ -38,8 +38,7 @@ class AlongZ(_exp.ScopeExp):
 
 class RasterXY(_exp.ScopeExp):
     """Class to conduct experiments where a square raster scan is taken with
-    the photo-diode and post-processed.
-    Valid kwargs are: raster_n_step."""
+    the photo-diode and post-processed."""
 
     def __init__(self, microscope, config_file, group=None,
                  included_data=('raster_n_step',), **kwargs):
@@ -52,7 +51,7 @@ class RasterXY(_exp.ScopeExp):
                                              self.initial_position])
 
         # Take measurements and move to position of maximum brightness.
-        # end_func is applied at the end of every set of (n, step).
+        # NOTE end_func is applied at the end of every set of (n, step).
         for n_step in self.config_dict['raster_n_step']:
             _exp.move_capture(self, {'x': [n_step], 'y': [n_step]},
                               func_list=func_list, save_mode=save_mode,
@@ -62,8 +61,8 @@ class RasterXY(_exp.ScopeExp):
 
 class RasterXYZ(_exp.ScopeExp):
     """Class to conduct experiments where a cubic raster scan is taken with
-    the photo-diode and post-processed. MOVES TO ORIGINAL POSITION AFTER DONE
-    Valid kwargs are: raster3d_n_step."""
+    the photo-diode and post-processed. MOVES TO ORIGINAL POSITION AFTER
+    DONE."""
 
     def __init__(self, microscope, config_file, group=None,
                  included_data=('raster3d_n_step',), **kwargs):
@@ -76,6 +75,7 @@ class RasterXYZ(_exp.ScopeExp):
                                              self.initial_position])
 
         # Take measurements and move to position of maximum brightness.
+        # TODO make the input format of this like the 2D raster.
         _exp.move_capture(self, {'x': self.config_dict['raster3d_n_step'],
                                  'y': self.config_dict['raster3d_n_step'],
                                  'z': [[self.config_dict['raster3d_n_step'][0][
@@ -87,13 +87,13 @@ class RasterXYZ(_exp.ScopeExp):
 
 
 class Align(_exp.ScopeExp):
-    """Class to align the spot to position of maximum brightness."""
+    """Class to align the spot to position of maximum brightness using a
+    raster followed by a simple hill walk. Note there are some included_data
+    args here that are obsolete, such as the parabola ones. CHECK."""
 
     def __init__(self, microscope, config_file, group=None, included_data=(
             'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'),
                  **kwargs):
-        """Valid kwargs are n_steps, parabola_N, parabola_step,
-        parabola_iterations."""
         super(Align, self).__init__(microscope, config_file, group,
                                     included_data, **kwargs)
 
@@ -116,10 +116,11 @@ class Align(_exp.ScopeExp):
 class DriftReCentre(_exp.ScopeExp):
     """Experiment to allow time for the spot to drift from its initial
     position for some time, then bring it back to the centre and measure
-    the drift."""
+    the drift. Currently not in a usable state given the fine alignment
+    algorithm is not that accurate."""
 
     # TODO ensure you average over the appropriate time for the noise not to
-    # TODO matter
+    # TODO matter. Check the allan deviation plot.
     def __init__(self, microscope, config_file, group=None, included_data=(
             'sleep_times', 'n_steps', 'parabola_N', 'parabola_step',
             'parabola_iterations'), **kwargs):
@@ -127,11 +128,10 @@ class DriftReCentre(_exp.ScopeExp):
                                             included_data, **kwargs)
 
     def run(self, func_list=b.baker(b.unchanged), save_mode='save_final',
-            number=1000, delay=0.1, initial_align=False):
+            num_per_avg=1000, delay=0.1, initial_align=False):
         """Default is to measure for 100s. See the config file for sleep
-        times."""
-        # Do an initial alignment and then take that position as the initial
-        # position.
+        times. Do an initial alignment and then take that position as the
+        initial position."""
 
         align = Align(self.scope, self.config_dict, group=self.gr)
         hill_walk = HillWalk(self.scope, self.config_dict, group=self.gr)
@@ -151,7 +151,8 @@ class DriftReCentre(_exp.ScopeExp):
             while _exp.elapsed(sleep_start) < sleep_times[i]:
                 timed_list.append(timed_mmts.run(save_mode=None))
             self.gr.create_dataset('timed_run', data=np.array(timed_list),
-                                   attrs={'number': number, 'delay': delay,
+                                   attrs={'number': num_per_avg,
+                                          'delay': delay,
                                           'sleep_time': sleep_times[i]})
             if i == 0:
                 last_pos = pos
@@ -162,12 +163,14 @@ class DriftReCentre(_exp.ScopeExp):
         # Measure the position after it has drifted by working out how much
         # it needs to move by to re-centre it.
         self.gr.create_dataset('Drift', data=np.array(drifts), attrs={
-            'number': number, 'delay': delay})
+            'number': num_per_avg, 'delay': delay})
 
 
 class KeepCentred(_exp.ScopeExp):
     """After the initial alignment, keep hillwalking with a very small step
-    size."""
+    size. Again, not usable until a better fine alignment algorithm is
+    developed. There are again some obsolete parameters here, such as
+    relating to the parabola."""
 
     def __init__(self, microscope, config_file, group=None, included_data=(
             'n_steps', 'parabola_N', 'parabola_step', 'parabola_iterations'),
@@ -207,12 +210,14 @@ class TimedMeasurements(_exp.ScopeExp):
                             position_to_pass_through=(0, 3))
         return _exp.move_capture(self, {}, order_gen=order_gen,
                                  func_list=func_list, save_mode=save_mode,
-                                 number=1, delay=0)
+                                 num_per_avg=1, delay=0)
 
 
 class HillWalk(_exp.ScopeExp):
     """Experiment to walk until a 5-point peak is found, and then repeats
-    this for each axis, after which the step size is reduced."""
+    this for each axis, after which the step size is reduced. One of the first
+    attempts to a fine alignment algorithm, kept because it works but not
+    very well. May be deleted once a better one is developed."""
 
     DRIFT_TIME = 1000
 
@@ -228,7 +233,7 @@ class HillWalk(_exp.ScopeExp):
         repeat.
         2) Get position, get brightness as specified by number and delay, add
         this to results.
-        3) For each reading, get the last 5 readings if possible. Sort them
+        3) For each reading, get the last 11 readings if possible. Sort them
         by the position axis that is varying (check that the others aren't,
         and get the sign of their changes. If it increases then decreases
         symmetrically, fit to parabola and move to the calculated maximum. Then
@@ -358,6 +363,8 @@ class HillWalk(_exp.ScopeExp):
         last_eleven_rows = self._check_sliced_results(results, 11, axis_index)
         sort = last_eleven_rows[np.argsort(last_eleven_rows[:, axis_index])]
 
+        # Tries to fit an 11-point parabola using sign changes, which is a
+        # major flaw due to noise.
         if np.all(np.sign(np.ediff1d(sort[:, 4])) == np.array(
                 [1, 1, 1, 1, 1, -1, -1, -1, -1, -1])):
             axis_string = ['x', 'y', 'z'][axis_index - 1]
@@ -386,8 +393,7 @@ class HillWalk(_exp.ScopeExp):
             last_rows = self._check_sliced_results(
                 results, 3, axis_index)
             sort = last_rows[np.argsort(last_rows[:, axis_index])]
-            # TODO WE NEED TO IMPLEMENT SORTING HERE. Check for monotonic
-            # decreases.
+
             # We want to find if the last 3 position/brightness
             # measurements have a positive/negative gradient. If
             # negative, reverse direction.
@@ -407,9 +413,9 @@ class HillWalk(_exp.ScopeExp):
         return direction, step_size
 
     def _ignore_noisy_signal(self, results, n_rows=10):
-        """If the last 10 readings along the same axis are within 2 sigma of
-        their previous reading, the signal is noise-affected and hill-walk
-        should not be used - instead a raster scan should be done."""
+        """If the last n_rows readings along the same axis are within 2
+        sigma of their previous reading, the signal is noise-affected and
+        hill-walk should not be used - instead a raster scan should be done."""
         last_ten_rows = self._check_sliced_results(results, n_rows,
                                                    check_unique=False)
         noisy_size = 0
@@ -425,27 +431,33 @@ class HillWalk(_exp.ScopeExp):
                 'be inaccurate.')
 
 
-class AdaptiveHillWalk(_exp.ScopeExp):
+class ThresholdedComFit(_exp.ScopeExp):
     """More sophisticated hill walk algorithm that measures in only one
-    direction, accounts for noise, saturation, descending measurements,
-    and adapts step size, averaging number and time to minimise noise and
-    runtime, and maximise precision and accuracy."""
+    direction, and fits a thresholded centre of mass to each set of
+    mmts. Measures first in x and y, then adjusts z to see the difference.
+    This is a step beyond what is described in the Vacation Work Report - I
+    did not have time to test this so omitted it. There are a lot of
+    obsolete methods here - check using right click -> check usages in
+    PyCharm."""
 
     DRIFT_TIME = 1000
 
     def __init__(self, microscope, config_file, group=None, included_data=(
             'max_step', 'init_number', 'init_delay', 'min_step',
             'num_per_parabola', 'sigma_level', 'sig_level'), **kwargs):
-        super(AdaptiveHillWalk, self).__init__(microscope, config_file, group,
-                                               included_data, **kwargs)
+        super(ThresholdedComFit, self).__init__(microscope, config_file, group,
+                                                included_data, **kwargs)
+        # Initialise variables first.
         self.step_size = None
         self.number = None
         self.delay = None
         self.num_per_parabola = None
         self.sigma_level = None
+
         self.reset()
 
     def reset(self):
+        # Set variables to default values.
         self.step_size = self.config_dict['max_step']
         self.number = self.config_dict['init_number']
         self.delay = self.config_dict['init_delay']
@@ -460,11 +472,13 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         maxima_values = []
         z_step = self.step_size[2]
         xy_step = self.step_size[:2]
-        print xy_step
         z_direction = 1
 
         for i in range(3):
             while not np.any(xy_step < self.config_dict['min_step']):
+                # TODO Check the above while loop - it doesn't seem to stop
+                # after falling below the min step.
+
                 # Changed the algorithm to align well in x and y, then adjust z
                 # slightly and see the difference
                 for axis in [[1, 0, 0], [0, 1, 0]]:
@@ -485,29 +499,29 @@ class AdaptiveHillWalk(_exp.ScopeExp):
                             count += 1
                             while True:
                                 results = _exp.read_move_save(
-                                    self, gen, func_list, save_mode, self.number,
-                                    self.delay, results)
+                                    self, gen, func_list, save_mode,
+                                    self.number, self.delay, results)
 
                         except b.Saturation:
-                            # If the measurement saturates, then take that set of
-                            # measurements again, with the new values of parameters
-                            # that change (step_size, number, delay). Don't ignore
-                            # saturation exceptions here, as this is fine
-                            # alignment!
+                            # If the measurement saturates, then take that set
+                            # of measurements again, with the new values of
+                            # parameters that change (step_size, number,
+                            # delay). Don't ignore saturation exceptions here,
+                            # as this is fine alignment!
 
                             results = np.array(results)
                             _exp.save_results(self, results, self.number,
-                                              self.delay, why_ended='Saturation')
+                                              self.delay, why_ended=
+                                              str(b.Saturation))
                             self.scope.stage.move_to_pos(current_pos)
                             continue
-
                         except KeyboardInterrupt:
+                            # Save results taken so far and stop IMMEDIATELY!
                             if save_mode == 'save_subset' or save_mode == \
                                     'save_final':
                                 _exp.save_results(
                                     self, results, self.number, self.delay,
                                     why_ended=str(KeyboardInterrupt))
-
                             sys.exit()
 
                         except StopIteration:
@@ -533,7 +547,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
             # After aligning in x and y, note down the position, max brightness
             # and width of the peak. Note we get width from the set of previous
             # xy_results, by looking at where brightness exceeds the half
-            # maximum.
+            # maximum. This chunk below could be put into its own function.
             peak_position = self.scope.stage.position
             brightness = self.scope.sensor.average_n(self.number, t=self.delay)
             xy_results = np.array(xy_results)
@@ -580,8 +594,7 @@ class AdaptiveHillWalk(_exp.ScopeExp):
             self.reset()
 
         _exp.save_results(self, np.array(maxima_values), self.number,
-                          self.delay, name='maxima_values',
-                          why_ended='complete')
+                          self.delay, name='maxima_values')
 
     @staticmethod
     def arr_range(arr):
@@ -600,7 +613,6 @@ class AdaptiveHillWalk(_exp.ScopeExp):
         thresh = stat.threshold(y, threshmin=thresh_level)
         normalisation = integrate.simps(thresh, x)
         numerator = integrate.simps(x * thresh, x)
-
         return numerator / normalisation, thresh
 
     def process_com(self, results, axis_index):

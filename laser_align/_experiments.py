@@ -19,6 +19,22 @@ class ScopeExp(Experiment):
 
     def __init__(self, microscope, config_file, group, included_data,
                  **kwargs):
+        """Defines a bunch of object attributes common to all scope
+        experiments.
+        :param microscope: The microscope object.
+        :param config_file: Either a dictionary of configuration parameters
+        or a string with the path to the YAML files that contains them.
+        :param group: The HDF5 data group object where all datafiles created
+        using this experiment are saved. If None, defaults to the group with
+        same name as the experiment being run. The customisability is useful
+        because some experiments may consist of several others, but you want
+        all data to be saved to the same group.
+        :param included_data: The keys of the config parameters to be
+        included, so that only these are written as attributes to the HDF5
+        file upon recording.
+        :param kwargs: Named arguments can be changed from their default values
+        in the config file using this argument. Valid kwargs are the same as
+        the strings in the default 'included_data' tuple."""
         super(ScopeExp, self).__init__()
         self.config_dict = d.make_dict(config_file, **kwargs)
         self.scope = microscope
@@ -36,9 +52,10 @@ class ScopeExp(Experiment):
 def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
                  order_gen=b.baker(b.raster, position_to_pass_through=(0, 3)),
                  save_mode='save_subset', end_func=b.baker(b.unchanged),
-                 valid_keys=('x', 'y', 'z'), number=100, delay=0):
+                 valid_keys=('x', 'y', 'z'), num_per_avg=100, delay=0):
     """Function to carry out a sequence of measurements as per iter_list,
-    take an image at each position, post-process it and return a final result.
+    take a measurement at each position, post-process it and return a final
+    result.
 
     :param exp_obj: The experiment object.
 
@@ -101,7 +118,8 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
     ways to move. if rotational degrees of freedom are introduced, this can
     include theta, etc.
 
-    :param number: The number of measurements to average over at each position.
+    :param num_per_avg: The number of measurements to average over at each
+    position.
 
     :param delay: The time delay between each individual measurement taken
     at a specific position."""
@@ -141,13 +159,14 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # calculation to a results file and save it all at the end.
             while True:
                 results = read_move_save(exp_obj, pos, func_list, save_mode,
-                                         number, delay, results)
+                                         num_per_avg, delay, results)
 
         except (StopIteration, KeyboardInterrupt) as e:
             # Iterations finished - save the subset of results.
             if save_mode == 'save_subset' or (save_mode == 'save_final'
                                               and e is KeyboardInterrupt):
-                save_results(exp_obj, results, number, delay, why_ended=str(e))
+                save_results(exp_obj, results, num_per_avg, delay,
+                             why_ended=str(e))
             if e is KeyboardInterrupt:
                 # Move to original position and exit program.
                 print "Aborted, moving back to initial position. Exiting " \
@@ -165,22 +184,29 @@ def move_capture(exp_obj, positions_dict, func_list=b.baker(b.unchanged),
             # the gain. Once turned down, this entire move_sequence must be
             # re-measured.
             return move_capture(exp_obj, positions_dict, func_list, order_gen,
-                                save_mode, end_func, valid_keys, number, delay)
+                                save_mode, end_func, valid_keys, num_per_avg,
+                                delay)
 
+    # Ensure ignore_saturation is False to prevent them being ignored on
+    # subsequent use.
     exp_obj.scope.sensor.ignore_saturation = False
+
     if save_mode != 'save_each':
         if save_mode == 'save_final':
-            save_results(exp_obj, results, number, delay, 'brightness_final')
+            save_results(exp_obj, results, num_per_avg, delay,
+                         'brightness_final')
         elif save_mode != 'save_subset' and save_mode is not None:
             raise ValueError('Invalid save mode.')
 
         # Process the result and return it. Remember end_func is unchanged
         # by default, which returns the array as-is.
         return end_func(np.array(results))
+
     elif save_mode == 'save_each':
         if end_func is not None or end_func is not b.baker(b.unchanged):
             w.warn('end_func will not be used when the save_mode is '
                    '\'save_each\', as it is here.')
+
     else:
         raise ValueError('Invalid save_mode.')
 
@@ -189,7 +215,7 @@ def apply_functions(mmt, func_list):
     """Applies each function from func_list to the mmt."""
     processed = mmt
 
-    # Converting to list first allows single functions to be entered.
+    # Converting to list first allows even single functions to be entered.
     try:
         len(func_list)
     except TypeError:
@@ -204,7 +230,7 @@ def apply_functions(mmt, func_list):
 def read_move_save(exp_obj, gen_obj, func_list, save_mode, number, delay,
                    results):
     """Function to repeatedly move to specific positions, take an average
-    measurement, save it as appropriate, and move on.
+    measurement, save it as appropriate, and move on. Part of move_capture.
     :param exp_obj: The experiment object.
     :param gen_obj: An instantiated generator function object.
     :param func_list: A list of functions to act on each measurement taken.
@@ -215,6 +241,7 @@ def read_move_save(exp_obj, gen_obj, func_list, save_mode, number, delay,
     be averaged.
     :param results: The results list.
     :return: The modified results list."""
+
     results = list(results)
     next_pos = next(gen_obj)  # This returns StopIteration at end.
     exp_obj.scope.stage.move_to_pos(next_pos)
@@ -247,11 +274,12 @@ def read_move_save(exp_obj, gen_obj, func_list, save_mode, number, delay,
     return np.array(results)
 
 
-def save_results(exp_obj, results, number, delay, name='brightness',
-                 why_ended='none', attrs=None):
+def save_results(exp_obj, results, num_per_avg, delay, name='brightness',
+                 why_ended='no_error', attrs=None):
     """Saves the results with custom attributes."""
     if attrs is None:
-        attrs = {'mmts_per_reading': number, 'delay': delay,
+        # Default parameters to save to dataset attributes.
+        attrs = {'mmts_per_reading': num_per_avg, 'delay': delay,
                  'why_ended': why_ended}
 
     print "Saving captured results."
@@ -260,6 +288,7 @@ def save_results(exp_obj, results, number, delay, name='brightness',
 
 
 def elapsed(starting):
+    """Calculates time elapsed from some start time."""
     end = t.time()
     return end - starting
 
@@ -269,14 +298,20 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
     move_capture. All items in len_list must be the same for no AssertionErrors
     to be raised. Returns len_lists[0] as the number of position arrays is
     used for iteration in move_capture."""
+
     len_lists = []
+
+    # Check the valid axes 'x', 'y' and 'z' have been specified.
     assert len(position_dict) <= len(valid_keys)
+
     for key in position_dict.keys():
         for tup in position_dict[key]:
+            # Check format is (n, step).
             assert len(tup) == 2, 'Invalid tuple format.'
+        # Check each axis matches a valid one.
         assert np.any(key == np.array(valid_keys)), 'Invalid key.'
-        # For robustness, the lengths of the lists for each key must be
-        # the same length.
+        # For robustness, the lengths of the lists for each axis must be
+        # the same length. See move_capture docstring.
         len_lists.append(len(position_dict[key]))
     if len(len_lists) > 1:
         assert [len_lists[0] == element for element in len_lists[1:]], \
@@ -284,7 +319,7 @@ def _verify_positions(position_dict, valid_keys=('x', 'y', 'z')):
     try:
         return len_lists[0]
     except IndexError:
-        # An empty positions dictionary has been passed. We want to default
+        # An empty positions dictionary has been entered. We want to default
         # to the position (0, 0, 0) only. This is a single 1 x 1 x 1 array
         # of positions.
         return 1

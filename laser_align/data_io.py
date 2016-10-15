@@ -78,7 +78,8 @@ def make_group(sc_exp_obj, group=None, group_name='Group'):
     return sc_exp_obj.gr
 
 
-# Graphing wrappers.
+# Graphing wrappers. These can be replaced by nplab's ones safely - only the
+# scripts under 'tests' will be affected.
 def plot_prettify(series_dict, title, x_title, y_title, output='show',
                   x_log=False, y_log=False, cust_x_lims=None, cust_y_lims=None,
                   x_sci=False, y_sci=False):

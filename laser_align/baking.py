@@ -29,6 +29,7 @@ def baker(fun, args=None, kwargs=None, position_to_pass_through=(0, 0)):
     positional arguments!
     :return: The object containing the function with its arguments."""
 
+    # Defaults.
     if args is None:
         args = []
     if kwargs is None:
@@ -67,8 +68,9 @@ def stop_on_nonzero(measurement):
 
 def saturation_reached(measurement, sensor_obj):
     """Function to raise Exception if measurements saturate, so that the
-    user is recommended to turn down the gain setting, with an input requested.
-    """
+    user is recommended to turn down the gain setting, with user input
+    requested upon completion."""
+
     if measurement[0] >= 900 and sensor_obj.gain >= 0:
         # This is the chosen value for saturation because the scale is
         # non-linear at the top end of the readings.
@@ -149,7 +151,7 @@ def yield_pos(positions):
 # Functions to act on the final entire set of results.
 def max_fifth_col(results_arr, scope_obj, initial_position):
     """Given a results array made of [[times], [x_pos], [y_pos], [z_pos],
-    [quantity]] format, moves scope stage to the position with the
+    [quantity], ...] format, move scope stage to the position with the
     maximum value of 'quantity' Recognises when there are multiple maxima
     and: if they are zero, moves to original position, if they are not zero,
     moves to the position of the first maximum."""
@@ -157,7 +159,7 @@ def max_fifth_col(results_arr, scope_obj, initial_position):
         print "No maximum detected, moving to original position."
         new_position = initial_position
     else:
-        # There my be multiple non-zero maxima - move to the first one in
+        # There may be multiple non-zero maxima - move to the first one in
         # this case.
         new_position = results_arr[np.argmax(results_arr[:, 4]), :][1:4]
     print new_position
@@ -170,7 +172,13 @@ def to_parmax(results_arr, scope_obj, axis, move=True):
     """Given a results array from move_capture, and an axis to look at,
     fits that axis's positions with the measured quantities to a parabola,
     returns the error and moves the scope_obj stage to the maximum point of the
-    parabola. Experiment can only be performed on a single axis."""
+    parabola. Experiment can only be performed on a single axis.
+    :param results_arr: The results array.
+    :param scope_obj: The microscope object to move.
+    :param axis: A character specifying the axis: 'x', 'y' or 'z'.
+    :param move: Whether to move at the end or not. TODO: REMOVE from here
+    and make calculation and motion independent."""
+
     x = results_arr[:, ['x', 'y', 'z'].index(axis) + 1]
     x_range = (np.min(x), np.max(x))
     y = results_arr[:, 4]
@@ -211,6 +219,3 @@ class NoisySignal(Exception):
     """Raise when excessive noise has been detected, so operation is
     terminated and raster scan is done instead."""
     pass
-
-
-

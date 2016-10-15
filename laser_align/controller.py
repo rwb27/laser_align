@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 """Script containing class to control and take measurements using the
-microscope via the keyboard."""
+microscope via the keyboard. Change to be independent of OpenCV, and there
+is no actual GUI."""
 
 import cv2
 
@@ -27,14 +28,7 @@ class KeyboardControls:
     _GUI_KEY_ENTER = 13
 
     def __init__(self, microscope, config_file, **kwargs):
-        """Optionally specify a width and height for Camera object, the channel
-        for the Stage object and a filename for the attached datafile.
-        cv2camera allows non-RPi systems to be tested also.
-        Valid kwargs are:
-            resolution, cv2camera, channel, manual and um_per_pixel and
-            camera_stage_transform, mode, tolerance, max_iterations,
-            max_resolution, key_stepsize. Keypress controls can only be
-            changed from the config file itself."""
+        """See config.yaml for kwargs."""
 
         self.config_dict = d.make_dict(config_file, **kwargs)
 

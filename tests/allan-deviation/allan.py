@@ -70,14 +70,7 @@ for filename in deets:
                                  series_dict=series_dict)
     df.close()
 
-#d.plot_prettify(series_dict, 'Plot of $\sigma_{A}$ as a function of $\\tau$',
-#                '$\\tau$/s', '$\sigma_{A}$/AU', x_log=True,
-#                y_log=True, output='none')
-#plt.legend().set_visible(False)
-#plt.show()
-
 big_results[0] = np.log10(big_results[0])
-#big_results[0]
 plt.loglog(big_results[0][:, 0][100:], big_results[0][:, 1][100:])
 plt.show()
 plt.loglog(big_results[1][:, 0][:-440], big_results[1][:, 1][:-440])
